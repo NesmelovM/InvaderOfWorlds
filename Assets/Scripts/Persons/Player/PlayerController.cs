@@ -1,5 +1,4 @@
-﻿using Services;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
@@ -10,28 +9,30 @@ public class PlayerController : MonoBehaviour
 
     private Vector3 _moveDirection;
     private Rigidbody _rb;
+    private Transform _playerSkin;
 
     private void Start()
     {
-       _rb = gameObject.GetComponent<Rigidbody>(); 
+        _playerSkin = transform.GetChild(0);
+        _rb = gameObject.GetComponent<Rigidbody>();
         _camera = Camera.main;
     }
     private void Update()
     {
-        _moveDirection = Vector3.zero;
+        _moveDirection = -Vector3.zero;
         if (Input.GetAxis("Horizontal") != 0)
         {
             _moveDirection += _camera.transform.right * Input.GetAxis("Horizontal");
         }
         if (Input.GetAxis("Vertical") != 0)
         {
-            _moveDirection += _camera.transform.forward* Input.GetAxis("Vertical");
+            _moveDirection += _camera.transform.forward * Input.GetAxis("Vertical");
         }
 
     }
     void FixedUpdate()
     {
         _rb.MovePosition(_rb.position + _moveSpeed * _moveDirection * Time.deltaTime);
-        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(_moveDirection), Time.deltaTime * _rotationSpeed);
+        //_playerSkin.rotation = Quaternion.Slerp(_playerSkin.rotation, Quaternion.LookRotation(_moveDirection), Time.deltaTime * _rotationSpeed);
     }
 }
