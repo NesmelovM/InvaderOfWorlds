@@ -28,6 +28,7 @@ public class PlayerController : MonoBehaviour
         {
             _moveDirection += _camera.transform.forward * Input.GetAxis("Vertical");
         }
+        _moveDirection = Vector3.ProjectOnPlane(_moveDirection, transform.position).normalized;
 
     }
     void FixedUpdate()
