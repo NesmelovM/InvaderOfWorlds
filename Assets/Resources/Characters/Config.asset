@@ -37,7 +37,7 @@ MonoBehaviour:
     Weapon: {fileID: 9017739727520688121, guid: b5f8d2ce6f6541240b4d1dd8d2e59b6f, type: 3}
     Height: 4.2
     WeaponScale: 1
-  StepSpeed: 8.5
-  LegAmplitude: 32
-  ArmAmplitude: 26
+  StepSpeed: 2.63
+  LegAmplitude: 27.1
+  ArmAmplitude: 22.7
   AttackDuration: 0.28

@@ -31,6 +31,7 @@ namespace InvaderOfWorlds.EditorTools
         private GameObject _eliteModel;
         private GameObject _eliteArcherModel;
         private GameObject _bossModel;
+        private CharacterConfig _enemySet;
         private Color _ground = new Color(0.45f, 0.47f, 0.50f);
         private Color _hill = new Color(0.42f, 0.38f, 0.34f);
         private Color _sky = new Color(0.02f, 0.03f, 0.08f);
@@ -84,6 +85,14 @@ namespace InvaderOfWorlds.EditorTools
                 "или из префабов пака — рост подгоняется автоматически.", MessageType.Info);
 
             EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Набор врагов биома", EditorStyles.boldLabel);
+            _enemySet = (CharacterConfig)EditorGUILayout.ObjectField("Набор (CharacterConfig)", _enemySet,
+                typeof(CharacterConfig), false);
+
+            if (GUILayout.Button("Создать набор для этого биома"))
+                _enemySet = CreateEnemySet();
+
+            EditorGUILayout.Space();
             _ground = EditorGUILayout.ColorField("Цвет поверхности", _ground);
             _hill = EditorGUILayout.ColorField("Цвет холмов", _hill);
             _sky = EditorGUILayout.ColorField("Цвет неба", _sky);
@@ -132,6 +141,7 @@ namespace InvaderOfWorlds.EditorTools
             biome.EliteModel = _eliteModel;
             biome.EliteArcherModel = _eliteArcherModel;
             biome.BossModel = _bossModel;
+            biome.Enemies = _enemySet;
 
             var path = $"{BiomesFolder}/{_name}.asset";
             AssetDatabase.CreateAsset(biome, path);
@@ -139,6 +149,26 @@ namespace InvaderOfWorlds.EditorTools
             AssetDatabase.Refresh();
 
             Debug.Log($"[BIOMES] Создан биом «{_name}»: {biome.Big.Count} крупных, {biome.Small.Count} мелких");
+        }
+
+        /// <summary>Создаёт пустой набор врагов для биома — его же правит окно «Персонажи».</summary>
+        private CharacterConfig CreateEnemySet()
+        {
+            EnsureFolder();
+
+            var path = $"{BiomesFolder}/Enemies_{_name}.asset";
+            var existing = AssetDatabase.LoadAssetAtPath<CharacterConfig>(path);
+
+            if (existing != null)
+                return existing;
+
+            var set = ScriptableObject.CreateInstance<CharacterConfig>();
+            AssetDatabase.CreateAsset(set, path);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            Debug.Log($"[BIOMES] Создан набор врагов {path}");
+            return set;
         }
 
         private void AddToCatalog(BiomeDefinition biome)

@@ -44,6 +44,9 @@ namespace InvaderOfWorlds
         [Min(1f)] public float WallHeight = 3f;
 
         [Header("Внешний вид врагов")]
+        [Tooltip("Свой набор моделей и оружия. Пусто — берётся общий из Resources/Characters/Config")]
+        public CharacterConfig Enemies;
+
         [Tooltip("Модель обычного бойца ближнего боя")]
         public GameObject MeleeModel;
         [Tooltip("Модель лучника")]
