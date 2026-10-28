@@ -264,23 +264,43 @@ namespace InvaderOfWorlds
             _socket.localPosition = _restPosition + new Vector3(0f, 0f, Mathf.Sin(progress * Mathf.PI) * 0.18f);
         }
 
+        /// <summary>
+        /// Подгоняет длину оружия по фактическим вершинам меша.
+        /// Renderer.bounds сразу после Instantiate ещё не пересчитан, поэтому
+        /// раньше размер получался случайным (лук выходил шире персонажа).
+        /// </summary>
         private static void FitLength(GameObject model, float length)
         {
-            var min = float.MaxValue;
-            var max = float.MinValue;
+            var root = model.transform;
+            var toRoot = root.worldToLocalMatrix;
+            var min = Vector3.positiveInfinity;
+            var max = Vector3.negativeInfinity;
 
-            foreach (var renderer in model.GetComponentsInChildren<Renderer>())
+            foreach (var filter in model.GetComponentsInChildren<MeshFilter>())
             {
-                var bounds = renderer.bounds;
-                var size = Mathf.Max(bounds.size.x, Mathf.Max(bounds.size.y, bounds.size.z));
-                min = Mathf.Min(min, size);
-                max = Mathf.Max(max, size);
+                var mesh = filter.sharedMesh;
+
+                if (mesh == null)
+                    continue;
+
+                var matrix = toRoot * filter.transform.localToWorldMatrix;
+
+                foreach (var vertex in mesh.vertices)
+                {
+                    var point = matrix.MultiplyPoint3x4(vertex);
+                    min = Vector3.Min(min, point);
+                    max = Vector3.Max(max, point);
+                }
             }
 
-            if (max <= 0.01f)
+            if (float.IsInfinity(min.x) || float.IsInfinity(max.x))
                 return;
 
-            model.transform.localScale *= length / max;
+            var size = max - min;
+            var longest = Mathf.Max(size.x, Mathf.Max(size.y, size.z));
+
+            if (longest > 0.001f)
+                root.localScale *= length / longest;
         }
     }
 }

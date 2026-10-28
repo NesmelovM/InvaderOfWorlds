@@ -46,18 +46,43 @@ namespace InvaderOfWorlds
             return null;
         }
 
-        private static void FitLength(GameObject weapon, float length)
+        /// <summary>
+        /// Подгоняет длину оружия по фактическим вершинам меша.
+        /// Renderer.bounds сразу после Instantiate ещё не пересчитан, поэтому
+        /// раньше размер получался случайным (лук выходил шире персонажа).
+        /// </summary>
+        private static void FitLength(GameObject model, float length)
         {
-            var max = 0f;
+            var root = model.transform;
+            var toRoot = root.worldToLocalMatrix;
+            var min = Vector3.positiveInfinity;
+            var max = Vector3.negativeInfinity;
 
-            foreach (var renderer in weapon.GetComponentsInChildren<Renderer>())
+            foreach (var filter in model.GetComponentsInChildren<MeshFilter>())
             {
-                var size = renderer.bounds.size;
-                max = Mathf.Max(max, Mathf.Max(size.x, Mathf.Max(size.y, size.z)));
+                var mesh = filter.sharedMesh;
+
+                if (mesh == null)
+                    continue;
+
+                var matrix = toRoot * filter.transform.localToWorldMatrix;
+
+                foreach (var vertex in mesh.vertices)
+                {
+                    var point = matrix.MultiplyPoint3x4(vertex);
+                    min = Vector3.Min(min, point);
+                    max = Vector3.Max(max, point);
+                }
             }
 
-            if (max > 0.01f)
-                weapon.transform.localScale *= length / max;
+            if (float.IsInfinity(min.x) || float.IsInfinity(max.x))
+                return;
+
+            var size = max - min;
+            var longest = Mathf.Max(size.x, Mathf.Max(size.y, size.z));
+
+            if (longest > 0.001f)
+                root.localScale *= length / longest;
         }
     }
 }
