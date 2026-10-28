@@ -48,7 +48,9 @@ namespace InvaderOfWorlds.EditorTools
             mage.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
 
             // Тёмная мантия: модель из пака одноцветная, поэтому красим её сами.
-            CharacterModel.Attach(mage, "Characters/man-cult", 2.2f, 0f, new Color(0.16f, 0.07f, 0.23f));
+            // Цвет через компонент — материал из редактора в сцене не сохраняется.
+            CharacterModel.Attach(mage, "Characters/man-cult", 2.2f, 0f);
+            mage.AddComponent<ModelTint>().Configure(new Color(0.16f, 0.07f, 0.23f));
 
             CreateRestArea(new Vector3(7.2f, 0f, -6.2f));
         }

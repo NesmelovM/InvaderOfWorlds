@@ -24,6 +24,7 @@ namespace InvaderOfWorlds
         private int _keptExperience;
         private GUIStyle _titleStyle;
         private GUIStyle _textStyle;
+        private GUIStyle _buttonStyle;
 
         public void Configure(Health playerHealth)
         {
@@ -113,14 +114,11 @@ namespace InvaderOfWorlds
             if (!_dead || Time.unscaledTime - _deadAt < _menuDelay)
                 return;
 
-            HealthBarDrawer.DrawRect(new Rect(0f, 0f, Screen.width, Screen.height),
-                new Color(0.06f, 0f, 0f, 0.78f));
-
             if (_titleStyle == null)
             {
                 _titleStyle = new GUIStyle(GUI.skin.label)
                 {
-                    fontSize = 44,
+                    fontSize = 38,
                     alignment = TextAnchor.MiddleCenter,
                     fontStyle = FontStyle.Bold,
                     normal = { textColor = new Color(0.95f, 0.35f, 0.30f) }
@@ -128,25 +126,52 @@ namespace InvaderOfWorlds
 
                 _textStyle = new GUIStyle(GUI.skin.label)
                 {
-                    fontSize = 20,
+                    fontSize = 19,
                     alignment = TextAnchor.MiddleCenter,
                     normal = { textColor = Color.white }
                 };
+
+                if (_buttonStyle == null)
+                    _buttonStyle = new GUIStyle(GUI.skin.button)
+                    {
+                        fontSize = 20,
+                        fontStyle = FontStyle.Bold
+                    };
             }
 
-            var top = Screen.height * 0.28f;
+            UiCanvas.Begin();
 
-            GUI.Label(new Rect(0f, top, Screen.width, 60f), "ВЫ ПОГИБЛИ", _titleStyle);
-            GUI.Label(new Rect(0f, top + 74f, Screen.width, 30f), $"Убито врагов: {RunSession.Kills}", _textStyle);
-            GUI.Label(new Rect(0f, top + 106f, Screen.width, 30f),
+            HealthBarDrawer.DrawRect(new Rect(0f, 0f, UiCanvas.Width, UiCanvas.Height),
+                new Color(0.06f, 0f, 0f, 0.82f));
+
+            var panel = new Rect(340f, 140f, 600f, 440f);
+            HealthBarDrawer.DrawRect(panel, new Color(0.09f, 0.05f, 0.06f, 0.96f));
+            HealthBarDrawer.DrawRect(new Rect(panel.x, panel.y, panel.width, 4f),
+                new Color(0.95f, 0.35f, 0.30f, 0.9f));
+
+            GUI.Label(new Rect(panel.x, panel.y + 24f, panel.width, 46f), "ВЫ ПОГИБЛИ", _titleStyle);
+
+            var y = panel.y + 96f;
+
+            GUI.Label(new Rect(panel.x + 40f, y, panel.width - 80f, 26f),
+                $"Убито врагов: {RunSession.Kills}", _textStyle);
+            GUI.Label(new Rect(panel.x + 40f, y + 32f, panel.width - 80f, 26f),
                 $"Добыто: {_runGold} золота, {_runExperience} опыта", _textStyle);
-            GUI.Label(new Rect(0f, top + 138f, Screen.width, 30f),
+            GUI.Label(new Rect(panel.x + 40f, y + 74f, panel.width - 80f, 26f),
                 $"Зачислено {Mathf.RoundToInt(_deathShare * 100f)}%: " +
                 $"{_keptGold} золота, {_keptExperience} опыта", _textStyle);
-            GUI.Label(new Rect(0f, top + 170f, Screen.width, 30f),
+            GUI.Label(new Rect(panel.x + 40f, y + 106f, panel.width - 80f, 26f),
                 $"Потеряно {Mathf.RoundToInt((1f - _deathShare) * 100f)}%: " +
                 $"{_runGold - _keptGold} золота, {_runExperience - _keptExperience} опыта", _textStyle);
-            GUI.Label(new Rect(0f, top + 210f, Screen.width, 30f), "R — вернуться в хаб", _textStyle);
+
+            if (GUI.Button(new Rect(panel.x + 40f, y + 160f, panel.width - 80f, 58f), "В ХАБ  (R)",
+                    _buttonStyle))
+                Restart();
+
+            GUI.Label(new Rect(panel.x + 40f, y + 232f, panel.width - 80f, 26f),
+                "Добыча уже сохранена — в хабе она ждёт вас.", _textStyle);
+
+            UiCanvas.End();
         }
     }
 }

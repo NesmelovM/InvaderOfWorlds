@@ -87,8 +87,11 @@ namespace InvaderOfWorlds.EditorTools
             body.center = new Vector3(0f, 0.9f, 0f);
 
             // Игрок — тот же маг, что стоит у башни в хабе: одна фигура на всю игру.
-            var model = CharacterModel.Attach(playerObject, "Characters/man-cult", 1.95f, 0f,
-                new Color(0.16f, 0.07f, 0.23f));
+            // Цвет задаём компонентом: материал, созданный в редакторе, в сцене не сохраняется.
+            var model = CharacterModel.Attach(playerObject, "Characters/man-cult", 1.95f, 0f);
+
+            var tint = playerObject.AddComponent<ModelTint>();
+            tint.Configure(new Color(0.16f, 0.07f, 0.23f));
 
             if (model == null)
             {
@@ -171,6 +174,9 @@ namespace InvaderOfWorlds.EditorTools
 
             var hud = runObject.AddComponent<RunHud>();
             hud.Configure(level);
+
+            var pause = runObject.AddComponent<PauseMenu>();
+            pause.Configure(level, health);
         }
 
         /// <summary>Сборка планеты при старте: рельеф, постройки, босс и портал.</summary>

@@ -134,7 +134,7 @@ namespace InvaderOfWorlds
                 var target = big ? 7f + (float)random.NextDouble() * 4f : 0.6f + (float)random.NextDouble();
                 FitHeight(prop, target);
 
-                BiomeTint.Apply(prop, _biomeColor, big ? 0.3f : 0.18f, random);
+                BiomeTint.Apply(prop, _biomeColor, big ? 0.45f : 0.3f, random);
             }
         }
 

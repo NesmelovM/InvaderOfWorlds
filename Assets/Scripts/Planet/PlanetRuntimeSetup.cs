@@ -242,7 +242,7 @@ namespace InvaderOfWorlds
 
             // Подмешиваем цвет биома: иначе чужие палитры спорят между собой.
             if (_biome != null)
-                BiomeTint.Apply(prop, _biome.GroundColor, keepColliders ? 0.3f : 0.18f, random);
+                BiomeTint.Apply(prop, _biome.GroundColor, keepColliders ? 0.45f : 0.3f, random);
         }
 
         /// <summary>
