@@ -12,6 +12,7 @@ namespace InvaderOfWorlds
         public int damageLevel;
         public int healthLevel;
         public int speedLevel;
+        public int skillMask;
     }
 
     /// <summary>
@@ -33,7 +34,8 @@ namespace InvaderOfWorlds
                 experience = RunSession.Experience,
                 damageLevel = MetaProgress.DamageLevel,
                 healthLevel = MetaProgress.HealthLevel,
-                speedLevel = MetaProgress.SpeedLevel
+                speedLevel = MetaProgress.SpeedLevel,
+                skillMask = SkillTree.Mask
             };
 
             try
@@ -61,6 +63,7 @@ namespace InvaderOfWorlds
 
                 RunSession.Load(data.gold, data.experience);
                 MetaProgress.Load(data.damageLevel, data.healthLevel, data.speedLevel);
+                SkillTree.Load(data.skillMask);
 
                 Debug.Log($"[SAVE] Прогресс загружен: золото {data.gold}, " +
                           $"урон {data.damageLevel}, здоровье {data.healthLevel}, скорость {data.speedLevel}");

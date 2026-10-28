@@ -77,6 +77,19 @@ namespace InvaderOfWorlds
             return true;
         }
 
+        /// <summary>Списать опыт, если его хватает.</summary>
+        public static bool TrySpendExperience(int experience)
+        {
+            if (experience <= 0)
+                return true;
+
+            if (Experience < experience)
+                return false;
+
+            Experience -= experience;
+            return true;
+        }
+
         /// <summary>Восстановление из сохранения.</summary>
         public static void Load(int gold, int experience)
         {
