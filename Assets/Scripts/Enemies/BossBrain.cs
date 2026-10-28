@@ -222,7 +222,7 @@ namespace InvaderOfWorlds
                 var spread = Quaternion.AngleAxis(angle, up) * direction;
 
                 ProjectileFactory.Spawn(origin + direction * 0.6f, spread, _projectileSpeed,
-                    _volleyDamage, transform, new Color(1f, 0.45f, 0.2f));
+                    _volleyDamage, transform, new Color(1f, 0.45f, 0.2f), planet: _planet);
             }
 
             Debug.Log($"[BOSS] Веер: {_volleyCount} снарядов");

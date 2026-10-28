@@ -3,8 +3,8 @@ using UnityEngine;
 namespace InvaderOfWorlds
 {
     /// <summary>
-    /// Самонаводящаяся ракета: сама поворачивает к ближайшему врагу,
-    /// поэтому попадает даже по бегущей цели. Поворот ограничен — увернуться можно.
+    /// Самонаводящаяся ракета: сама поворачивает к ближайшему врагу и летит
+    /// по дуге вокруг планеты. Поворот ограничен — увернуться можно.
     /// </summary>
     public class HomingProjectile : MonoBehaviour
     {
@@ -18,12 +18,15 @@ namespace InvaderOfWorlds
         private readonly Collider[] _overlaps = new Collider[16];
 
         private Transform _owner;
+        private Planet _planet;
         private Vector3 _direction;
         private float _life;
 
-        public void Launch(Transform owner, Vector3 direction, float speed, float damage)
+        public void Launch(Transform owner, Vector3 direction, float speed, float damage,
+            Planet planet = null)
         {
             _owner = owner;
+            _planet = planet;
             _direction = direction.normalized;
             _speed = speed;
             _damage = damage;
@@ -44,32 +47,41 @@ namespace InvaderOfWorlds
 
             if (target != null)
             {
-                var desired = (target.position + Vector3.up * 0.5f - transform.position).normalized;
-                _direction = Vector3.RotateTowards(_direction, desired, _turnRate * Mathf.Deg2Rad * Time.deltaTime, 0f);
+                var desired = target.position + Vector3.up * 0.5f;
+                _direction = _planet != null
+                    ? PlanetArc.SteerTowards(_planet, transform.position, _direction, desired,
+                        _turnRate * Mathf.Deg2Rad * Time.deltaTime)
+                    : Vector3.RotateTowards(_direction, (desired - transform.position).normalized,
+                        _turnRate * Mathf.Deg2Rad * Time.deltaTime, 0f);
             }
 
-            var step = _direction * (_speed * Time.deltaTime);
-            var distance = step.magnitude;
+            var step = _speed * Time.deltaTime;
+            var nextPosition = transform.position;
+            var nextDirection = _direction;
 
-            if (distance > 0f && Physics.SphereCast(transform.position, _radius, _direction, out var hit, distance,
-                    ~0, QueryTriggerInteraction.Ignore))
+            PlanetArc.Advance(_planet, ref nextPosition, ref nextDirection, step);
+
+            var toNext = nextPosition - transform.position;
+            var distance = toNext.magnitude;
+
+            if (distance > 0.0001f &&
+                Physics.SphereCast(transform.position, _radius, toNext / distance, out var hit, distance, ~0,
+                    QueryTriggerInteraction.Ignore))
             {
-                if (_owner != null && hit.collider.transform.IsChildOf(_owner))
+                if (_owner == null || !hit.collider.transform.IsChildOf(_owner))
                 {
-                    transform.position += step;
+                    var damageable = hit.collider.GetComponentInParent<IDamageable>();
+
+                    if (damageable != null && damageable.IsAlive)
+                        damageable.TakeDamage(_damage);
+
+                    Destroy(gameObject);
                     return;
                 }
-
-                var damageable = hit.collider.GetComponentInParent<IDamageable>();
-
-                if (damageable != null && damageable.IsAlive)
-                    damageable.TakeDamage(_damage);
-
-                Destroy(gameObject);
-                return;
             }
 
-            transform.position += step;
+            _direction = nextDirection;
+            transform.position = nextPosition;
             transform.rotation = Quaternion.LookRotation(_direction);
         }
 

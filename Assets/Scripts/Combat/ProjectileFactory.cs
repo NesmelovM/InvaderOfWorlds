@@ -9,7 +9,7 @@ namespace InvaderOfWorlds
     public static class ProjectileFactory
     {
         public static void Spawn(Vector3 position, Vector3 direction, float speed, float damage,
-            Transform owner, Color color, int pierce = 0)
+            Transform owner, Color color, int pierce = 0, Planet planet = null)
         {
             var projectileObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             projectileObject.name = "Projectile";
@@ -27,7 +27,7 @@ namespace InvaderOfWorlds
                 renderer.sharedMaterial = EnemyFactory.GetMaterial(color);
 
             var projectile = projectileObject.AddComponent<Projectile>();
-            projectile.Launch(direction, speed, damage, owner, pierce);
+            projectile.Launch(direction, speed, damage, owner, pierce, planet);
         }
     }
 }

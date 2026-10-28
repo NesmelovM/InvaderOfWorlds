@@ -161,7 +161,7 @@ namespace InvaderOfWorlds.EditorTools
             player.AddComponent<PlayerHud>();
 
             var attack = player.AddComponent<WeaponSystem>();
-            attack.Configure(cameraObject.transform);
+            attack.Configure(cameraObject.transform, planet);
 
             // Два стартовых оружия: удар вблизи и снаряд по дальней цели.
             attack.TryEquip(new WeaponSlot

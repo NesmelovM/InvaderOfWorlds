@@ -226,7 +226,7 @@ namespace InvaderOfWorlds
                 renderer.sharedMaterial = EnemyFactory.GetMaterial(new Color(1f, 0.75f, 0.2f));
 
             var projectile = projectileObject.AddComponent<Projectile>();
-            projectile.Launch(direction, _projectileSpeed, _damage, transform);
+            projectile.Launch(direction, _projectileSpeed, _damage, transform, 0, _planet);
         }
 
         private void Strafe(Vector3 direction, Vector3 up)

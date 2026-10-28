@@ -5,8 +5,8 @@ namespace InvaderOfWorlds
 {
     /// <summary>
     /// Бумеранг: летит вперёд на заданную дистанцию и возвращается к хозяину.
-    /// Задевает цели дважды — туда и обратно, но одну и ту же цель не чаще,
-    /// чем раз в полсекунды, иначе на толпе он был бы бесконечным уроном.
+    /// Движется по дуге вокруг планеты, чтобы не уходить в грунт и не отрываться
+    /// от поверхности. Одну цель бьёт не чаще раза в полсекунды.
     /// </summary>
     public class Boomerang : MonoBehaviour
     {
@@ -21,31 +21,30 @@ namespace InvaderOfWorlds
         private readonly Dictionary<int, float> _nextHit = new Dictionary<int, float>();
 
         private Transform _owner;
-        private Vector3 _origin;
+        private Planet _planet;
         private Vector3 _direction;
         private float _travelled;
         private float _life;
         private bool _returning;
 
-        public void Launch(Transform owner, Vector3 direction, float speed, float damage, float range)
+        public void Launch(Transform owner, Vector3 direction, float speed, float damage, float range,
+            Planet planet = null)
         {
             _owner = owner;
-            _origin = transform.position;
+            _planet = planet;
             _direction = direction.normalized;
             _speed = speed;
             _damage = damage;
             _range = range;
+            _life = _lifetime;
 
             var up = owner != null ? owner.up : Vector3.up;
             _direction = Vector3.ProjectOnPlane(_direction, up).normalized;
-            _life = _lifetime;
         }
 
         private void Update()
         {
             _life -= Time.deltaTime;
-
-            var up = _owner != null ? _owner.up : Vector3.up;
 
             if (_life <= 0f)
             {
@@ -53,10 +52,13 @@ namespace InvaderOfWorlds
                 return;
             }
 
+            var step = _speed * Time.deltaTime;
+            var position = transform.position;
+
             if (!_returning)
             {
-                transform.position += _direction * (_speed * Time.deltaTime);
-                _travelled += _speed * Time.deltaTime;
+                PlanetArc.Advance(_planet, ref position, ref _direction, step);
+                _travelled += step;
 
                 if (_travelled >= _range)
                     _returning = true;
@@ -69,23 +71,25 @@ namespace InvaderOfWorlds
                     return;
                 }
 
+                var up = _planet != null ? _planet.UpAt(position) : _owner.up;
                 var target = _owner.position + up * 1f;
-                var toOwner = target - transform.position;
 
-                if (toOwner.magnitude < 1f)
+                if (Vector3.Distance(position, target) < 1f)
                 {
                     Destroy(gameObject);
                     return;
                 }
 
-                transform.position += toOwner.normalized * (_speed * Time.deltaTime);
+                _direction = (target - position).normalized;
+                PlanetArc.Advance(_planet, ref position, ref _direction, step);
             }
 
+            transform.position = position;
             transform.Rotate(Vector3.up, 720f * Time.deltaTime, Space.World);
-            DamageAround(up);
+            DamageAround();
         }
 
-        private void DamageAround(Vector3 up)
+        private void DamageAround()
         {
             var count = Physics.OverlapSphereNonAlloc(transform.position, _radius, _overlaps, ~0,
                 QueryTriggerInteraction.Ignore);
