@@ -54,8 +54,14 @@ namespace InvaderOfWorlds
 
         private void Start()
         {
-            _level = _startLevel;
+            // При переходе на следующую планету уровень сохраняется.
+            _level = Mathf.Max(_startLevel, RunState.Level);
+
             _experienceForNext = _baseExperience;
+
+            for (var i = _startLevel; i < _level; i++)
+                _experienceForNext = Mathf.RoundToInt(_experienceForNext * _experienceGrowth);
+
             _shownExperience = RunSession.RunExperience;
         }
 
@@ -80,6 +86,7 @@ namespace InvaderOfWorlds
         private void BeginChoice()
         {
             _level++;
+            RunState.Level = _level;
             BuildCards();
 
             if (_cards.Count == 0)
@@ -182,6 +189,10 @@ namespace InvaderOfWorlds
                 return;
 
             Armory.TryEquip(id);
+
+            if (!RunState.Loadout.Contains(id))
+                RunState.Loadout.Add(id);
+
             SaveSystem.Save();
         }
 

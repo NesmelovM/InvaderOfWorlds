@@ -4,8 +4,9 @@ using UnityEngine.SceneManagement;
 namespace InvaderOfWorlds
 {
     /// <summary>
-    /// Портал выхода. Закрыт, пока жив босс; после его смерти открывается,
-    /// и вход в него завершает забег победой: вся добыча плюс бонус за чистый заход.
+    /// Портал выхода. Открывается после смерти босса и даёт два пути:
+    /// E — идти дальше, на следующую планету (новый сид, сложность ×1.5),
+    /// F — вернуться в хаб, забрав всю добычу с бонусом.
     /// </summary>
     [DisallowMultipleComponent]
     public class ExitPortal : MonoBehaviour
@@ -16,7 +17,7 @@ namespace InvaderOfWorlds
 
         [Header("Настройки")]
         [SerializeField, Min(0.5f)] private float _radius = 2.6f;
-        [Tooltip("Множитель добычи при успешном уходе (1.2 = +20%)")]
+        [Tooltip("Множитель добычи при возврате в хаб (1.2 = +20%)")]
         [SerializeField, Min(1f)] private float _bonusShare = 1.2f;
         [SerializeField] private string _hubSceneName = "Hub";
 
@@ -24,7 +25,7 @@ namespace InvaderOfWorlds
         [SerializeField] private Color _openColor = new Color(0.25f, 0.9f, 0.95f);
 
         private bool _open;
-        private bool _used;
+        private bool _near;
         private Renderer _renderer;
         private GUIStyle _style;
 
@@ -63,25 +64,38 @@ namespace InvaderOfWorlds
 
         private void Update()
         {
-            if (!_open || _used || _player == null)
+            if (!_open || _player == null)
                 return;
 
-            var up = (_player.position - transform.position).normalized;
+            _near = Vector3.Distance(_player.position, transform.position) <= _radius;
 
-            if (Vector3.Distance(_player.position, transform.position) > _radius)
+            if (!_near)
                 return;
 
-            Complete();
+#if ENABLE_LEGACY_INPUT_MANAGER
+            if (Input.GetKeyDown(KeyCode.E))
+                NextPlanet();
+            else if (Input.GetKeyDown(KeyCode.F))
+                ReturnToHub();
+#endif
         }
 
-        private void Complete()
+        /// <summary>Дальше: та же планета с новым сидом и врагами в полтора раза злее.</summary>
+        private void NextPlanet()
         {
-            _used = true;
+            RunState.AdvancePlanet();
+            Time.timeScale = 1f;
 
-            // Уходим победителем: вся добыча и бонус.
+            var scene = SceneManager.GetActiveScene();
+            SceneManager.LoadScene(scene.buildIndex >= 0 ? scene.buildIndex : 0);
+        }
+
+        /// <summary>В хаб: вся добыча с бонусом, состояние забега сбрасывается.</summary>
+        private void ReturnToHub()
+        {
             RunSession.CommitRun(_bonusShare);
             SaveSystem.Save();
-
+            RunState.Reset();
 
             Time.timeScale = 1f;
             SceneManager.LoadScene(_hubSceneName);
@@ -104,24 +118,27 @@ namespace InvaderOfWorlds
 
         private void OnGUI()
         {
-            if (!_open || _used)
+            if (!_open || !_near)
                 return;
 
             if (_style == null)
             {
                 _style = new GUIStyle(GUI.skin.label)
                 {
-                    fontSize = 20,
+                    fontSize = 19,
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter,
                     normal = { textColor = new Color(0.4f, 1f, 1f) }
                 };
             }
 
-            var panel = new Rect(Screen.width * 0.5f - 260f, 70f, 520f, 34f);
-            HealthBarDrawer.DrawRect(panel, new Color(0f, 0f, 0f, 0.5f));
-            GUI.Label(new Rect(panel.x, panel.y + 5f, panel.width, 26f),
-                "ПОРТАЛ ОТКРЫТ — ВОЙДИТЕ В НЕГО", _style);
+            var panel = new Rect(Screen.width * 0.5f - 330f, 70f, 660f, 64f);
+            HealthBarDrawer.DrawRect(panel, new Color(0f, 0f, 0f, 0.55f));
+
+            GUI.Label(new Rect(panel.x, panel.y + 6f, panel.width, 26f), "ПОРТАЛ ОТКРЫТ", _style);
+
+            GUI.Label(new Rect(panel.x, panel.y + 32f, panel.width, 24f),
+                $"E — дальше (сложность ×{RunState.Difficulty * 1.5f:F1})     F — в хаб с добычей", _style);
         }
     }
 }

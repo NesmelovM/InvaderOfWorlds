@@ -64,6 +64,13 @@ namespace InvaderOfWorlds
             _target = target;
         }
 
+        /// <summary>Сложность следующей планеты: урон растёт вместе с забегом.</summary>
+        public void ScaleDamage(float multiplier)
+        {
+            if (multiplier > 0f)
+                _damage *= multiplier;
+        }
+
         /// <summary>
         /// Настройка боевых параметров из кода — используется элитой.
         ///

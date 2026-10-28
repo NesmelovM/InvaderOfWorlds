@@ -73,6 +73,12 @@ namespace InvaderOfWorlds
                 Generate();
         }
 
+        /// <summary>Сид задаётся извне: каждый забег и каждая планета получают свой.</summary>
+        public void SetSeed(int seed)
+        {
+            _seed = seed;
+        }
+
         [ContextMenu("Сгенерировать планету")]
         public void Generate()
         {

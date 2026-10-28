@@ -3,10 +3,11 @@ using UnityEngine;
 namespace InvaderOfWorlds
 {
     /// <summary>
-    /// Начало забега: сбрасывает временные усилители и выдаёт стартовый набор.
+    /// Начало планеты: при первом заходе — новый забег, при переходе «дальше» —
+    /// восстановление билда, который несёт игрок.
     ///
-    /// Из оружейной берётся только одно оружие — остальное игрок получает
-    /// карточками при повышении уровня, поэтому билд собирается по ходу забега.
+    /// Из оружейной берётся только одно оружие: остальное приходит карточками
+    /// при повышении уровня.
     /// </summary>
     [DisallowMultipleComponent]
     public class RunBootstrap : MonoBehaviour
@@ -15,7 +16,14 @@ namespace InvaderOfWorlds
 
         private void Start()
         {
-            RunSession.ResetRun();
+            var firstPlanet = RunState.PlanetIndex == 0;
+
+            if (firstPlanet)
+            {
+                RunState.Reset();
+                RunSession.ResetRun();
+            }
+
             RunModifiers.Reset();
 
             var player = GameObject.FindWithTag("Player");
@@ -24,11 +32,10 @@ namespace InvaderOfWorlds
                 return;
 
             var health = player.GetComponent<Health>();
-            var maxHealth = _baseHealth + MetaProgress.HealthBonus;
 
             if (health != null)
             {
-                health.Configure(maxHealth);
+                health.Configure(_baseHealth + MetaProgress.HealthBonus);
                 RunModifiers.PlayerHealth = health;
             }
 
@@ -39,15 +46,28 @@ namespace InvaderOfWorlds
                 attack.ApplyDamageMultiplier(MetaProgress.DamageMultiplier);
                 attack.ClearSlots();
 
-                var startingWeapon = Armory.Equipped.Count > 0 ? Armory.Equipped[0] : 0;
-                attack.TryEquip(Armory.ToSlot(startingWeapon));
+                if (firstPlanet)
+                {
+                    var startingWeapon = Armory.Equipped.Count > 0 ? Armory.Equipped[0] : 0;
+                    attack.TryEquip(Armory.ToSlot(startingWeapon));
+
+                    RunState.Loadout.Clear();
+                    RunState.Loadout.Add(startingWeapon);
+                }
+                else
+                {
+                    foreach (var id in RunState.Loadout)
+                        attack.TryEquip(Armory.ToSlot(id));
+                }
+
+                if (RunState.WeaponDamageMultiplier > 1f)
+                    attack.MultiplyDamage(RunState.WeaponDamageMultiplier);
             }
 
             var motor = player.GetComponent<PlayerMotor>();
 
             if (motor != null)
                 motor.ApplySpeedMultiplier(MetaProgress.SpeedMultiplier);
-
         }
     }
 }

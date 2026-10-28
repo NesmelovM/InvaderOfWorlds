@@ -78,6 +78,13 @@ namespace InvaderOfWorlds
             _speed = speed;
         }
 
+        /// <summary>Сложность следующей планеты: урон растёт вместе с забегом.</summary>
+        public void ScaleDamage(float multiplier)
+        {
+            if (multiplier > 0f)
+                _damage *= multiplier;
+        }
+
         private void Awake()
         {
             _health = GetComponent<Health>();

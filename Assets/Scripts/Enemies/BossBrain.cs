@@ -72,6 +72,16 @@ namespace InvaderOfWorlds
             _target = target;
         }
 
+        /// <summary>Сложность следующей планеты: урон растёт вместе с забегом.</summary>
+        public void ScaleDamage(float multiplier)
+        {
+            if (multiplier <= 0f)
+                return;
+
+            _slamDamage *= multiplier;
+            _volleyDamage *= multiplier;
+        }
+
         private void Awake()
         {
             _health = GetComponent<Health>();
