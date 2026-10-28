@@ -26,12 +26,7 @@ namespace InvaderOfWorlds.EditorTools
         private float _wallHeight = 3f;
         private int _bigCount = 90;
         private int _smallCount = 600;
-        private GameObject _meleeModel;
-        private GameObject _rangedModel;
-        private GameObject _eliteModel;
-        private GameObject _eliteArcherModel;
-        private GameObject _bossModel;
-        private CharacterConfig _enemySet;
+        private GameObject _enemyModel;
         private Color _ground = new Color(0.45f, 0.47f, 0.50f);
         private Color _hill = new Color(0.42f, 0.38f, 0.34f);
         private Color _sky = new Color(0.02f, 0.03f, 0.08f);
@@ -72,25 +67,16 @@ namespace InvaderOfWorlds.EditorTools
             _wallHeight = EditorGUILayout.FloatField("Высота сегмента, м", _wallHeight);
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Внешний вид врагов", EditorStyles.boldLabel);
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Враги биома", EditorStyles.boldLabel);
 
-            _meleeModel = (GameObject)EditorGUILayout.ObjectField("Боец ближнего боя", _meleeModel, typeof(GameObject), false);
-            _rangedModel = (GameObject)EditorGUILayout.ObjectField("Лучник", _rangedModel, typeof(GameObject), false);
-            _eliteModel = (GameObject)EditorGUILayout.ObjectField("Элитный боец", _eliteModel, typeof(GameObject), false);
-            _eliteArcherModel = (GameObject)EditorGUILayout.ObjectField("Элитный лучник", _eliteArcherModel, typeof(GameObject), false);
-            _bossModel = (GameObject)EditorGUILayout.ObjectField("Босс", _bossModel, typeof(GameObject), false);
+            _enemyModel = (GameObject)EditorGUILayout.ObjectField("Модель врага (риг)", _enemyModel,
+                typeof(GameObject), false);
 
             EditorGUILayout.HelpBox(
-                "Пустое поле означает прежнюю модель. Модели можно брать из папки Characters " +
-                "или из префабов пака — рост подгоняется автоматически.", MessageType.Info);
-
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Набор врагов биома", EditorStyles.boldLabel);
-            _enemySet = (CharacterConfig)EditorGUILayout.ObjectField("Набор (CharacterConfig)", _enemySet,
-                typeof(CharacterConfig), false);
-
-            if (GUILayout.Button("Создать набор для этого биома"))
-                _enemySet = CreateEnemySet();
+                "Одна модель на всех врагов биома. Рост подгоняется по типу: " +
+                "мечник 1.8, лучник 1.9, элита 2.5, элитный лучник 2.4, босс 4.2 м.",
+                MessageType.Info);
 
             EditorGUILayout.Space();
             _ground = EditorGUILayout.ColorField("Цвет поверхности", _ground);
@@ -136,12 +122,7 @@ namespace InvaderOfWorlds.EditorTools
             biome.Walls = LoadPrefabs(_wallsFolder, _wallFilter);
             biome.WallSegments = Mathf.Max(3, _wallSegments);
             biome.WallHeight = Mathf.Max(1f, _wallHeight);
-            biome.MeleeModel = _meleeModel;
-            biome.RangedModel = _rangedModel;
-            biome.EliteModel = _eliteModel;
-            biome.EliteArcherModel = _eliteArcherModel;
-            biome.BossModel = _bossModel;
-            biome.Enemies = _enemySet;
+            biome.EnemyModel = _enemyModel;
 
             var path = $"{BiomesFolder}/{_name}.asset";
             AssetDatabase.CreateAsset(biome, path);
@@ -149,26 +130,6 @@ namespace InvaderOfWorlds.EditorTools
             AssetDatabase.Refresh();
 
             Debug.Log($"[BIOMES] Создан биом «{_name}»: {biome.Big.Count} крупных, {biome.Small.Count} мелких");
-        }
-
-        /// <summary>Создаёт пустой набор врагов для биома — его же правит окно «Персонажи».</summary>
-        private CharacterConfig CreateEnemySet()
-        {
-            EnsureFolder();
-
-            var path = $"{BiomesFolder}/Enemies_{_name}.asset";
-            var existing = AssetDatabase.LoadAssetAtPath<CharacterConfig>(path);
-
-            if (existing != null)
-                return existing;
-
-            var set = ScriptableObject.CreateInstance<CharacterConfig>();
-            AssetDatabase.CreateAsset(set, path);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            Debug.Log($"[BIOMES] Создан набор врагов {path}");
-            return set;
         }
 
         private void AddToCatalog(BiomeDefinition biome)

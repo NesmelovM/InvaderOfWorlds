@@ -45,12 +45,6 @@ namespace InvaderOfWorlds.EditorTools
             _scroll = EditorGUILayout.BeginScrollView(_scroll);
 
             DrawPlayer();
-            EditorGUILayout.Space(6f);
-            DrawEnemy("Мечник", _config.Melee, "Characters/man-soldier_Rig", "Weapons/sword", 1.8f);
-            DrawEnemy("Лучник", _config.Ranged, "Characters/man-cult_Rig", "Weapons/bow", 1.9f);
-            DrawEnemy("Элита", _config.Elite, "Characters/man-knight_Rig", "Weapons/hammer", 2.5f);
-            DrawEnemy("Элитный лучник", _config.EliteRanged, "Characters/man-cult_Rig", "Weapons/bow", 2.4f);
-            DrawEnemy("Босс", _config.Boss, "Characters/giant_Rig", "Weapons/club-zulu", 4.2f);
 
             EditorGUILayout.Space(10f);
             DrawAnimation();

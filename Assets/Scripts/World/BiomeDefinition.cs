@@ -43,19 +43,8 @@ namespace InvaderOfWorlds
         [Tooltip("Высота сегмента стены в метрах")]
         [Min(1f)] public float WallHeight = 3f;
 
-        [Header("Внешний вид врагов")]
-        [Tooltip("Свой набор моделей и оружия. Пусто — берётся общий из Resources/Characters/Config")]
-        public CharacterConfig Enemies;
-
-        [Tooltip("Модель обычного бойца ближнего боя")]
-        public GameObject MeleeModel;
-        [Tooltip("Модель лучника")]
-        public GameObject RangedModel;
-        [Tooltip("Модель элитного бойца")]
-        public GameObject EliteModel;
-        [Tooltip("Модель элитного лучника")]
-        public GameObject EliteArcherModel;
-        [Tooltip("Модель босса")]
-        public GameObject BossModel;
+        [Header("Враги биома")]
+        [Tooltip("Одна модель человека с ригом на всех врагов: рост подгоняется по типу")]
+        public GameObject EnemyModel;
     }
 }

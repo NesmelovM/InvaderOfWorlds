@@ -165,6 +165,7 @@ MonoBehaviour:
   - {fileID: 2876743178510568125, guid: 6f333dcb4d664514a8f7ce4601d9c3a5, type: 3}
   WallSegments: 6
   WallHeight: 3
+  Enemies: {fileID: 0}
   MeleeModel: {fileID: 7868132922192012966, guid: 836f73e67d8862d459f6e59a59163879, type: 3}
   RangedModel: {fileID: 1000011281046578, guid: e3ed5860c5e9903428590482dca65348, type: 3}
   EliteModel: {fileID: 7868132922192012966, guid: 836f73e67d8862d459f6e59a59163879, type: 3}

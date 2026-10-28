@@ -29,7 +29,7 @@ namespace InvaderOfWorlds
 
             var enemy = CreateBody(planet, surfacePosition, color, health, parent, height, 0.35f,
                 gold: 5, experience: 10, modelPath: "Characters/man-soldier_Rig", weaponPath: "Weapons/sword",
-                modelOverride: look?.Model != null ? look.Model : RunState.ActiveBiome?.MeleeModel,
+                modelOverride: look?.Model,
                 weaponOverride: look?.Weapon);
             enemy.name = "Guard";
 
@@ -49,7 +49,7 @@ namespace InvaderOfWorlds
 
             var enemy = CreateBody(planet, surfacePosition, RangedColor, health, parent, height, 0.33f,
                 gold: 7, experience: 14, modelPath: "Characters/man-cult_Rig", weaponPath: "Weapons/bow",
-                modelOverride: look?.Model != null ? look.Model : RunState.ActiveBiome?.RangedModel,
+                modelOverride: look?.Model,
                 weaponOverride: look?.Weapon);
             enemy.name = "Archer";
 
@@ -69,7 +69,7 @@ namespace InvaderOfWorlds
 
             var enemy = CreateBody(planet, surfacePosition, EliteColor, 180f, parent, height, 0.5f,
                 gold: 25, experience: 50, modelPath: "Characters/man-knight_Rig", weaponPath: "Weapons/hammer",
-                modelOverride: look?.Model != null ? look.Model : RunState.ActiveBiome?.EliteModel,
+                modelOverride: look?.Model,
                 weaponOverride: look?.Weapon);
             enemy.name = "Elite";
 
@@ -90,7 +90,7 @@ namespace InvaderOfWorlds
 
             var enemy = CreateBody(planet, surfacePosition, EliteRangedColor, 140f, parent, height, 0.5f,
                 gold: 35, experience: 70, modelPath: "Characters/man-cult_Rig", weaponPath: "Weapons/bow",
-                modelOverride: look?.Model != null ? look.Model : RunState.ActiveBiome?.EliteArcherModel,
+                modelOverride: look?.Model,
                 weaponOverride: look?.Weapon);
             enemy.name = "Elite Archer";
 
@@ -111,7 +111,7 @@ namespace InvaderOfWorlds
 
             var enemy = CreateBody(planet, surfacePosition, BossColor, 520f, parent, height, 0.9f,
                 gold: 150, experience: 300, modelPath: "Characters/giant_Rig", weaponPath: "Weapons/club-zulu",
-                modelOverride: look?.Model != null ? look.Model : RunState.ActiveBiome?.BossModel,
+                modelOverride: look?.Model,
                 weaponOverride: look?.Weapon);
             enemy.name = "Boss";
 
@@ -147,8 +147,13 @@ namespace InvaderOfWorlds
                 CreateFallbackVisual(enemy, color, height, radius);
             else
             {
-                // Процедурная анимация по костям и оружие в правой руке.
-                enemy.AddComponent<CharacterRig>();
+                // Если у модели уже есть Animator с контроллером, её анимация
+                // главнее: процедурную не добавляем, иначе они подерутся.
+                var animator = enemy.GetComponentInChildren<Animator>();
+                var hasReadyAnimation = animator != null && animator.runtimeAnimatorController != null;
+
+                if (!hasReadyAnimation)
+                    enemy.AddComponent<CharacterRig>();
 
                 if (weaponOverride != null)
                     WeaponMount.Attach(enemy, weaponOverride, height * 0.55f);

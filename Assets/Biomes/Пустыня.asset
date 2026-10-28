@@ -178,9 +178,4 @@ MonoBehaviour:
   - {fileID: 1184891785919542449, guid: d3747a8b7a13db0499828bb262bb7a86, type: 3}
   WallSegments: 6
   WallHeight: 3
-  Enemies: {fileID: 11400000, guid: 08eb9b757c18e1a418cc9b6659e53955, type: 2}
-  MeleeModel: {fileID: 4014474951382151450, guid: d251edccdaab4bb4c8b5cfb21dbf095f, type: 3}
-  RangedModel: {fileID: 644089311415344233, guid: 7a06b2c91f18ba24b93d7ffe7d11ba49, type: 3}
-  EliteModel: {fileID: 7081784429496321265, guid: 5acbac9c4f489d2408fc534e6e9576b3, type: 3}
-  EliteArcherModel: {fileID: 644089311415344233, guid: 7a06b2c91f18ba24b93d7ffe7d11ba49, type: 3}
-  BossModel: {fileID: 1151944983711225507, guid: 989b5af3735e90c488c54cf972a1cf5f, type: 3}
+  EnemyModel: {fileID: 919132149155446097, guid: ded1fa50f7eaef2439c5659849a39287, type: 3}

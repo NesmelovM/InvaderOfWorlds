@@ -69,48 +69,20 @@ namespace InvaderOfWorlds
         }
 
         /// <summary>
-        /// Облик врага: сначала смотрим набор текущего биома, потом общий.
-        /// Так у пустыни могут быть египетские враги, а у Индии — свои.
+        /// Облик врага: модель берётся из биома (одна на все типы), рост — по типу.
+        /// Если в биоме пусто, используется общий конфиг, а потом встроенные модели.
         /// </summary>
         public static EnemyLook Get(EnemyType type)
         {
             var biome = RunState.ActiveBiome;
 
-            if (biome != null && biome.Enemies != null)
-            {
-                var look = Pick(biome.Enemies, type);
-
-                if (look != null && (look.Model != null || look.Weapon != null))
-                    return look;
-            }
-
-            // Старое поле биома (одна модель на тип) тоже учитываем:
-            // у существующих биомов оно уже заполнено.
-            var legacy = LegacyModel(biome, type);
-
-            if (legacy != null)
-                return new EnemyLook { Model = legacy, Height = DefaultHeight(type) };
+            if (biome != null && biome.EnemyModel != null)
+                return new EnemyLook { Model = biome.EnemyModel, Height = DefaultHeight(type) };
 
             if (Config == null)
                 return null;
 
             return Pick(Config, type);
-        }
-
-        private static GameObject LegacyModel(BiomeDefinition biome, EnemyType type)
-        {
-            if (biome == null)
-                return null;
-
-            return type switch
-            {
-                EnemyType.Melee => biome.MeleeModel,
-                EnemyType.Ranged => biome.RangedModel,
-                EnemyType.Elite => biome.EliteModel,
-                EnemyType.EliteRanged => biome.EliteArcherModel,
-                EnemyType.Boss => biome.BossModel,
-                _ => null
-            };
         }
 
         public static float DefaultHeight(EnemyType type)
@@ -125,7 +97,6 @@ namespace InvaderOfWorlds
                 _ => 1.8f
             };
         }
-
         public static EnemyLook Pick(CharacterConfig config, EnemyType type)
         {
             if (config == null)
