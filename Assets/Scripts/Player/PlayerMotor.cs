@@ -3,17 +3,20 @@ using UnityEngine;
 namespace InvaderOfWorlds
 {
     /// <summary>
-    /// Движение игрока по сфере без CharacterController.
+    /// Движение игрока по сфере без CharacterController, с учётом рельефа и построек.
     ///
-    /// Почему так: CharacterController рассчитан на плоский мир. Если держать его
+    /// Почему без CharacterController: он рассчитан на плоский мир. Если держать его
     /// прижатым к выпуклой поверхности, он проникает в сферу, физика выталкивает его
     /// с огромной скоростью (в логах видели ccVel до 100 м/с), контакт теряется,
     /// и горизонтальная скорость гасится. Персонаж «застревает» без всякой стены.
     ///
-    /// Здесь позиция считается аналитически: точка всегда лежит на сфере радиуса R,
-    /// высота прыжка — отдельная величина над поверхностью. Такое движение нельзя
-    /// «продавить» в грунт, потому что грунта как коллайдера нет вообще.
-    /// Препятствия (стены, постройки) обрабатываются отдельным SphereCast со скольжением.
+    /// Как устроено:
+    /// 1. Высота грунта в направлении персонажа берётся лучом сверху вниз к центру
+    ///    планеты. Нет коллайдеров — берётся базовая сфера радиуса R.
+    /// 2. Позиция ставится на найденный грунт плюс высота прыжка. Провалиться некуда.
+    /// 3. Подъём выше лимита ступени и склон круче лимита считаются препятствием:
+    ///    персонаж скользит вдоль стены, а не проходит сквозь неё.
+    /// 4. Отдельные объекты (стены, ящики) дополнительно проверяются SphereCast'ом.
     /// </summary>
     [DisallowMultipleComponent]
     public class PlayerMotor : MonoBehaviour
@@ -33,7 +36,7 @@ namespace InvaderOfWorlds
         [SerializeField, Min(0f)] private float _jumpHeight = 1.6f;
         [SerializeField, Min(0f)] private float _gravity = 25f;
 
-        [Header("Геометрия")]
+        [Header("Геометрия тела")]
         [Tooltip("Зазор между ступнями и поверхностью")]
         [SerializeField, Min(0f)] private float _surfaceGap = 0.02f;
         [Tooltip("Центр капсулы для проверки препятствий")]
@@ -41,13 +44,25 @@ namespace InvaderOfWorlds
         [SerializeField, Min(0.05f)] private float _bodyRadius = 0.35f;
         [SerializeField] private LayerMask _obstacleMask = ~0;
 
+        [Header("Рельеф")]
+        [Tooltip("Слои, по которым определяется высота грунта: планета, скалы, постройки")]
+        [SerializeField] private LayerMask _groundMask = ~0;
+        [Tooltip("Насколько рельеф может подниматься над базовой сферой, м")]
+        [SerializeField, Min(0f)] private float _terrainHeight = 40f;
+        [Tooltip("Максимальная высота ступени, на которую персонаж заходит без прыжка")]
+        [SerializeField, Min(0f)] private float _maxStepHeight = 0.45f;
+        [Tooltip("Предельный уклон, по которому можно идти, градусы")]
+        [SerializeField, Range(0f, 90f)] private float _slopeLimit = 55f;
+
         [Header("Отладка")]
         [SerializeField] private bool _logMovement = true;
 
         private Vector3 _velocity;       // касательная скорость, м/с
-        private float _height;           // высота над поверхностью, м
+        private float _height;           // высота над грунтом, м
         private float _verticalSpeed;    // вдоль нормали, м/с
         private Vector3 _up = Vector3.up;
+        private Vector3 _groundNormal = Vector3.up;
+        private float _groundRadius;
         private bool _grounded = true;
 
         public Vector3 Up => _up;
@@ -66,6 +81,9 @@ namespace InvaderOfWorlds
             _grounded = true;
             _height = 0f;
             _verticalSpeed = 0f;
+
+            if (_planet != null)
+                _groundRadius = SampleGroundRadius(_planet.UpAt(transform.position), out _groundNormal);
         }
 
         private void Awake()
@@ -80,6 +98,7 @@ namespace InvaderOfWorlds
                 return;
 
             _up = _planet.UpAt(transform.position);
+            _groundRadius = SampleGroundRadius(_up, out _groundNormal);
 
             // Скорость живёт в касательной плоскости текущей точки.
             _velocity = Vector3.ProjectOnPlane(_velocity, _up);
@@ -94,6 +113,7 @@ namespace InvaderOfWorlds
 
             var delta = _velocity * Time.deltaTime;
             delta = ResolveObstacles(delta);
+            delta = ResolveTerrain(delta);
 
             ApplyDelta(delta);
 
@@ -129,16 +149,63 @@ namespace InvaderOfWorlds
             }
         }
 
-        /// <summary>Переносит персонажа по касательной и ставит обратно на сферу.</summary>
+        /// <summary>
+        /// Насколько крутой склон или высокая ступень встретились на пути.
+        /// Крутой склон — скользим вдоль него, высокая ступень — просто не пускаем.
+        /// </summary>
+        private Vector3 ResolveTerrain(Vector3 delta)
+        {
+            if (delta.sqrMagnitude < 0.0000001f)
+                return delta;
+
+            var nextPosition = transform.position + delta;
+            var nextUp = _planet.UpAt(nextPosition);
+            var nextGround = SampleGroundRadius(nextUp, out var nextNormal);
+
+            // Склон круче предела — это стена. Скользим вдоль неё.
+            if (Vector3.Angle(nextNormal, nextUp) > _slopeLimit)
+                return Vector3.ProjectOnPlane(delta, nextNormal);
+
+            // Подъём выше лимита ступени — не пускаем.
+            if (_grounded && nextGround - _groundRadius > _maxStepHeight)
+                return Vector3.zero;
+
+            return delta;
+        }
+
+        /// <summary>Переносит персонажа и сажает его на грунт в новой точке.</summary>
         private void ApplyDelta(Vector3 delta)
         {
             var nextPosition = transform.position + delta;
-
-            // Новая нормаль — уже в точке, куда идём: движение идёт по дуге большого круга.
             var up = _planet.UpAt(nextPosition);
-            _up = up;
 
-            transform.position = _planet.Center + up * (_planet.Radius + _surfaceGap + _height);
+            var newGround = SampleGroundRadius(up, out var normal);
+
+            // Перепад грунта меняет высоту над землёй: подъём «съедает» её, спуск добавляет.
+            if (_grounded)
+            {
+                _height += _groundRadius - newGround;
+
+                if (_height < 0f)
+                    _height = 0f;                        // поднимаемся на склон
+
+                if (_height > _maxStepHeight)
+                {
+                    _grounded = false;                   // обрыв: отрываемся и падаем
+                    _verticalSpeed = 0f;
+                }
+                else
+                {
+                    _height = 0f;
+                    _verticalSpeed = 0f;
+                }
+            }
+
+            _up = up;
+            _groundNormal = normal;
+            _groundRadius = newGround;
+
+            transform.position = _planet.Center + up * (newGround + _surfaceGap + _height);
 
             // Разворот: сначала выравниваем «верх» по нормали, затем доворачиваем по движению.
             var aligned = Quaternion.FromToRotation(transform.up, up) * transform.rotation;
@@ -156,8 +223,30 @@ namespace InvaderOfWorlds
         }
 
         /// <summary>
-        /// Препятствия: если путь перекрыт, скользим вдоль стены, а не останавливаемся.
-        /// Сама планета коллайдера не имеет, поэтому в проверку не попадает.
+        /// Высота грунта в заданном направлении: луч сверху вниз к центру планеты.
+        /// Если коллайдеров нет — базовая сфера радиуса R.
+        /// </summary>
+        private float SampleGroundRadius(Vector3 direction, out Vector3 normal)
+        {
+            normal = direction;
+
+            var top = _planet.Radius + _terrainHeight;
+            var bottom = Mathf.Max(1f, _planet.Radius - _terrainHeight);
+            var origin = _planet.Center + direction * top;
+            var distance = top - bottom;
+
+            if (Physics.Raycast(origin, -direction, out var hit, distance, _groundMask,
+                    QueryTriggerInteraction.Ignore))
+            {
+                normal = hit.normal;
+                return (hit.point - _planet.Center).magnitude;
+            }
+
+            return _planet.Radius;
+        }
+
+        /// <summary>
+        /// Отдельные препятствия (стены, ящики): если путь перекрыт — скользим вдоль стены.
         /// </summary>
         private Vector3 ResolveObstacles(Vector3 delta)
         {
@@ -230,10 +319,11 @@ namespace InvaderOfWorlds
         {
             var distance = (transform.position - _planet.Center).magnitude;
             var upError = Vector3.Angle(transform.up, _up);
+            var slope = Vector3.Angle(_groundNormal, _up);
 
-            return $"pos {transform.position:F1}  dist {distance:F2}  spd {CurrentSpeed:F2}  " +
-                   $"height {_height:F2}  vSpeed {_verticalSpeed:F2}  grounded {_grounded}  " +
-                   $"upErr {upError:F1}  input {input:F2}";
+            return $"pos {transform.position:F1}  dist {distance:F2}  ground {_groundRadius:F2}  " +
+                   $"slope {slope:F0}°  spd {CurrentSpeed:F2}  height {_height:F2}  " +
+                   $"grounded {_grounded}  upErr {upError:F1}  input {input:F2}";
         }
 
         private void OnGUI()
@@ -255,7 +345,7 @@ namespace InvaderOfWorlds
 
             if (input.sqrMagnitude > 0.1f && CurrentSpeed < 0.5f && Time.time > 1f)
                 Debug.LogWarning($"[MOVE-STALL] pos={transform.position:F3} up={_up:F3} " +
-                                 $"height={_height:F2} grounded={_grounded}");
+                                 $"ground={_groundRadius:F2} height={_height:F2} grounded={_grounded}");
         }
 
 #if ENABLE_LEGACY_INPUT_MANAGER

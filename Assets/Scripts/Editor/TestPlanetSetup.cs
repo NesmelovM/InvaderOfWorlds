@@ -27,6 +27,7 @@ namespace InvaderOfWorlds.EditorTools
             var player = CreatePlayer(planet, out var motor);
             var cameraObject = CreateCamera(planet, out var cameraRig);
             CreateContent(planet);
+            CreateTerrainTest(planet);
 
             // Связываем игрока с планетой и камерой.
             motor.Configure(planet, cameraObject.transform);
@@ -117,6 +118,47 @@ namespace InvaderOfWorlds.EditorTools
             var contentObject = new GameObject("Planet Content");
             var generator = contentObject.AddComponent<PlanetContentGenerator>();
             generator.Configure(planet);
+        }
+
+        /// <summary>
+        /// Проверочный рельеф: холмы и стена. Нужен, чтобы увидеть, что движение
+        /// учитывает высоту грунта, уклон и ступени, а не только гладкую сферу.
+        /// </summary>
+        private static void CreateTerrainTest(Planet planet)
+        {
+            var root = new GameObject("Terrain Test");
+
+            // Три холма в разных точках, чтобы не все сразу на пути к экватору.
+            var hillDirections = new[]
+            {
+                new Vector3(0.6f, 0.55f, 0.58f),
+                new Vector3(-0.8f, 0.3f, 0.5f),
+                new Vector3(0.1f, -0.2f, 0.97f)
+            };
+
+            for (var i = 0; i < hillDirections.Length; i++)
+            {
+                var direction = hillDirections[i].normalized;
+                var position = planet.Center + direction * (planet.Radius - 3f);
+
+                var hill = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                hill.name = $"Hill {i + 1}";
+                hill.transform.SetParent(root.transform, false);
+                hill.transform.position = position;
+                hill.transform.localScale = Vector3.one * 14f;
+            }
+
+            // Стена: проверяем скольжение вдоль препятствия.
+            var wallDirection = new Vector3(0.9f, 0.1f, 0.42f).normalized;
+            var wallPosition = planet.Center + wallDirection * planet.Radius;
+
+            var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.name = "Wall";
+            wall.transform.SetParent(root.transform, false);
+            wall.transform.position = wallPosition + wallDirection * 1.6f;
+            wall.transform.rotation = Quaternion.LookRotation(wallDirection, Vector3.up) *
+                                     Quaternion.Euler(0f, 90f, 0f);
+            wall.transform.localScale = new Vector3(6f, 3.2f, 0.6f);
         }
 
         private static void SaveScene(UnityEngine.SceneManagement.Scene scene)
