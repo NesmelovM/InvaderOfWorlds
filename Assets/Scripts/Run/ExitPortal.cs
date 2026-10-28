@@ -35,6 +35,10 @@ namespace InvaderOfWorlds
         {
             _bossHealth = bossHealth;
             _player = player;
+
+            // Компонент добавляется в рантайме: OnEnable уже прошёл, когда ссылок
+            // ещё не было. Подписываемся здесь, иначе портал никогда не откроется.
+            Subscribe();
         }
 
         private void Awake()
@@ -45,14 +49,22 @@ namespace InvaderOfWorlds
 
         private void OnEnable()
         {
-            if (_bossHealth != null)
-                _bossHealth.Died += OnBossDied;
+            Subscribe();
         }
 
         private void OnDisable()
         {
             if (_bossHealth != null)
                 _bossHealth.Died -= OnBossDied;
+        }
+
+        private void Subscribe()
+        {
+            if (_bossHealth == null)
+                return;
+
+            _bossHealth.Died -= OnBossDied;
+            _bossHealth.Died += OnBossDied;
         }
 
         private void OnBossDied(Health health)

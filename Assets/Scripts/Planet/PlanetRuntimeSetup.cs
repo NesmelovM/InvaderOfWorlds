@@ -26,15 +26,22 @@ namespace InvaderOfWorlds
         [SerializeField, Min(0.5f)] private float _hillHeight = 3f;
 
         [Header("Растительность и камни")]
-        [SerializeField, Min(0)] private int _propCount = 60;
+        [Tooltip("Крупные объекты: башни, шатёр, большие камни. Они преграждают путь")]
+        [SerializeField, Min(0)] private int _bigPropCount = 90;
+        [Tooltip("Мелочь: грибы и мелкие камни. Сквозь них проходим")]
+        [SerializeField, Min(0)] private int _smallPropCount = 600;
 
-        private static readonly string[] PropPaths =
+        private static readonly string[] BigPropPaths =
         {
-            "Props/rock-pillar", "Props/rock-sharp", "Props/rocks-small",
-            "Props/stone-oval", "Props/stone-pointy",
-            "Props/mushroom-boletus", "Props/mushroom-toadstool",
+            "Props/rock-pillar", "Props/rock-sharp", "Props/stone-oval",
             "Props/tower-castle_round", "Props/tower-medieval-wood",
             "Props/barrel", "Props/tent-circus-big"
+        };
+
+        private static readonly string[] SmallPropPaths =
+        {
+            "Props/rocks-small", "Props/stone-pointy",
+            "Props/mushroom-boletus", "Props/mushroom-toadstool"
         };
 
         public void Configure(Planet planet, PlanetContentGenerator generator, Transform player,
@@ -47,7 +54,8 @@ namespace InvaderOfWorlds
         }
 
         private void Start()
-        {            if (_planet == null || _generator == null)
+        {
+            if (_planet == null || _generator == null)
                 return;
 
             var seed = RunState.Seed == 0 ? 20261028 : RunState.Seed;
@@ -58,7 +66,8 @@ namespace InvaderOfWorlds
 
             PlacePlayer();
             SpawnHills(random);
-            SpawnProps(random);
+            SpawnBigProps(random);
+            SpawnSmallProps(random);
             SpawnSettlementWalls(random);
             SpawnBossArena();
         }
@@ -98,14 +107,28 @@ namespace InvaderOfWorlds
             }
         }
 
-        /// <summary>Камни, грибы, башни и ящики — чтобы поверхность не была пустой.</summary>
-        private void SpawnProps(System.Random random)
+        /// <summary>
+        /// Крупные объекты: башни, шатёр, большие камни. Коллайдеры оставляем —
+        /// через них нельзя пройти, поэтому мир ощущается плотным.
+        /// </summary>
+        private void SpawnBigProps(System.Random random)
         {
-            var root = new GameObject("Props").transform;
+            SpawnProps(random, BigPropPaths, _bigPropCount, keepColliders: true);
+        }
 
-            for (var i = 0; i < _propCount; i++)
+        /// <summary>Мелочь: грибы и мелкие камни. Их много, сквозь них проходим.</summary>
+        private void SpawnSmallProps(System.Random random)
+        {
+            SpawnProps(random, SmallPropPaths, _smallPropCount, keepColliders: false);
+        }
+
+        private void SpawnProps(System.Random random, string[] paths, int count, bool keepColliders)
+        {
+            var root = new GameObject(keepColliders ? "Props" : "Small Props").transform;
+
+            for (var i = 0; i < count; i++)
             {
-                var path = PropPaths[random.Next(PropPaths.Length)];
+                var path = paths[random.Next(paths.Length)];
                 var prefab = Resources.Load<GameObject>(path);
 
                 if (prefab == null)
@@ -116,10 +139,16 @@ namespace InvaderOfWorlds
 
                 var prop = Instantiate(prefab, position, Quaternion.identity, root);
 
-                foreach (var collider in prop.GetComponentsInChildren<Collider>(true))
-                    Destroy(collider);
+                if (!keepColliders)
+                {
+                    foreach (var collider in prop.GetComponentsInChildren<Collider>(true))
+                        Destroy(collider);
+                }
 
-                var scale = 0.7f + (float)random.NextDouble() * 0.8f;
+                var scale = keepColliders
+                    ? 0.7f + (float)random.NextDouble() * 0.8f
+                    : 0.5f + (float)random.NextDouble() * 0.7f;
+
                 prop.transform.localScale *= scale;
                 prop.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction) *
                                          Quaternion.Euler(0f, (float)random.NextDouble() * 360f, 0f);
