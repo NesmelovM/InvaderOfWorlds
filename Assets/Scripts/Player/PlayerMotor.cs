@@ -302,6 +302,10 @@ namespace InvaderOfWorlds
                 if (hit.collider == null || hit.collider.transform.IsChildOf(transform))
                     continue;
 
+                // Существа (у них есть Health) — не грунт и не стена: сквозь них проходим.
+                if (hit.collider.GetComponentInParent<Health>() != null)
+                    continue;
+
                 if (hit.distance >= bestDistance)
                     continue;
 

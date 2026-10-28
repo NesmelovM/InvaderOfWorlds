@@ -26,8 +26,9 @@ namespace InvaderOfWorlds.EditorTools
             var planet = CreatePlanet();
             var player = CreatePlayer(planet, out var motor);
             var cameraObject = CreateCamera(planet, out var cameraRig);
-            CreateContent(planet);
+            var generator = CreateContent(planet);
             CreateTerrainTest(planet);
+            CreateCombat(planet, player, cameraObject, generator);
 
             // Связываем игрока с планетой и камерой.
             motor.Configure(planet, cameraObject.transform);
@@ -37,8 +38,8 @@ namespace InvaderOfWorlds.EditorTools
 
             Selection.activeGameObject = player;
             Debug.Log($"[Invader of Worlds] Тестовая сцена собрана. Радиус планеты {PlanetRadius} м, " +
-                      $"игрок на «северном полюсе». WASD, мышь, Space — прыжок, Shift — бег. " +
-                      $"Впереди в 18 м холм, слева в 12 м ступень 30 см, справа в 8 м стена.");
+                      $"игрок на «северном полюсе». WASD, мышь, Space — прыжок, Shift — бег, ЛКМ — удар. " +
+                      $"Впереди в 18 м холм, слева в 12 м ступень, справа в 8 м стена, рядом два врага.");
         }
 
         private static void CreateLight()
@@ -114,11 +115,41 @@ namespace InvaderOfWorlds.EditorTools
             return cameraObject;
         }
 
-        private static void CreateContent(Planet planet)
+        private static PlanetContentGenerator CreateContent(Planet planet)
         {
             var contentObject = new GameObject("Planet Content");
             var generator = contentObject.AddComponent<PlanetContentGenerator>();
             generator.Configure(planet);
+            return generator;
+        }
+
+        /// <summary>
+        /// Боевая часть: здоровье и удар игрока, заселение поселений и пара врагов
+        /// рядом с точкой появления, чтобы бой можно было проверить сразу.
+        /// </summary>
+        private static void CreateCombat(Planet planet, GameObject player, GameObject cameraObject,
+            PlanetContentGenerator generator)
+        {
+            var health = player.AddComponent<Health>();
+            health.Configure(100f);
+
+            var attack = player.AddComponent<PlayerAttack>();
+            attack.Configure(cameraObject.transform);
+
+            var spawnerObject = new GameObject("Settlement Spawner");
+            var spawner = spawnerObject.AddComponent<SettlementSpawner>();
+            spawner.Configure(planet, generator, player.transform);
+
+            var root = new GameObject("Test Enemies");
+            var enemyColor = new Color(0.85f, 0.25f, 0.20f);
+
+            EnemyFactory.Spawn(planet, player.transform,
+                planet.SurfacePoint(Quaternion.AngleAxis(4f, Vector3.right) * Vector3.up),
+                enemyColor, 50f, root.transform);
+
+            EnemyFactory.Spawn(planet, player.transform,
+                planet.SurfacePoint(Quaternion.AngleAxis(-6f, Vector3.right) * Vector3.up),
+                enemyColor, 50f, root.transform);
         }
 
         /// <summary>
