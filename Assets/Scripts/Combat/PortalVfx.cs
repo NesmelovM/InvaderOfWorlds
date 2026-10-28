@@ -11,7 +11,15 @@ namespace InvaderOfWorlds
     /// </summary>
     public static class PortalVfx
     {
-        public static void Attach(Transform portal, Color color)
+        /// <summary>Ссылки на созданные эффекты, чтобы перекрашивать портал при открытии.</summary>
+        public struct Handle
+        {
+            public ParticleSystem Particles;
+            public ParticleSystemRenderer Renderer;
+            public Light Light;
+        }
+
+        public static Handle Attach(Transform portal, Color color)
         {
             var host = new GameObject("Portal VFX");
             host.transform.position = portal.position;
@@ -79,6 +87,44 @@ namespace InvaderOfWorlds
             light.color = color;
             light.range = 14f;
             light.intensity = 2.6f;
+
+            return new Handle { Particles = particles, Renderer = renderer, Light = light };
+        }
+
+        /// <summary>
+        /// Перекрашивает искры, материал и свет. Цвет уже летящих частиц остаётся
+        /// прежним — они догорают за пару секунд, новые рождаются в новом цвете.
+        /// </summary>
+        public static void Recolor(Handle handle, Color color)
+        {
+            if (handle.Particles != null)
+            {
+                var main = handle.Particles.main;
+                main.startColor = color;
+
+                var colorOverLifetime = handle.Particles.colorOverLifetime;
+                var gradient = new Gradient();
+                gradient.SetKeys(
+                    new[]
+                    {
+                        new GradientColorKey(color, 0f),
+                        new GradientColorKey(Color.white, 0.4f),
+                        new GradientColorKey(color, 1f)
+                    },
+                    new[]
+                    {
+                        new GradientAlphaKey(0f, 0f),
+                        new GradientAlphaKey(1f, 0.2f),
+                        new GradientAlphaKey(0f, 1f)
+                    });
+                colorOverLifetime.color = new ParticleSystem.MinMaxGradient(gradient);
+            }
+
+            if (handle.Renderer != null && handle.Renderer.sharedMaterial != null)
+                handle.Renderer.sharedMaterial.SetColor("_TintColor", color);
+
+            if (handle.Light != null)
+                handle.Light.color = color;
         }
 
         private static Material CreateMaterial(Color color)

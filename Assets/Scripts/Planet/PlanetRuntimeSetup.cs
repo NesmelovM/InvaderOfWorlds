@@ -239,6 +239,10 @@ namespace InvaderOfWorlds
                 var lowest = LowestPointAlong(prop, up);
                 prop.transform.position += up * (-lowest - sink);
             }
+
+            // Подмешиваем цвет биома: иначе чужие палитры спорят между собой.
+            if (_biome != null)
+                BiomeTint.Apply(prop, _biome.GroundColor, keepColliders ? 0.3f : 0.18f, random);
         }
 
         /// <summary>
@@ -413,10 +417,10 @@ namespace InvaderOfWorlds
                 _planet.Center + direction * (_planet.Radius + 0.02f), root);
 
             var portalComponent = portal.AddComponent<ExitPortal>();
-            portalComponent.Configure(boss.GetComponent<Health>(), _player);
 
             // Закрытый портал уже светится искрами — видно, куда идти.
-            PortalVfx.Attach(portal.transform, new Color(0.85f, 0.25f, 0.30f));
+            var vfx = PortalVfx.Attach(portal.transform, new Color(0.85f, 0.25f, 0.30f));
+            portalComponent.Configure(boss.GetComponent<Health>(), _player, vfx);
 
             for (var i = 0; i < 3; i++)
             {

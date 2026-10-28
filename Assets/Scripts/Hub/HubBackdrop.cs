@@ -19,6 +19,7 @@ namespace InvaderOfWorlds
 
         private Transform _root;
         private int _shownBiome = -1;
+        private Color _biomeColor = Color.white;
 
         public void Configure(Camera camera)
         {
@@ -36,6 +37,7 @@ namespace InvaderOfWorlds
             if (biome == null)
                 return;
 
+            _biomeColor = biome.GroundColor;
             ApplySky(biome);
             BuildGround(biome);
             BuildHills(biome);
@@ -131,6 +133,8 @@ namespace InvaderOfWorlds
 
                 var target = big ? 7f + (float)random.NextDouble() * 4f : 0.6f + (float)random.NextDouble();
                 FitHeight(prop, target);
+
+                BiomeTint.Apply(prop, _biomeColor, big ? 0.3f : 0.18f, random);
             }
         }
 

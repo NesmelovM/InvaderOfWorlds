@@ -28,13 +28,15 @@ namespace InvaderOfWorlds
         private bool _near;
         private Renderer _renderer;
         private GUIStyle _style;
+        private PortalVfx.Handle _vfx;
 
         public bool IsOpen => _open;
 
-        public void Configure(Health bossHealth, Transform player)
+        public void Configure(Health bossHealth, Transform player, PortalVfx.Handle vfx = default)
         {
             _bossHealth = bossHealth;
             _player = player;
+            _vfx = vfx;
 
             // Компонент добавляется в рантайме: OnEnable уже прошёл, когда ссылок
             // ещё не было. Подписываемся здесь, иначе портал никогда не откроется.
@@ -71,6 +73,7 @@ namespace InvaderOfWorlds
         {
             _open = true;
             ApplyColor(_openColor);
+            PortalVfx.Recolor(_vfx, _openColor);
             SoundBank.Portal(transform.position);
         }
 
