@@ -259,7 +259,7 @@ namespace InvaderOfWorlds
         private void MoveTowards(Vector3 position, Vector3 up, Vector3 toTarget)
         {
             var direction = Vector3.ProjectOnPlane(toTarget, up).normalized;
-            var step = direction * (_speed * RunModifiers.EnemySpeedMultiplier * Time.deltaTime);
+            var step = direction * (_speed * RunModifiers.EnemySpeedMultiplier * Balance.EnemySpeedMultiplier * Time.deltaTime);
 
             step = CharacterObstacles.Slide(transform, up, 1.6f, 0.9f, step, ~0);
             var nextPosition = position + step;

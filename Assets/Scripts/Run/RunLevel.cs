@@ -61,6 +61,8 @@ namespace InvaderOfWorlds
             // При переходе на следующую планету уровень сохраняется.
             _level = Mathf.Max(_startLevel, RunState.Level);
 
+            _baseExperience = Balance.LevelBaseExperience;
+            _experienceGrowth = Balance.LevelGrowth;
             _experienceForNext = _baseExperience;
 
             for (var i = _startLevel; i < _level; i++)

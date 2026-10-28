@@ -43,7 +43,7 @@ namespace InvaderOfWorlds
         public static void AdvancePlanet()
         {
             PlanetIndex++;
-            Difficulty *= 1.5f;
+            Difficulty *= Balance.DifficultyStep;
             Seed = Random.Range(1, int.MaxValue);
         }
 

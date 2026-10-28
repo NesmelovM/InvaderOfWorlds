@@ -100,6 +100,10 @@ namespace InvaderOfWorlds
 
             if (_planet == null)
                 _planet = FindAnyObjectByType<Planet>();
+
+            // Скорости берём из конфига баланса: их правят в инструменте.
+            _walkSpeed = Balance.WalkSpeed;
+            _sprintSpeed = Balance.SprintSpeed;
         }
 
         private void Update()

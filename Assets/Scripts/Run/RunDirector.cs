@@ -78,6 +78,8 @@ namespace InvaderOfWorlds
 
 
             // При смерти доходит только часть добычи — остальное теряется.
+            // Доля берётся из конфига баланса, значение в компоненте — запасное.
+            _deathShare = Balance.DeathPenaltyShare;
             _runGold = RunSession.RunGold;
             _runExperience = RunSession.RunExperience;
             _keptGold = Mathf.RoundToInt(_runGold * _deathShare);

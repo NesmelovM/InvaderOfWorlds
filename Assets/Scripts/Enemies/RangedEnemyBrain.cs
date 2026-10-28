@@ -250,7 +250,7 @@ namespace InvaderOfWorlds
         {
             var avoidance = ComputeAvoidance(up);
             var moveDirection = (direction + avoidance * _avoidStrength).normalized;
-            var step = moveDirection * (_speed * RunModifiers.EnemySpeedMultiplier * Time.deltaTime);
+            var step = moveDirection * (_speed * RunModifiers.EnemySpeedMultiplier * Balance.EnemySpeedMultiplier * Time.deltaTime);
 
             step = CharacterObstacles.Slide(transform, up, 0.9f, 0.35f, step, ~0);
 

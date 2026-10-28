@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace InvaderOfWorlds
 {
@@ -113,7 +114,7 @@ namespace InvaderOfWorlds
             if (id < 0 || id >= Catalog.Length || IsOwned(id))
                 return false;
 
-            if (!RunSession.TrySpend(Catalog[id].Cost))
+            if (!RunSession.TrySpend(CostOf(id)))
                 return false;
 
             OwnedMask |= 1 << id;
@@ -135,20 +136,46 @@ namespace InvaderOfWorlds
             return EquippedWeapons.Remove(id);
         }
 
-        /// <summary>Превращает запись каталога в слот оружия для боя.</summary>
+        /// <summary>
+        /// Превращает запись каталога в слот оружия для боя.
+        /// Значения из конфига баланса важнее встроенных.
+        /// </summary>
         public static WeaponSlot ToSlot(int id)
         {
             var def = Catalog[id];
 
-            return new WeaponSlot
+            var slot = new WeaponSlot
             {
                 Kind = def.Kind,
                 Damage = def.Damage,
                 Cooldown = def.Cooldown,
                 Range = def.Range,
                 ProjectileSpeed = def.ProjectileSpeed,
+                Shots = 1,
                 Enabled = true
             };
+
+            if (!Balance.TryWeapon(id, out var balance))
+                return slot;
+
+            slot.Damage = balance.Damage;
+            slot.Cooldown = Mathf.Max(0.05f, balance.Cooldown);
+            slot.Range = Mathf.Max(0.5f, balance.Range);
+            slot.Shots = Mathf.Max(1, balance.Shots);
+
+            if (balance.ProjectileSpeed > 0f)
+                slot.ProjectileSpeed = balance.ProjectileSpeed;
+
+            return slot;
+        }
+
+        /// <summary>Цена с учётом конфига баланса.</summary>
+        public static int CostOf(int id)
+        {
+            if (id < 0 || id >= Catalog.Length)
+                return 0;
+
+            return Balance.WeaponCost(id, Catalog[id].Cost);
         }
 
         public static void Load(int ownedMask, string equipped)

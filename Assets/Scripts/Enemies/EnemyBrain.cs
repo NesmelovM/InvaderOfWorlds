@@ -162,7 +162,7 @@ namespace InvaderOfWorlds
                 return;
 
             var moveDirection = (toSlot.normalized + ComputeAvoidance(up) * _avoidStrength).normalized;
-            var step = moveDirection * (_speed * RunModifiers.EnemySpeedMultiplier * Time.deltaTime);
+            var step = moveDirection * (_speed * RunModifiers.EnemySpeedMultiplier * Balance.EnemySpeedMultiplier * Time.deltaTime);
 
             // Стены и постройки обходим так же, как игрок: физика движение не разрешает.
             step = CharacterObstacles.Slide(transform, up, 0.9f, 0.35f, step, ~0);

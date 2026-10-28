@@ -30,7 +30,7 @@ namespace InvaderOfWorlds
 
             var brain = enemy.AddComponent<EnemyBrain>();
             brain.Configure(planet, target);
-            brain.ScaleDamage(RunState.Difficulty);
+            brain.ScaleDamage(RunState.Difficulty * Balance.EnemyDamageMultiplier);
 
             return enemy;
         }
@@ -45,7 +45,7 @@ namespace InvaderOfWorlds
 
             var brain = enemy.AddComponent<RangedEnemyBrain>();
             brain.Configure(planet, target);
-            brain.ScaleDamage(RunState.Difficulty);
+            brain.ScaleDamage(RunState.Difficulty * Balance.EnemyDamageMultiplier);
 
             return enemy;
         }
@@ -61,7 +61,7 @@ namespace InvaderOfWorlds
             var brain = enemy.AddComponent<EnemyBrain>();
             brain.Configure(planet, target);
             brain.ConfigureCombat(damage: 14f, attackCooldown: 1.8f, attackRange: 2.6f, speed: 2.6f);
-            brain.ScaleDamage(RunState.Difficulty);
+            brain.ScaleDamage(RunState.Difficulty * Balance.EnemyDamageMultiplier);
 
             return enemy;
         }
@@ -77,7 +77,7 @@ namespace InvaderOfWorlds
             var brain = enemy.AddComponent<RangedEnemyBrain>();
             brain.Configure(planet, target);
             brain.ConfigureCombat(damage: 12f, cooldown: 1.6f, windupTime: 0.5f, shootRange: 20f, speed: 2.4f);
-            brain.ScaleDamage(RunState.Difficulty);
+            brain.ScaleDamage(RunState.Difficulty * Balance.EnemyDamageMultiplier);
 
             return enemy;
         }
@@ -92,7 +92,7 @@ namespace InvaderOfWorlds
 
             var brain = enemy.AddComponent<BossBrain>();
             brain.Configure(planet, target);
-            brain.ScaleDamage(RunState.Difficulty);
+            brain.ScaleDamage(RunState.Difficulty * Balance.EnemyDamageMultiplier);
 
             return enemy;
         }
@@ -122,7 +122,7 @@ namespace InvaderOfWorlds
                 CreateFallbackVisual(enemy, color, height, radius);
 
             var healthComponent = enemy.AddComponent<Health>();
-            healthComponent.Configure(health * Mathf.Max(1f, RunState.Difficulty));
+            healthComponent.Configure(health * Mathf.Max(1f, RunState.Difficulty) * Balance.EnemyHealthMultiplier);
 
             enemy.AddComponent<EnemyMarker>();
             enemy.AddComponent<HitFlash>();

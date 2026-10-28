@@ -43,6 +43,8 @@ namespace InvaderOfWorlds
         public float Cooldown = 0.8f;
         public float Range = 3f;
         public float ProjectileSpeed = 24f;
+        [Tooltip("Сколько атак за один тик: залп снарядов или несколько ударов")]
+        public int Shots = 1;
         public bool Enabled = true;
 
         [NonSerialized] public float NextFireTime;
@@ -440,8 +442,27 @@ namespace InvaderOfWorlds
             return nearest;
         }
 
-        private void Fire(WeaponSlot slot, Transform target)
+        /// <summary>
+        /// Залп: несколько снарядов за один тик с небольшим разбросом по сторонам.
+        /// Количество берётся из слота — это правится в инструменте баланса.
+        /// </summary>
+        private void FireVolley(WeaponSlot slot, Vector3 origin, Vector3 direction, float r, float g, float b,
+            int pierce = 0)
         {
+            var shots = Mathf.Max(1, slot.Shots);
+            var spread = shots > 1 ? 6f : 0f;
+
+            for (var i = 0; i < shots; i++)
+            {
+                var offset = (i - (shots - 1) * 0.5f) * spread;
+                var aimed = Quaternion.AngleAxis(offset, transform.up) * direction;
+
+                ProjectileFactory.Spawn(origin + direction * 0.4f, aimed, slot.ProjectileSpeed, slot.Damage,
+                    transform, new Color(r, g, b), pierce, _planet);
+            }
+        }
+
+        private void Fire(WeaponSlot slot, Transform target)        {
             var up = transform.up;
             var origin = transform.position + up * _bodyCenter;
             var toTarget = target.position + up * 0.9f - origin;
@@ -454,13 +475,11 @@ namespace InvaderOfWorlds
             switch (slot.Kind)
             {
                 case WeaponKind.Bolt:
-                    ProjectileFactory.Spawn(origin + direction * 0.4f, direction, slot.ProjectileSpeed,
-                        slot.Damage, transform, new Color(0.35f, 0.85f, 1f), planet: _planet);
+                    FireVolley(slot, origin, direction, 0.35f, 0.85f, 1f);
                     break;
 
                 case WeaponKind.Pierce:
-                    ProjectileFactory.Spawn(origin + direction * 0.4f, direction, slot.ProjectileSpeed,
-                        slot.Damage, transform, new Color(0.95f, 0.9f, 0.35f), pierce: 3, planet: _planet);
+                    FireVolley(slot, origin, direction, 0.95f, 0.9f, 0.35f, pierce: 3);
                     break;
 
                 case WeaponKind.Chain:
