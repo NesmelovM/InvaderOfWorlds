@@ -177,7 +177,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 2df78434670e21d48bc8f198394e102d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -247,6 +247,7 @@ MonoBehaviour:
   _pivotHeight: 1.55
   _pitchLimits: {x: -65, y: 55}
   _sensitivity: 2.2
+  _invertVertical: 0
   _smoothTime: 0.06
   _collisionMask:
     serializedVersion: 2
@@ -471,7 +472,19 @@ MonoBehaviour:
   _turnSpeed: 12
   _jumpHeight: 1.6
   _gravity: 25
-  _groundStick: 3
+  _surfaceGap: 0.02
+  _bodyCenter: 0.9
+  _bodyRadius: 0.35
+  _obstacleMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  _groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  _terrainHeight: 40
+  _maxStepHeight: 0.45
+  _slopeLimit: 55
+  _logMovement: 1
 --- !u!143 &1255080041
 CharacterController:
   m_ObjectHideFlags: 0

@@ -224,7 +224,8 @@ namespace InvaderOfWorlds
 
         /// <summary>
         /// Высота грунта в заданном направлении: луч сверху вниз к центру планеты.
-        /// Если коллайдеров нет — базовая сфера радиуса R.
+        /// Попадания в самого персонажа пропускаются — иначе он становится своей землёй
+        /// и уезжает вверх. Если поверхности нет — базовая сфера радиуса R.
         /// </summary>
         private float SampleGroundRadius(Vector3 direction, out Vector3 normal)
         {
@@ -235,14 +236,14 @@ namespace InvaderOfWorlds
             var origin = _planet.Center + direction * top;
             var distance = top - bottom;
 
-            if (Physics.Raycast(origin, -direction, out var hit, distance, _groundMask,
-                    QueryTriggerInteraction.Ignore))
-            {
-                normal = hit.normal;
-                return (hit.point - _planet.Center).magnitude;
-            }
+            var count = Physics.RaycastNonAlloc(origin, -direction, _groundHits, distance, _groundMask,
+                QueryTriggerInteraction.Ignore);
 
-            return _planet.Radius;
+            if (!TryPickNearest(count, _groundHits, out var hit))
+                return _planet.Radius;
+
+            normal = hit.normal;
+            return (hit.point - _planet.Center).magnitude;
         }
 
         /// <summary>
@@ -257,13 +258,52 @@ namespace InvaderOfWorlds
             var origin = transform.position + _up * _bodyCenter;
             var direction = delta / distance;
 
-            if (Physics.SphereCast(origin, _bodyRadius, direction, out var hit, distance + 0.05f,
-                    _obstacleMask, QueryTriggerInteraction.Ignore))
-            {
+            if (TrySphereCastIgnoringSelf(origin, _bodyRadius, direction, distance + 0.05f, out var hit))
                 return Vector3.ProjectOnPlane(delta, hit.normal);
-            }
 
             return delta;
+        }
+
+        private readonly RaycastHit[] _groundHits = new RaycastHit[16];
+        private readonly RaycastHit[] _obstacleHits = new RaycastHit[16];
+
+        /// <summary>
+        /// Ищет ближайшее попадание, пропуская коллайдеры самого персонажа.
+        /// Без этого луч «в грунт» попадает в собственную капсулу: персонаж становится
+        /// своей же землёй и уезжает вверх на высоту капсулы каждый кадр.
+        /// </summary>
+        private bool TrySphereCastIgnoringSelf(Vector3 origin, float radius, Vector3 direction,
+            float maxDistance, out RaycastHit nearest)
+        {
+            nearest = default;
+
+            var count = Physics.SphereCastNonAlloc(origin, radius, direction, _obstacleHits, maxDistance,
+                _obstacleMask, QueryTriggerInteraction.Ignore);
+
+            return TryPickNearest(count, _obstacleHits, out nearest);
+        }
+
+        private bool TryPickNearest(int count, RaycastHit[] hits, out RaycastHit nearest)
+        {
+            nearest = default;
+            var bestDistance = float.MaxValue;
+
+            for (var i = 0; i < count; i++)
+            {
+                var hit = hits[i];
+
+                // Всё, что принадлежит персонажу, землёй и препятствием не считается.
+                if (hit.collider == null || hit.collider.transform.IsChildOf(transform))
+                    continue;
+
+                if (hit.distance >= bestDistance)
+                    continue;
+
+                bestDistance = hit.distance;
+                nearest = hit;
+            }
+
+            return bestDistance < float.MaxValue;
         }
 
         /// <summary>
