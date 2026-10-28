@@ -4,17 +4,20 @@ namespace InvaderOfWorlds
 {
     /// <summary>
     /// Поиск свободной точки для появления на поверхности планеты.
-    /// Нужен, чтобы стража не появлялась внутри стен, ступеней и прочих объектов:
-    /// кандидат проверяется сферой на пересечения, и если место занято — берётся другое.
+    ///
+    /// Проверяются две разные вещи, и это важно:
+    /// 1. Статичная геометрия — стены, ступени, постройки. Врага нельзя ставить внутрь.
+    /// 2. Другие персонажи — врага нельзя ставить вплотную к соседу.
+    /// Раньше персонажи игнорировались целиком, из-за чего стража появлялась
+    /// по три штуки в одной точке.
     /// </summary>
     public static class SpawnPlacement
     {
-        /// <summary>
-        /// Ищет свободную точку в радиусе <paramref name="spread"/> вокруг заданной.
-        /// Возвращает false, если все попытки заняты.
-        /// </summary>
+        private const int BufferSize = 32;
+        private static readonly Collider[] Buffer = new Collider[BufferSize];
+
         public static bool TryFindFreeGroundPosition(Planet planet, Vector3 around, float spread, int attempts,
-            out Vector3 surfacePosition, out Vector3 up)
+            out Vector3 surfacePosition, out Vector3 up, float characterSpacing = 1.6f)
         {
             surfacePosition = around;
             up = planet.UpAt(around);
@@ -34,7 +37,7 @@ namespace InvaderOfWorlds
                 var ground = PlanetSurface.SampleGroundRadius(planet, direction, 40f, ~0, null, out _);
                 var position = planet.Center + direction * (ground + 0.02f);
 
-                if (!IsFree(position, direction))
+                if (!IsFree(position, direction, characterSpacing))
                     continue;
 
                 surfacePosition = position;
@@ -46,17 +49,24 @@ namespace InvaderOfWorlds
         }
 
         /// <summary>
-        /// Свободно ли место для тела: сфера на высоте пояса не должна пересекать
-        /// ничего, кроме других персонажей (они не считаются препятствием).
+        /// Свободно ли место: рядом нет геометрии и рядом нет другого персонажа.
         /// </summary>
-        public static bool IsFree(Vector3 surfacePosition, Vector3 up, float bodyHeight = 1f,
-            float clearance = 0.45f)
+        public static bool IsFree(Vector3 surfacePosition, Vector3 up, float characterSpacing,
+            float bodyHeight = 1f, float clearance = 0.45f)
         {
-            var center = surfacePosition + up * bodyHeight;
-            var overlaps = Physics.OverlapSphere(center, clearance, ~0, QueryTriggerInteraction.Ignore);
+            // Враги создаются в одном кадре один за другим: без синхронизации трансформов
+            // проверка не увидит коллайдеры, созданные мгновением раньше.
+            Physics.SyncTransforms();
 
-            foreach (var overlap in overlaps)
+            var center = surfacePosition + up * bodyHeight;
+
+            // 1. Геометрия: любое пересечение, кроме персонажей.
+            var count = Physics.OverlapSphereNonAlloc(center, clearance, Buffer, ~0, QueryTriggerInteraction.Ignore);
+
+            for (var i = 0; i < count; i++)
             {
+                var overlap = Buffer[i];
+
                 if (overlap == null)
                     continue;
 
@@ -64,6 +74,23 @@ namespace InvaderOfWorlds
                     continue;
 
                 return false;
+            }
+
+            // 2. Соседи: персонажи не должны стоять вплотную.
+            if (characterSpacing <= 0f)
+                return true;
+
+            count = Physics.OverlapSphereNonAlloc(center, characterSpacing, Buffer, ~0, QueryTriggerInteraction.Ignore);
+
+            for (var i = 0; i < count; i++)
+            {
+                var overlap = Buffer[i];
+
+                if (overlap == null)
+                    continue;
+
+                if (overlap.GetComponentInParent<Health>() != null)
+                    return false;
             }
 
             return true;

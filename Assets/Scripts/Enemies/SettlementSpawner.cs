@@ -18,6 +18,8 @@ namespace InvaderOfWorlds
         [SerializeField, Min(1)] private int _maxPerSettlement = 4;
         [SerializeField, Min(0f)] private float _spread = 9f;
         [SerializeField, Min(1)] private int _placementAttempts = 24;
+        [Tooltip("Минимальное расстояние между врагами при появлении")]
+        [SerializeField, Min(0f)] private float _characterSpacing = 1.8f;
         [SerializeField, Min(1f)] private float _health = 60f;
         [SerializeField] private Color _color = new Color(0.78f, 0.22f, 0.18f);
         [SerializeField] private bool _spawnOnStart = true;
@@ -55,22 +57,29 @@ namespace InvaderOfWorlds
             Debug.Log($"[SettlementSpawner] Заселено поселений: {_generator.Settlements.Count}");
         }
 
-        /// <summary>Ставит одного стража рядом с центром поселения, на поверхности.</summary>
         /// <summary>
         /// Ставит одного стража рядом с центром поселения. Место проверяется:
-        /// если точка занята стеной или постройкой — берётся соседняя.
+        /// если точка занята стеной, постройкой или другим врагом — берётся соседняя.
+        /// Если места нет совсем, страж не появляется: лучше меньше врагов, чем
+        /// трое в одной точке.
         /// </summary>
         public GameObject SpawnGuard(Vector3 around)
         {
-            if (!SpawnPlacement.TryFindFreeGroundPosition(_planet, around, _spread, _placementAttempts,
-                    out var position, out var up))
+            if (SpawnPlacement.TryFindFreeGroundPosition(_planet, around, _spread, _placementAttempts,
+                    out var position, out var up, _characterSpacing))
             {
-                Debug.LogWarning($"[SettlementSpawner] Не нашёл свободного места у {around}, ставлю в центре.", this);
-                position = around;
-                up = _planet.UpAt(around);
+                return EnemyFactory.Spawn(_planet, _player, position, _color, _health, transform);
             }
 
-            return EnemyFactory.Spawn(_planet, _player, position, _color, _health, transform);
+            // Вторая попытка с более широким радиусом — поселение может быть тесным.
+            if (SpawnPlacement.TryFindFreeGroundPosition(_planet, around, _spread * 2.5f, _placementAttempts,
+                    out position, out up, _characterSpacing))
+            {
+                return EnemyFactory.Spawn(_planet, _player, position, _color, _health, transform);
+            }
+
+            Debug.LogWarning($"[SettlementSpawner] Нет свободного места у {around:F1}, страж пропущен.", this);
+            return null;
         }
     }
 }
