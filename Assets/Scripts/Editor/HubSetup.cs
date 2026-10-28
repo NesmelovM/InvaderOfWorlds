@@ -25,6 +25,7 @@ namespace InvaderOfWorlds.EditorTools
             // поэтому отдельная тёмная плоскость здесь не нужна.
             var cameraObject = CreateCamera();
             CreateMage();
+            CreatePortal();
 
             var hubObject = new GameObject("Hub");
             var director = hubObject.AddComponent<HubDirector>();
@@ -50,6 +51,54 @@ namespace InvaderOfWorlds.EditorTools
             CharacterModel.Attach(mage, "Characters/man-cult", 2.2f, 0f, new Color(0.16f, 0.07f, 0.23f));
 
             CreateRestArea(new Vector3(7.2f, 0f, -6.2f));
+        }
+
+        /// <summary>
+        /// Портал в хабе: вертикальное зеркало с искрами и светом.
+        /// Стоит справа от башни, чтобы не заслонять мага, но сразу бросается в глаза.
+        /// </summary>
+        private static void CreatePortal()
+        {
+            var color = new Color(0.30f, 0.85f, 0.95f);
+            var root = new GameObject("Hub Portal");
+            root.transform.position = new Vector3(-7.5f, 0f, -1.5f);
+            root.transform.rotation = Quaternion.Euler(0f, 35f, 0f);
+
+            // Диск повёрнут вертикально: его нормаль смотрит на камеру.
+            var disc = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            disc.name = "Portal Disc";
+            disc.transform.SetParent(root.transform, false);
+            disc.transform.localPosition = new Vector3(0f, 4.2f, 0f);
+            disc.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            disc.transform.localScale = new Vector3(7f, 0.12f, 7f);
+
+            Object.DestroyImmediate(disc.GetComponent<Collider>());
+
+            var material = new Material(Shader.Find("Standard"))
+            {
+                name = "Hub Portal",
+                color = color
+            };
+
+            material.EnableKeyword("_EMISSION");
+            material.SetColor("_EmissionColor", color * 0.6f);
+            disc.GetComponent<Renderer>().sharedMaterial = material;
+
+            var spin = disc.AddComponent<PortalSpin>();
+            spin.Configure(18f, color);
+
+            // Искры поднимаются вверх по миру: портал вертикальный.
+            PortalVfx.Attach(root.transform, color, Vector3.up);
+
+            // Каменное кольцо-основание, чтобы диск не висел в воздухе.
+            var baseRing = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            baseRing.name = "Portal Base";
+            baseRing.transform.SetParent(root.transform, false);
+            baseRing.transform.localPosition = new Vector3(0f, 0.15f, 0f);
+            baseRing.transform.localScale = new Vector3(8.4f, 0.15f, 8.4f);
+            Object.DestroyImmediate(baseRing.GetComponent<Collider>());
+            baseRing.GetComponent<Renderer>().sharedMaterial =
+                EnemyFactory.GetMaterial(new Color(0.30f, 0.32f, 0.36f));
         }
 
         /// <summary>Шезлонг, полотенце, сумка и столик — башня мага, но отдыхать тоже надо.</summary>

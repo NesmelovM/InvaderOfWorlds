@@ -19,11 +19,19 @@ namespace InvaderOfWorlds
             public Light Light;
         }
 
-        public static Handle Attach(Transform portal, Color color)
+        /// <summary>
+        /// Создаёт искры и свет у портала.
+        /// <paramref name="emitUp"/> задаёт направление подъёма искр: на планете это
+        /// нормаль поверхности, в хабе — мировой «вверх», потому что там портал стоит
+        /// вертикально, как арка.
+        /// </summary>
+        public static Handle Attach(Transform portal, Color color, Vector3? emitUp = null)
         {
+            var up = emitUp.HasValue ? emitUp.Value.normalized : portal.up;
+
             var host = new GameObject("Portal VFX");
             host.transform.position = portal.position;
-            host.transform.rotation = Quaternion.FromToRotation(Vector3.forward, portal.up);
+            host.transform.rotation = Quaternion.FromToRotation(Vector3.forward, up);
 
             var particles = host.AddComponent<ParticleSystem>();
             var main = particles.main;
@@ -80,7 +88,7 @@ namespace InvaderOfWorlds
 
             // Мягкий свет, чтобы портал подсвечивал землю вокруг.
             var lightObject = new GameObject("Portal Light");
-            lightObject.transform.position = portal.position + portal.up * 2.5f;
+            lightObject.transform.position = portal.position + up * 2.5f;
 
             var light = lightObject.AddComponent<Light>();
             light.type = LightType.Point;
