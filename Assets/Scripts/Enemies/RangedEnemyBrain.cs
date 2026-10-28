@@ -47,9 +47,14 @@ namespace InvaderOfWorlds
         [SerializeField, Min(0f)] private float _terrainHeight = 40f;
         [SerializeField, Range(0f, 90f)] private float _slopeLimit = 60f;
         [SerializeField] private LayerMask _groundMask = ~0;
+        [Tooltip("Что закрывает обзор лучнику: стены, постройки, рельеф")]
+        [SerializeField] private LayerMask _obstacleMask = ~0;
+        [Tooltip("Высота глаз лучника над землёй")]
+        [SerializeField, Min(0.1f)] private float _eyeHeight = 1.2f;
 
         private const int NeighbourBufferSize = 16;
         private static readonly Collider[] Neighbours = new Collider[NeighbourBufferSize];
+        private readonly RaycastHit[] _sightHits = new RaycastHit[12];
 
         private Health _health;
         private Vector3 _baseScale;
@@ -107,6 +112,14 @@ namespace InvaderOfWorlds
 
             FaceTowards(toTarget, up);
 
+            // Стреляет только когда действительно видит игрока. Если обзор закрыт
+            // стеной или холмом — идёт вперёд, пока видимость не откроется.
+            if (!HasLineOfSight(up))
+            {
+                Strafe(Vector3.ProjectOnPlane(toTarget, up).normalized, up);
+                return;
+            }
+
             if (distance < _keepMin)
             {
                 Strafe(-Vector3.ProjectOnPlane(toTarget, up).normalized, up);
@@ -130,6 +143,14 @@ namespace InvaderOfWorlds
 
         private void UpdateAim(Vector3 up, Vector3 toTarget, float distance)
         {
+            // Игрок спрятался за стену — прекращаем целиться и идём искать обзор.
+            if (!HasLineOfSight(up))
+            {
+                _aiming = false;
+                transform.localScale = _baseScale;
+                return;
+            }
+
             FaceTowards(toTarget, up);
             HoldPosition(up);
 
@@ -147,6 +168,41 @@ namespace InvaderOfWorlds
                 return;
 
             Fire();
+        }
+
+        /// <summary>
+        /// Прямая видимость игрока: луч от глаз лучника к груди цели.
+        /// Персонажи обзор не перекрывают — важно только то, что стоит между:
+        /// стены, постройки, рельеф.
+        /// </summary>
+        private bool HasLineOfSight(Vector3 up)
+        {
+            var eye = transform.position + up * _eyeHeight;
+            var chest = _target.position + up * 1f;
+            var toTarget = chest - eye;
+            var distance = toTarget.magnitude;
+
+            if (distance < 0.01f)
+                return true;
+
+            var direction = toTarget / distance;
+            var count = Physics.RaycastNonAlloc(eye, direction, _sightHits, distance, _obstacleMask,
+                QueryTriggerInteraction.Ignore);
+
+            for (var i = 0; i < count; i++)
+            {
+                var hit = _sightHits[i];
+
+                if (hit.collider == null || hit.collider.transform.IsChildOf(transform))
+                    continue;
+
+                if (hit.collider.GetComponentInParent<Health>() != null)
+                    continue;
+
+                return false;
+            }
+
+            return true;
         }
 
         private void Fire()
