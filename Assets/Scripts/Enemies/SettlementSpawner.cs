@@ -20,6 +20,8 @@ namespace InvaderOfWorlds
         [SerializeField, Min(1)] private int _placementAttempts = 24;
         [Tooltip("Минимальное расстояние между врагами при появлении")]
         [SerializeField, Min(0f)] private float _characterSpacing = 1.8f;
+        [Tooltip("Доля стражей дальнего боя")]
+        [SerializeField, Range(0f, 1f)] private float _rangedChance = 0.3f;
         [SerializeField, Min(1f)] private float _health = 60f;
         [SerializeField] private Color _color = new Color(0.78f, 0.22f, 0.18f);
         [SerializeField] private bool _spawnOnStart = true;
@@ -68,18 +70,26 @@ namespace InvaderOfWorlds
             if (SpawnPlacement.TryFindFreeGroundPosition(_planet, around, _spread, _placementAttempts,
                     out var position, out var up, _characterSpacing))
             {
-                return EnemyFactory.Spawn(_planet, _player, position, _color, _health, transform);
+                return CreateGuard(position);
             }
 
             // Вторая попытка с более широким радиусом — поселение может быть тесным.
             if (SpawnPlacement.TryFindFreeGroundPosition(_planet, around, _spread * 2.5f, _placementAttempts,
                     out position, out up, _characterSpacing))
             {
-                return EnemyFactory.Spawn(_planet, _player, position, _color, _health, transform);
+                return CreateGuard(position);
             }
 
             Debug.LogWarning($"[SettlementSpawner] Нет свободного места у {around:F1}, страж пропущен.", this);
             return null;
+        }
+
+        /// <summary>Часть стражи — дальнего боя, чтобы поселение не было однородной толпой.</summary>
+        private GameObject CreateGuard(Vector3 position)
+        {
+            return Random.value < _rangedChance
+                ? EnemyFactory.SpawnRanged(_planet, _player, position, _health * 0.8f, transform)
+                : EnemyFactory.Spawn(_planet, _player, position, _color, _health, transform);
         }
     }
 }

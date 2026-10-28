@@ -159,6 +159,22 @@ namespace InvaderOfWorlds.EditorTools
             // чтобы враг не оказался внутри ступени, стены или холма.
             SpawnTestEnemy(planet, player.transform, root.transform, 3.5f, enemyColor, 50f);
             SpawnTestEnemy(planet, player.transform, root.transform, -3.5f, enemyColor, 50f);
+
+            // Дальний враг в 14 метрах: держит дистанцию и стреляет.
+            SpawnTestRanged(planet, player.transform, root.transform, 9f);
+        }
+
+        private static void SpawnTestRanged(Planet planet, Transform player, Transform parent, float angle)
+        {
+            var around = planet.SurfacePoint(Quaternion.AngleAxis(angle, Vector3.forward) * Vector3.up);
+
+            if (!SpawnPlacement.TryFindFreeGroundPosition(planet, around, 4f, 20, out var position, out _))
+            {
+                Debug.LogWarning("[TestPlanetSetup] Не нашёл свободного места для лучника, ставлю как есть.");
+                position = around;
+            }
+
+            EnemyFactory.SpawnRanged(planet, player, position, 40f, parent);
         }
 
         private static void SpawnTestEnemy(Planet planet, Transform player, Transform parent, float angle,
