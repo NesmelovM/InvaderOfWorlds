@@ -13,8 +13,7 @@ namespace InvaderOfWorlds
         public int healthLevel;
         public int speedLevel;
         public int skillMask;
-        public int ownedWeapons;
-        public string equippedWeapons = string.Empty;
+        public int ownedWeapons;        public string equippedWeapons = string.Empty;
     }
 
     /// <summary>
@@ -37,7 +36,6 @@ namespace InvaderOfWorlds
                 damageLevel = MetaProgress.DamageLevel,
                 healthLevel = MetaProgress.HealthLevel,
                 speedLevel = MetaProgress.SpeedLevel,
-                skillMask = SkillTree.Mask,
                 ownedWeapons = Armory.OwnedMask,
                 equippedWeapons = Armory.SerializeEquipped()
             };
@@ -67,7 +65,6 @@ namespace InvaderOfWorlds
 
                 RunSession.Load(data.gold, data.experience);
                 MetaProgress.Load(data.damageLevel, data.healthLevel, data.speedLevel);
-                SkillTree.Load(data.skillMask);
                 Armory.Load(data.ownedWeapons, data.equippedWeapons);
 
                 Debug.Log($"[SAVE] Прогресс загружен: золото {data.gold}, " +

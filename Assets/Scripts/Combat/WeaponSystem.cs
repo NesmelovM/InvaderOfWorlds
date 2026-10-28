@@ -109,6 +109,16 @@ namespace InvaderOfWorlds
                 slot.Damage *= multiplier;
         }
 
+        /// <summary>Усиление из карточки уровня: множитель ко всем слотам.</summary>
+        public void MultiplyDamage(float multiplier)
+        {
+            if (multiplier <= 0f)
+                return;
+
+            foreach (var slot in _slots)
+                slot.Damage *= multiplier;
+        }
+
         /// <summary>Поставить оружие в свободный слот — пригодится оружейной в хабе.</summary>
         public bool TryEquip(WeaponSlot slot)
         {

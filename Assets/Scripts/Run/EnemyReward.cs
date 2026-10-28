@@ -40,6 +40,12 @@ namespace InvaderOfWorlds
         private void OnDied(Health health)
         {
             RunSession.RegisterKill(_gold, _experience);
+
+            // «Вампиризм»: за убийство возвращается немного здоровья.
+            if (RunModifiers.HealPerKill <= 0f || RunModifiers.PlayerHealth == null)
+                return;
+
+            RunModifiers.PlayerHealth.Heal(RunModifiers.HealPerKill);
         }
     }
 }

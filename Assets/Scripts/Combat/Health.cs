@@ -78,5 +78,16 @@ namespace InvaderOfWorlds
             _current = Mathf.Min(_max, _current + amount);
             Changed?.Invoke(_current, _max);
         }
+
+        /// <summary>Увеличение максимума с одновременным лечением — карточка «Стойкость».</summary>
+        public void IncreaseMax(float amount)
+        {
+            if (amount <= 0f)
+                return;
+
+            _max += amount;
+            _current = Mathf.Min(_max, _current + amount);
+            Changed?.Invoke(_current, _max);
+        }
     }
 }

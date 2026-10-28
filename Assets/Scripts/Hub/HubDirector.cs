@@ -56,7 +56,6 @@ namespace InvaderOfWorlds
             DrawHeader();
             DrawShop();
             DrawArmory();
-            DrawTree();
         }
 
         /// <summary>Оружейная: покупка оружия и сборка набора в шесть слотов.</summary>
@@ -104,44 +103,7 @@ namespace InvaderOfWorlds
             }
         }
 
-        /// <summary>Дерево прокачки: узлы за опыт, часть требует предыдущих.</summary>
-        private void DrawTree()
-        {
-            var panel = new Rect(Screen.width - 444f, 24f, 420f, 348f);
-            HealthBarDrawer.DrawRect(panel, new Color(0f, 0f, 0f, 0.62f));
-
-            GUI.Label(new Rect(panel.x + 18f, panel.y + 10f, 380f, 26f), "ДЕРЕВО ПРОКАЧКИ", _titleStyle);
-            GUI.Label(new Rect(panel.x + 18f, panel.y + 34f, 380f, 20f),
-                $"Опыт: {RunSession.Experience}", _hintStyle);
-
-            for (var i = 0; i < SkillTree.Nodes.Length; i++)
-            {
-                var node = SkillTree.Nodes[i];
-                var rowY = panel.y + 60f + i * 46f;
-
-                var unlocked = SkillTree.IsUnlocked(i);
-                var canUnlock = SkillTree.CanUnlock(i);
-                var affordable = canUnlock && RunSession.Experience >= node.Cost;
-
-                GUI.Label(new Rect(panel.x + 18f, rowY, 270f, 20f),
-                    $"{node.Title} · {node.Effect}", _textStyle);
-                GUI.Label(new Rect(panel.x + 18f, rowY + 18f, 270f, 18f),
-                    unlocked ? "изучено" : $"опыт: {node.Cost}", _hintStyle);
-
-                var caption = unlocked ? "готово" : canUnlock ? "изучить" : "закрыто";
-
-                var previous = GUI.enabled;
-                GUI.enabled = affordable;
-
-                if (GUI.Button(new Rect(panel.x + 296f, rowY + 2f, 106f, 32f), caption, _buttonStyle))
-                {
-                    if (SkillTree.TryUnlock(i))
-                        SaveSystem.Save();
-                }
-
-                GUI.enabled = previous;
-            }
-        }
+        /// <summary>Дерево прокачки переехало в забег: здесь остались магазин и оружейная.</summary>
 
         private void DrawHeader()
         {

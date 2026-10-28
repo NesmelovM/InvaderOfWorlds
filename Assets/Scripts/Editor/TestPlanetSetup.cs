@@ -185,6 +185,10 @@ namespace InvaderOfWorlds.EditorTools
             runObject.AddComponent<RunHud>();
             runObject.AddComponent<RunBootstrap>();
 
+            // Повышение уровня внутри забега: карточки улучшений.
+            var level = runObject.AddComponent<RunLevel>();
+            level.Configure(health, attack, player.transform);
+
             var root = new GameObject("Test Enemies");
             var enemyColor = new Color(0.85f, 0.25f, 0.20f);
 
