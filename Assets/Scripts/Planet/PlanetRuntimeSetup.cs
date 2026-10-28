@@ -19,6 +19,10 @@ namespace InvaderOfWorlds
         [SerializeField] private PlanetContentGenerator _generator;
         [SerializeField] private Transform _player;
         [SerializeField] private SettlementSpawner _settlementSpawner;
+        [Tooltip("Порядок биомов: какой из них ставится, зависит от числа пройденных порталов")]
+        [SerializeField] private BiomeCatalog _catalog;
+
+        private BiomeDefinition _biome;
 
         [Header("Рельеф")]
         [SerializeField, Min(0)] private int _hills = 4;
@@ -45,12 +49,15 @@ namespace InvaderOfWorlds
         };
 
         public void Configure(Planet planet, PlanetContentGenerator generator, Transform player,
-            SettlementSpawner settlementSpawner)
+            SettlementSpawner settlementSpawner, BiomeCatalog catalog = null)
         {
             _planet = planet;
             _generator = generator;
             _player = player;
             _settlementSpawner = settlementSpawner;
+
+            if (catalog != null)
+                _catalog = catalog;
         }
 
         private void Start()
@@ -61,15 +68,35 @@ namespace InvaderOfWorlds
             var seed = RunState.Seed == 0 ? 20261028 : RunState.Seed;
             var random = new System.Random(seed);
 
+            _biome = _catalog != null ? _catalog.ForPlanet(RunState.PlanetIndex) : null;
+
             _generator.SetSeed(seed);
             _generator.Generate();
 
+            ApplyBiomeColors();
             PlacePlayer();
             SpawnHills(random);
             SpawnBigProps(random);
             SpawnSmallProps(random);
             SpawnSettlementWalls(random);
             SpawnBossArena();
+        }
+
+        /// <summary>Цвета поверхности, холмов и неба берутся из биома.</summary>
+        private void ApplyBiomeColors()
+        {
+            if (_biome == null)
+                return;
+
+            var visual = _planet.GetComponentInChildren<Renderer>();
+
+            if (visual != null)
+                visual.material.color = _biome.GroundColor;
+
+            var camera = Camera.main;
+
+            if (camera != null)
+                camera.backgroundColor = _biome.SkyColor;
         }
 
         private void PlacePlayer()
@@ -96,7 +123,7 @@ namespace InvaderOfWorlds
                 filter.sharedMesh = SurfaceDomeMesh.Create(_planet.Radius, _hillRadius, _hillHeight);
 
                 hill.AddComponent<MeshRenderer>().sharedMaterial =
-                    EnemyFactory.GetMaterial(new Color(0.42f, 0.38f, 0.34f));
+                    EnemyFactory.GetMaterial(_biome != null ? _biome.HillColor : new Color(0.42f, 0.38f, 0.34f));
 
                 var collider = hill.AddComponent<MeshCollider>();
                 collider.sharedMesh = filter.sharedMesh;
@@ -113,50 +140,82 @@ namespace InvaderOfWorlds
         /// </summary>
         private void SpawnBigProps(System.Random random)
         {
-            SpawnProps(random, BigPropPaths, _bigPropCount, keepColliders: true);
+            if (_biome != null && _biome.Big.Count > 0)
+            {
+                SpawnProps(random, _biome.Big, _biome.BigProps, keepColliders: true);
+                return;
+            }
+
+            SpawnPropsFromResources(random, BigPropPaths, _bigPropCount, keepColliders: true);
         }
 
         /// <summary>Мелочь: грибы и мелкие камни. Их много, сквозь них проходим.</summary>
         private void SpawnSmallProps(System.Random random)
         {
-            SpawnProps(random, SmallPropPaths, _smallPropCount, keepColliders: false);
+            if (_biome != null && _biome.Small.Count > 0)
+            {
+                SpawnProps(random, _biome.Small, _biome.SmallProps, keepColliders: false);
+                return;
+            }
+
+            SpawnPropsFromResources(random, SmallPropPaths, _smallPropCount, keepColliders: false);
         }
 
-        private void SpawnProps(System.Random random, string[] paths, int count, bool keepColliders)
+        private void SpawnProps(System.Random random, System.Collections.Generic.List<GameObject> prefabs,
+            int count, bool keepColliders)
         {
             var root = new GameObject(keepColliders ? "Props" : "Small Props").transform;
 
             for (var i = 0; i < count; i++)
             {
-                var path = paths[random.Next(paths.Length)];
-                var prefab = Resources.Load<GameObject>(path);
+                var prefab = prefabs[random.Next(prefabs.Count)];
 
                 if (prefab == null)
                     continue;
 
-                var direction = RandomDirection(random);
-
-                // Крупные объекты слегка утапливаем в грунт: так они стоят устойчиво
-                // и не висят на склоне одним краем.
-                var inset = keepColliders ? 1f : 0f;
-                var position = _planet.Center + direction * (_planet.Radius - inset);
-
-                var prop = Instantiate(prefab, position, Quaternion.identity, root);
-
-                if (!keepColliders)
-                {
-                    foreach (var collider in prop.GetComponentsInChildren<Collider>(true))
-                        Destroy(collider);
-                }
-
-                var scale = keepColliders
-                    ? 0.7f + (float)random.NextDouble() * 0.8f
-                    : 0.5f + (float)random.NextDouble() * 0.7f;
-
-                prop.transform.localScale *= scale;
-                prop.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction) *
-                                         Quaternion.Euler(0f, (float)random.NextDouble() * 360f, 0f);
+                PlaceProp(prefab, random, root, keepColliders);
             }
+        }
+
+        private void SpawnPropsFromResources(System.Random random, string[] paths, int count, bool keepColliders)
+        {
+            var root = new GameObject(keepColliders ? "Props" : "Small Props").transform;
+
+            for (var i = 0; i < count; i++)
+            {
+                var prefab = Resources.Load<GameObject>(paths[random.Next(paths.Length)]);
+
+                if (prefab == null)
+                    continue;
+
+                PlaceProp(prefab, random, root, keepColliders);
+            }
+        }
+
+        private void PlaceProp(GameObject prefab, System.Random random, Transform root, bool keepColliders)
+        {
+            var direction = RandomDirection(random);
+
+            // Крупные объекты слегка утапливаем в грунт: так они стоят устойчиво
+            // и не висят на склоне одним краем.
+            var inset = keepColliders ? 1f : 0f;
+            var position = _planet.Center + direction * (_planet.Radius - inset);
+
+            var prop = Instantiate(prefab, position, Quaternion.identity, root);
+
+            if (!keepColliders)
+            {
+                foreach (var collider in prop.GetComponentsInChildren<Collider>(true))
+                    Destroy(collider);
+            }
+
+            var scale = keepColliders
+                ? 0.7f + (float)random.NextDouble() * 0.8f
+                : 0.5f + (float)random.NextDouble() * 0.7f;
+
+            prop.transform.localScale *= scale;
+            prop.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction) *
+                                     Quaternion.Euler(0f, (float)random.NextDouble() * 360f, 0f);
         }
 
         /// <summary>Кольцо стен вокруг каждого поселения — прорыв остаётся задачей.</summary>

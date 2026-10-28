@@ -174,7 +174,18 @@ namespace InvaderOfWorlds.EditorTools
             var setup = setupObject.AddComponent<PlanetRuntimeSetup>();
 
             var spawner = Object.FindFirstObjectByType<SettlementSpawner>();
-            setup.Configure(planet, generator, player.transform, spawner);
+
+            // Каталог биомов подхватываем автоматически, если он уже создан.
+            var catalogGuids = AssetDatabase.FindAssets("t:BiomeCatalog");
+            BiomeCatalog catalog = null;
+
+            if (catalogGuids.Length > 0)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(catalogGuids[0]);
+                catalog = AssetDatabase.LoadAssetAtPath<BiomeCatalog>(path);
+            }
+
+            setup.Configure(planet, generator, player.transform, spawner, catalog);
         }
 
         private static Material GetOrCreateMaterial(string name, Color color)

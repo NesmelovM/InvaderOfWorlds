@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91ee58de07c247d68f27dc218f3b47b5, type: 3}
+  m_Name: BiomeCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::InvaderOfWorlds.BiomeCatalog
+  Biomes:
+  - {fileID: 11400000, guid: c858eb9ff8b21d2408e5da0b4ee14032, type: 2}
+  - {fileID: 11400000, guid: eab6b5b02f3b53b43a25a4b14dae1834, type: 2}
+  PlanetsPerBiome: 5
