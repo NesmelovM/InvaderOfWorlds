@@ -35,6 +35,7 @@ namespace InvaderOfWorlds.EditorTools
             CreateTerrainTest(planet);
             CreateCombat(planet, player, cameraObject, generator);
             CreateBossEncounter(planet, player, generator);
+            CreateSettlementWalls(planet, generator);
 
             // Связываем игрока с планетой и камерой.
             motor.Configure(planet, cameraObject.transform);
@@ -328,6 +329,47 @@ namespace InvaderOfWorlds.EditorTools
             wall.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
             wall.transform.localScale = new Vector3(6f, 3f, 0.5f);
             Paint(wall, GetOrCreateMaterial("TestWall", new Color(0.95f, 0.20f, 0.15f)));
+
+            var health = wall.AddComponent<Health>();
+            health.Configure(120f);
+            wall.AddComponent<Destructible>();
+        }
+
+        /// <summary>
+        /// Кольцо стен вокруг каждого поселения: прорыв через укрепления
+        /// должен быть реальным действием, а не декорацией.
+        /// </summary>
+        private static void CreateSettlementWalls(Planet planet, PlanetContentGenerator generator)
+        {
+            var root = new GameObject("Settlement Walls");
+            var material = GetOrCreateMaterial("WallStone", new Color(0.52f, 0.48f, 0.43f));
+            const int segments = 6;
+
+            foreach (var settlement in generator.Settlements)
+            {
+                var up = planet.UpAt(settlement.Center);
+
+                for (var i = 0; i < segments; i++)
+                {
+                    var angle = 360f / segments * i;
+                    var offset = Quaternion.AngleAxis(angle, up) * Vector3.forward * (settlement.Radius * 0.6f);
+                    var position = settlement.Center + Vector3.ProjectOnPlane(offset, up);
+                    var direction = planet.UpAt(position);
+
+                    var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    wall.name = "Settlement Wall";
+                    wall.transform.SetParent(root.transform, false);
+                    wall.transform.position = planet.Center + direction * (planet.Radius + 1.2f);
+                    wall.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction) *
+                                              Quaternion.Euler(0f, angle, 0f);
+                    wall.transform.localScale = new Vector3(5f, 2.4f, 0.5f);
+                    wall.GetComponent<Renderer>().sharedMaterial = material;
+
+                    var health = wall.AddComponent<Health>();
+                    health.Configure(140f);
+                    wall.AddComponent<Destructible>();
+                }
+            }
         }
 
         private static void Paint(GameObject target, Material material)

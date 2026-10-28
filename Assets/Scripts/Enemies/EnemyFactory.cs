@@ -93,6 +93,7 @@ namespace InvaderOfWorlds
             var healthComponent = enemy.AddComponent<Health>();
             healthComponent.Configure(health);
 
+            enemy.AddComponent<EnemyMarker>();
             enemy.AddComponent<HitFlash>();
 
             var bar = enemy.AddComponent<EnemyHealthBar>();

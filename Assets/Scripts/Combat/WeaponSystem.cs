@@ -141,6 +141,18 @@ namespace InvaderOfWorlds
         private Transform FindNearestTarget(float range, out float distance)
         {
             distance = float.MaxValue;
+
+            // Сначала живые враги: стены подождут, даже если они ближе.
+            var enemy = FindNearest(range, ref distance, true);
+
+            if (enemy != null)
+                return enemy;
+
+            return FindNearest(range, ref distance, false);
+        }
+
+        private Transform FindNearest(float range, ref float distance, bool onlyEnemies)
+        {
             Transform nearest = null;
 
             var center = transform.position + transform.up * _bodyCenter;
@@ -154,6 +166,12 @@ namespace InvaderOfWorlds
                 if (candidate == null || candidate.transform.IsChildOf(transform))
                     continue;
 
+                var isEnemy = candidate.GetComponentInParent<EnemyMarker>() != null;
+
+                // Второй проход — только по постройкам.
+                if (isEnemy != onlyEnemies)
+                    continue;
+
                 var damageable = candidate.GetComponentInParent<IDamageable>();
 
                 if (damageable == null || !damageable.IsAlive)
@@ -161,11 +179,11 @@ namespace InvaderOfWorlds
 
                 var candidateDistance = Vector3.Distance(center, candidate.bounds.center);
 
-                if (candidateDistance >= distance)
-                    continue;
-
-                distance = candidateDistance;
-                nearest = candidate.transform;
+                if (candidateDistance < distance)
+                {
+                    distance = candidateDistance;
+                    nearest = candidate.transform;
+                }
             }
 
             return nearest;
