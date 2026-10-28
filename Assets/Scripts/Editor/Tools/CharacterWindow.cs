@@ -44,6 +44,8 @@ namespace InvaderOfWorlds.EditorTools
 
             _scroll = EditorGUILayout.BeginScrollView(_scroll);
 
+            DrawPlayer();
+            EditorGUILayout.Space(6f);
             DrawEnemy("Мечник", _config.Melee, "Characters/man-soldier_Rig", "Weapons/sword", 1.8f);
             DrawEnemy("Лучник", _config.Ranged, "Characters/man-cult_Rig", "Weapons/bow", 1.9f);
             DrawEnemy("Элита", _config.Elite, "Characters/man-knight_Rig", "Weapons/hammer", 2.5f);
@@ -72,6 +74,30 @@ namespace InvaderOfWorlds.EditorTools
                     EditorUtility.SetDirty(_config);
                     AssetDatabase.SaveAssets();
                     InvaderOfWorlds.Characters.ResetCache();
+                }
+            }
+        }
+
+        private void DrawPlayer()
+        {
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField("ИГРОК", EditorStyles.boldLabel);
+
+                _config.Player.Model = (GameObject)EditorGUILayout.ObjectField("Модель (риг)",
+                    _config.Player.Model, typeof(GameObject), false);
+                _config.Player.Weapon = (GameObject)EditorGUILayout.ObjectField("Оружие",
+                    _config.Player.Weapon, typeof(GameObject), false);
+
+                _config.Player.Height = EditorGUILayout.Slider("Рост", _config.Player.Height, 0.8f, 3f);
+                _config.Player.WeaponScale = EditorGUILayout.Slider("Размер оружия",
+                    _config.Player.WeaponScale, 0.3f, 2f);
+                _config.PlayerTint = EditorGUILayout.ColorField("Цвет мантии", _config.PlayerTint);
+
+                if (_config.Player.Model == null)
+                {
+                    EditorGUILayout.HelpBox("Пусто — используется модель из сцены " +
+                                            "(Characters/man-cult_Rig).", MessageType.None);
                 }
             }
         }
@@ -149,6 +175,9 @@ namespace InvaderOfWorlds.EditorTools
             Fill(config.Elite, "Characters/man-knight_Rig", "Weapons/hammer", 2.5f);
             Fill(config.EliteRanged, "Characters/man-cult_Rig", "Weapons/bow", 2.4f);
             Fill(config.Boss, "Characters/giant_Rig", "Weapons/club-zulu", 4.2f);
+
+            config.Player = new EnemyLook { Height = 1.95f };
+            config.PlayerTint = new Color(0.16f, 0.07f, 0.23f);
 
             config.StepSpeed = 8.5f;
             config.LegAmplitude = 32f;

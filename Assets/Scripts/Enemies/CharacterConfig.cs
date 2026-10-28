@@ -22,6 +22,10 @@ namespace InvaderOfWorlds
     [CreateAssetMenu(fileName = "Config", menuName = "Invader of Worlds/Персонажи")]
     public class CharacterConfig : ScriptableObject
     {
+        [Header("Игрок")]
+        public EnemyLook Player = new EnemyLook { Height = 1.95f };
+        public Color PlayerTint = new Color(0.16f, 0.07f, 0.23f);
+
         [Header("Враги")]
         public EnemyLook Melee = new EnemyLook { Height = 1.8f };
         public EnemyLook Ranged = new EnemyLook { Height = 1.9f };
@@ -137,6 +141,9 @@ namespace InvaderOfWorlds
                 _ => null
             };
         }
+
+        public static EnemyLook PlayerLook => Config != null ? Config.Player : null;
+        public static Color PlayerTint => Config != null ? Config.PlayerTint : new Color(0.16f, 0.07f, 0.23f);
 
         public static float StepSpeed => Config != null ? Config.StepSpeed : 8.5f;
         public static float LegAmplitude => Config != null ? Config.LegAmplitude : 32f;

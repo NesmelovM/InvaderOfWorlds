@@ -12,6 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9985192399b3e9479c6af094fa8124e, type: 3}
   m_Name: Config
   m_EditorClassIdentifier: Assembly-CSharp::InvaderOfWorlds.CharacterConfig
+  Player:
+    Model: {fileID: 919132149155446097, guid: d2a92702c0b6db0479db7bd5542d2d92, type: 3}
+    Weapon: {fileID: 0}
+    Height: 1.95
+    WeaponScale: 1
+  PlayerTint: {r: 0.16, g: 0.07, b: 0.23, a: 1}
   Melee:
     Model: {fileID: 919132149155446097, guid: ded1fa50f7eaef2439c5659849a39287, type: 3}
     Weapon: {fileID: 1000011153640270, guid: dffba8244aeb1844494d47159ea57cd8, type: 3}

@@ -88,10 +88,10 @@ namespace InvaderOfWorlds
         /// <summary>Показывает оружие из первого занятого слота.</summary>
         private void RefreshModel()
         {
-            if (_weapons == null)
-                return;
-
-            var id = FindWeapon();
+            // Оружие из конфига персонажей важнее каталога: так игроку можно
+            // назначить любую модель, не трогая оружейную.
+            var overrideWeapon = Characters.PlayerLook != null ? Characters.PlayerLook.Weapon : null;
+            var id = overrideWeapon != null ? -2 : (_weapons != null ? FindWeapon() : -1);
 
             if (id == _shownId)
                 return;
@@ -101,12 +101,26 @@ namespace InvaderOfWorlds
             if (_model != null)
                 Destroy(_model);
 
+            if (overrideWeapon != null)
+            {
+                BuildModel(overrideWeapon);
+                return;
+            }
+
             if (id < 0 || id >= Models.Length)
                 return;
 
             var prefab = Resources.Load<GameObject>(Models[id]);
 
             if (prefab == null)
+                return;
+
+            BuildModel(prefab);
+        }
+
+        private void BuildModel(GameObject prefab)
+        {
+            if (prefab == null || _socket == null)
                 return;
 
             _model = Instantiate(prefab, _socket);

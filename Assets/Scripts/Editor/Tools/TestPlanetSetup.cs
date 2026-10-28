@@ -91,6 +91,7 @@ namespace InvaderOfWorlds.EditorTools
             var model = CharacterModel.Attach(playerObject, "Characters/man-cult_Rig", 1.95f, 0f);
 
             playerObject.AddComponent<CharacterRig>();
+            playerObject.AddComponent<PlayerAppearance>();
 
             var tint = playerObject.AddComponent<ModelTint>();
             tint.Configure(new Color(0.16f, 0.07f, 0.23f));

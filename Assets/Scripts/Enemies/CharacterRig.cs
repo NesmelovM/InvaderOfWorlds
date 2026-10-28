@@ -54,9 +54,6 @@ namespace InvaderOfWorlds
             _armAmplitude = Characters.ArmAmplitude;
             _attackDuration = Characters.AttackDuration;
 
-            CacheBones();
-            CacheBaseRotations();
-
             var health = GetComponent<Health>();
 
             if (health != null)
@@ -69,6 +66,19 @@ namespace InvaderOfWorlds
 
             if (health != null)
                 health.Died -= OnDied;
+        }
+
+        private void EnsureCached()
+        {
+            if (_hips != null)
+                return;
+
+            CacheBones();
+
+            if (_hips == null)
+                return;
+
+            CacheBaseRotations();
         }
 
         private void CacheBones()
@@ -148,6 +158,10 @@ namespace InvaderOfWorlds
 
         private void LateUpdate()
         {
+            // Кости ищем лениво: модель могла быть пересоздана другим компонентом
+            // уже после Awake, и тогда кеш из Start оказался бы пустым.
+            EnsureCached();
+
             if (_hips == null)
                 return;
 
