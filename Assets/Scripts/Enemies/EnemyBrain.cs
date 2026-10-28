@@ -40,6 +40,19 @@ namespace InvaderOfWorlds
         private void Awake()
         {
             _health = GetComponent<Health>();
+
+            // Страховка: если ссылки не проставлены в сцене, находим их сами.
+            // Это спасает от «missing script» и пустых полей после пересборки сцены.
+            if (_planet == null)
+                _planet = FindFirstObjectByType<Planet>();
+
+            if (_target == null)
+            {
+                var player = GameObject.FindWithTag("Player");
+
+                if (player != null)
+                    _target = player.transform;
+            }
         }
 
         private void Update()

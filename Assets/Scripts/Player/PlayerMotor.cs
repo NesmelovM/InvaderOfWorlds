@@ -90,6 +90,9 @@ namespace InvaderOfWorlds
         {
             if (_cameraTransform == null && Camera.main != null)
                 _cameraTransform = Camera.main.transform;
+
+            if (_planet == null)
+                _planet = FindFirstObjectByType<Planet>();
         }
 
         private void Update()

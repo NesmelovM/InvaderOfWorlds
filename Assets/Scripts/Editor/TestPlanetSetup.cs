@@ -80,6 +80,7 @@ namespace InvaderOfWorlds.EditorTools
         private static GameObject CreatePlayer(Planet planet, out PlayerMotor motor)
         {
             var playerObject = new GameObject("Player");
+            playerObject.tag = "Player";
 
             // Визуал: капсула без коллайдера. Коллайдер персонажу не нужен —
             // препятствия проверяются SphereCast'ом в самом моторе.
@@ -143,12 +144,14 @@ namespace InvaderOfWorlds.EditorTools
             var root = new GameObject("Test Enemies");
             var enemyColor = new Color(0.85f, 0.25f, 0.20f);
 
+            // По бокам от точки появления: ступень и стена стоят на других направлениях,
+            // так что враги не оказываются внутри чужого коллайдера.
             EnemyFactory.Spawn(planet, player.transform,
-                planet.SurfacePoint(Quaternion.AngleAxis(4f, Vector3.right) * Vector3.up),
+                planet.SurfacePoint(Quaternion.AngleAxis(3.5f, Vector3.forward) * Vector3.up),
                 enemyColor, 50f, root.transform);
 
             EnemyFactory.Spawn(planet, player.transform,
-                planet.SurfacePoint(Quaternion.AngleAxis(-6f, Vector3.right) * Vector3.up),
+                planet.SurfacePoint(Quaternion.AngleAxis(-3.5f, Vector3.forward) * Vector3.up),
                 enemyColor, 50f, root.transform);
         }
 
@@ -162,16 +165,14 @@ namespace InvaderOfWorlds.EditorTools
             var root = new GameObject("Terrain Test");
             var spawnUp = Vector3.up;
 
-            // Холм в 18 метрах впереди (≈11.5° дуги): пологий, по нему можно идти.
-            CreateMound(root.transform, planet, Quaternion.AngleAxis(11.5f, Vector3.right) * spawnUp);
-
             // Ступень в 12 метрах слева: 30 см, должна проходиться без прыжка.
             CreateStep(root.transform, planet, Quaternion.AngleAxis(7.6f, Vector3.forward) * spawnUp);
 
             // Стена в 8 метрах справа: 3 метра высотой, должна не пускать и скользить.
             CreateWall(root.transform, planet, Quaternion.AngleAxis(-5f, Vector3.forward) * spawnUp);
 
-            // Ещё два холма дальше, чтобы рельеф был в разных местах планеты.
+            // Два холма далеко от точки появления: рядом с ней стоят враги,
+            // и холм перекрывал бы их коллайдером.
             CreateMound(root.transform, planet, Quaternion.AngleAxis(40f, Vector3.right) * spawnUp);
             CreateMound(root.transform, planet, Quaternion.AngleAxis(-45f, Vector3.forward) * spawnUp);
         }
