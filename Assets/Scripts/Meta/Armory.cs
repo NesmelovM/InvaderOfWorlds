@@ -68,6 +68,26 @@ namespace InvaderOfWorlds
             {
                 Name = "Громовая цепь", Description = "молния по трём целям", Kind = WeaponKind.Chain,
                 Damage = 20f, Cooldown = 1.9f, Range = 9f, Cost = 280
+            },
+            new WeaponDef
+            {
+                Name = "Орбитальный клинок", Description = "кружит вокруг героя", Kind = WeaponKind.Orbiter,
+                Damage = 12f, Cooldown = 0.3f, Range = 2.2f, Cost = 260
+            },
+            new WeaponDef
+            {
+                Name = "Аура", Description = "постоянный урон в радиусе", Kind = WeaponKind.Aura,
+                Damage = 10f, Cooldown = 0.5f, Range = 3.5f, Cost = 300
+            },
+            new WeaponDef
+            {
+                Name = "Бумеранг", Description = "летит и возвращается", Kind = WeaponKind.Boomerang,
+                Damage = 22f, Cooldown = 1.6f, Range = 12f, ProjectileSpeed = 18f, Cost = 250
+            },
+            new WeaponDef
+            {
+                Name = "Ракета", Description = "сама наводится на цель", Kind = WeaponKind.Homing,
+                Damage = 26f, Cooldown = 2.2f, Range = 16f, ProjectileSpeed = 14f, Cost = 320
             }
         };
 
