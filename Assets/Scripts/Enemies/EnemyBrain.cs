@@ -3,11 +3,13 @@ using UnityEngine;
 namespace InvaderOfWorlds
 {
     /// <summary>
-    /// Простое поведение врага: догнать игрока по поверхности сферы и ударить.
+    /// Поведение врага: занять своё место вокруг игрока и ударить.
     ///
-    /// Удар сделан читаемым: враг останавливается, на 0.45 с раздувается (замах),
-    /// и только потом наносит урон. Игрок успевает увидеть, что его сейчас ударят,
-    /// и отойти — без этого бой превращается в «умер непонятно от чего».
+    /// Ключевая деталь — «слот»: у каждого врага свой угол подхода, поэтому они
+    /// не сбиваются в клубок у одной точки. Плюс объезд соседей и расталкивание,
+    /// чтобы даже в толпе не слипались.
+    ///
+    /// Удар читаемый: враг на 0.45 с замирает и раздувается, и только потом бьёт.
     /// </summary>
     [DisallowMultipleComponent]
     public class EnemyBrain : MonoBehaviour
@@ -30,17 +32,31 @@ namespace InvaderOfWorlds
         [Tooltip("Насколько раздувается модель во время замаха")]
         [SerializeField, Range(0f, 0.5f)] private float _windupPulse = 0.18f;
 
+        [Header("Толпа")]
+        [Tooltip("Дистанция между центрами врагов, ближе которой они не сходятся")]
+        [SerializeField, Min(0.4f)] private float _personalSpace = 1.2f;
+        [Tooltip("Радиус, в котором враг объезжает соседей")]
+        [SerializeField, Min(0f)] private float _avoidRadius = 2.5f;
+        [Tooltip("Насколько сильно объезд влияет на движение")]
+        [SerializeField, Min(0f)] private float _avoidStrength = 1.4f;
+        [Tooltip("Разброс углов подхода вокруг игрока, градусы")]
+        [SerializeField, Range(0f, 180f)] private float _slotSpread = 75f;
+
         [Header("Геометрия")]
         [SerializeField, Min(0f)] private float _surfaceGap = 0.02f;
         [SerializeField, Min(0f)] private float _terrainHeight = 40f;
         [SerializeField, Range(0f, 90f)] private float _slopeLimit = 60f;
         [SerializeField] private LayerMask _groundMask = ~0;
 
+        private const int NeighbourBufferSize = 16;
+        private static readonly Collider[] Neighbours = new Collider[NeighbourBufferSize];
+
         private Health _health;
         private float _nextAttackTime;
         private Vector3 _baseScale;
         private bool _windingUp;
         private float _windupEndTime;
+        private float _slotAngle;
 
         public void Configure(Planet planet, Transform target)
         {
@@ -53,7 +69,9 @@ namespace InvaderOfWorlds
             _health = GetComponent<Health>();
             _baseScale = transform.localScale;
 
-            // Страховка: если ссылки не проставлены в сцене, находим их сами.
+            // Свой угол подхода: враги окружают игрока, а не встают в одну точку.
+            _slotAngle = Random.Range(-_slotSpread, _slotSpread);
+
             if (_planet == null)
                 _planet = FindFirstObjectByType<Planet>();
 
@@ -87,9 +105,7 @@ namespace InvaderOfWorlds
 
             if (distance <= _attackRange)
             {
-                SnapToGround(position, up);
-                CharacterSeparation.Resolve(transform, up, 0.9f, 0.35f, 0.9f);
-                SnapToGround(transform.position, up);
+                HoldPosition(up);
                 FaceTowards(toTarget, up);
                 TryBeginWindup();
                 return;
@@ -97,36 +113,86 @@ namespace InvaderOfWorlds
 
             if (distance > _aggroRadius)
             {
-                SnapToGround(position, up);
-                CharacterSeparation.Resolve(transform, up, 0.9f, 0.35f, 0.9f);
-                SnapToGround(transform.position, up);
+                HoldPosition(up);
                 return;
             }
 
-            var direction = Vector3.ProjectOnPlane(toTarget, up).normalized;
+            MoveTowardsSlot(position, up, toTarget);
+        }
 
-            if (direction.sqrMagnitude < 0.0001f)
+        /// <summary>Идёт не в центр игрока, а в свою точку на окружности вокруг него.</summary>
+        private void MoveTowardsSlot(Vector3 position, Vector3 up, Vector3 toTarget)
+        {
+            var directionToPlayer = Vector3.ProjectOnPlane(toTarget, up).normalized;
+
+            if (directionToPlayer.sqrMagnitude < 0.0001f)
                 return;
 
-            var step = direction * (_speed * Time.deltaTime);
+            var slotDirection = Quaternion.AngleAxis(_slotAngle, up) * directionToPlayer;
+            var slotPoint = _target.position - slotDirection * (_attackRange * 0.85f);
+
+            var toSlot = Vector3.ProjectOnPlane(slotPoint - position, up);
+
+            if (toSlot.sqrMagnitude < 0.0001f)
+                return;
+
+            var moveDirection = (toSlot.normalized + ComputeAvoidance(up) * _avoidStrength).normalized;
+            var step = moveDirection * (_speed * Time.deltaTime);
+
             var nextPosition = position + step;
             var nextUp = _planet.UpAt(nextPosition);
             var ground = PlanetSurface.SampleGroundRadius(_planet, nextUp, _terrainHeight, _groundMask,
                 transform, out var normal);
 
-            // Слишком крутой склон — не лезем, стоим у подножия.
             if (Vector3.Angle(normal, nextUp) > _slopeLimit)
             {
-                SnapToGround(position, up);
+                HoldPosition(up);
                 return;
             }
 
             transform.position = _planet.Center + nextUp * (ground + _surfaceGap);
             FaceTowards(step, nextUp);
 
-            // Упираемся в соседа или в игрока, а не проходим сквозь них.
-            CharacterSeparation.Resolve(transform, nextUp, 0.9f, 0.35f, 0.9f);
-            SnapToGround(transform.position, nextUp);
+            HoldPosition(nextUp);
+        }
+
+        /// <summary>Боковой объезд соседей: суммарное отталкивание от тех, кто рядом.</summary>
+        private Vector3 ComputeAvoidance(Vector3 up)
+        {
+            var center = transform.position + up * 0.9f;
+            var count = Physics.OverlapSphereNonAlloc(center, _avoidRadius, Neighbours, ~0,
+                QueryTriggerInteraction.Ignore);
+
+            var avoidance = Vector3.zero;
+
+            for (var i = 0; i < count; i++)
+            {
+                var neighbour = Neighbours[i];
+
+                if (neighbour == null || neighbour.transform.IsChildOf(transform))
+                    continue;
+
+                if (neighbour.GetComponentInParent<Health>() == null)
+                    continue;
+
+                var away = Vector3.ProjectOnPlane(center - neighbour.bounds.center, up);
+                var distance = away.magnitude;
+
+                if (distance < 0.0001f || distance > _avoidRadius)
+                    continue;
+
+                avoidance += away.normalized * (1f - distance / _avoidRadius);
+            }
+
+            return Vector3.ClampMagnitude(avoidance, 1f);
+        }
+
+        /// <summary>Стоять на месте, но не позволять соседям в себя влезть.</summary>
+        private void HoldPosition(Vector3 up)
+        {
+            SnapToGround(transform.position, up);
+            CharacterSeparation.Resolve(transform, up, 0.9f, _personalSpace * 0.5f, 0.9f);
+            SnapToGround(transform.position, up);
         }
 
         private void TryBeginWindup()
@@ -138,10 +204,10 @@ namespace InvaderOfWorlds
             _windupEndTime = Time.time + _windupTime;
         }
 
-        /// <summary>Замах: стоим на месте и раздуваемся — это и есть телеграф удара.</summary>
         private void UpdateWindup(Vector3 up, Vector3 toTarget, float distance)
         {
             FaceTowards(toTarget, up);
+            HoldPosition(up);
 
             var progress = 1f - Mathf.Clamp01((_windupEndTime - Time.time) / _windupTime);
             var pulse = 1f + _windupPulse * Mathf.Sin(progress * Mathf.PI);
@@ -159,7 +225,6 @@ namespace InvaderOfWorlds
             transform.localScale = _baseScale;
             _nextAttackTime = Time.time + _attackCooldown;
 
-            // Пока враг замахивался, игрок мог отойти — тогда удар уходит в воздух.
             if (distance > _attackRange * 1.35f)
                 return;
 
