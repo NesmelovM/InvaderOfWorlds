@@ -5,10 +5,10 @@ namespace InvaderOfWorlds
     /// <summary>
     /// Камера из-за плеча для сферического мира.
     ///
-    /// Cinemachine FreeLook здесь не подходит: он считает «верх» мировым Y, поэтому
-    /// на обратной стороне планеты картинка переворачивается. Здесь верх — нормаль
-    /// планеты в точке игрока, а горизонтальный угол накапливается в касательной
-    /// плоскости, поэтому обход планеты по кругу не ломает управление.
+    /// Ключевая идея: ориентация хранится кватернионом и переносится вместе с кривизной
+    /// планеты («параллельный перенос»), а не как вектор в касательной плоскости.
+    /// Векторный вариант ломается на экваторе: там «вперёд» и «вверх» могут совпасть,
+    /// проекция обнуляется, и управление умирает. Кватернион такой особой точки не имеет.
     /// </summary>
     [DisallowMultipleComponent]
     public class PlayerCameraRig : MonoBehaviour
@@ -21,8 +21,15 @@ namespace InvaderOfWorlds
         [SerializeField, Min(0.5f)] private float _distance = 4.5f;
         [SerializeField] private float _shoulderOffset = 0.7f;
         [SerializeField] private float _pivotHeight = 1.55f;
+
+        [Tooltip("Наклон в градусах: x — вниз, y — вверх")]
         [SerializeField] private Vector2 _pitchLimits = new Vector2(-65f, 55f);
+
         [SerializeField, Min(0f)] private float _sensitivity = 2.2f;
+
+        [Tooltip("Инверсия вертикали: включите, если мышь вверх опускает камеру")]
+        [SerializeField] private bool _invertVertical;
+
         [SerializeField, Min(0.01f)] private float _smoothTime = 0.06f;
 
         [Header("Столкновения")]
@@ -32,14 +39,21 @@ namespace InvaderOfWorlds
         [Header("Курсор")]
         [SerializeField] private bool _lockCursor = true;
 
-        private float _pitch;
-        private Vector3 _forward = Vector3.forward;
+        private Quaternion _rotation;
+        private Vector3 _lastUp = Vector3.up;
         private Vector3 _smoothVelocity;
         private Vector3 _position;
         private bool _initialized;
 
-        /// <summary>Горизонтальное направление камеры в касательной плоскости.</summary>
-        public Vector3 PlanarForward => _forward;
+        /// <summary>Горизонтальное направление камеры — для прицеливания и оружия.</summary>
+        public Vector3 PlanarForward
+        {
+            get
+            {
+                var up = _planet != null ? _planet.UpAt(transform.position) : Vector3.up;
+                return Vector3.ProjectOnPlane(_rotation * Vector3.forward, up).normalized;
+            }
+        }
 
         /// <summary>Привязка камеры к цели и планете.</summary>
         public void Configure(Transform target, Planet planet)
@@ -70,25 +84,22 @@ namespace InvaderOfWorlds
                 return;
 
             var up = _planet != null ? _planet.UpAt(_target.position) : Vector3.up;
+            InitializeIfNeeded(up);
 
-            // 1. Опорное направление держим в касательной плоскости, чтобы при обходе
-            //    планеты камера не «закручивалась» вокруг игрока.
-            _forward = Vector3.ProjectOnPlane(_forward, up);
-            if (_forward.sqrMagnitude < 0.0001f)
-                _forward = Vector3.ProjectOnPlane(_target.forward, up);
-            _forward = _forward.normalized;
+            // 1. Переносим ориентацию вместе с поворотом «верха»: камера едет по сфере,
+            //    не закручиваясь вокруг игрока.
+            var curvature = Quaternion.FromToRotation(_lastUp, up);
+            _rotation = curvature * _rotation;
+            _lastUp = up;
 
-            // 2. Мышь: горизонталь — поворот вокруг нормали, вертикаль — наклон.
+            // 2. Мышь: горизонталь — вокруг нормали, вертикаль — вокруг локальной оси X.
             ReadLook(out var look);
-            _forward = Quaternion.AngleAxis(look.x * _sensitivity, up) * _forward;
-            _pitch = Mathf.Clamp(_pitch - look.y * _sensitivity, _pitchLimits.x, _pitchLimits.y);
+            _rotation = Quaternion.AngleAxis(look.x * _sensitivity, up) * _rotation;
+            ApplyPitch(look.y * _sensitivity * (_invertVertical ? -1f : 1f), up);
 
-            // 3. Итоговый поворот: смотрим вдоль _forward, верх — нормаль планеты.
-            var rotation = Quaternion.LookRotation(_forward, up) * Quaternion.Euler(-_pitch, 0f, 0f);
-
-            // 4. Позиция: плечо + отвод назад, затем проверка на препятствия.
+            // 3. Позиция: плечо, отвод назад, проверка на препятствия.
             var pivot = _target.position + up * _pivotHeight;
-            var desired = pivot + rotation * new Vector3(_shoulderOffset, 0f, -_distance);
+            var desired = pivot + _rotation * new Vector3(_shoulderOffset, 0f, -_distance);
             desired = ResolveCollision(pivot, desired);
 
             if (!_initialized)
@@ -98,7 +109,35 @@ namespace InvaderOfWorlds
             }
 
             _position = Vector3.SmoothDamp(_position, desired, ref _smoothVelocity, _smoothTime);
-            transform.SetPositionAndRotation(_position, rotation);
+            transform.SetPositionAndRotation(_position, _rotation);
+        }
+
+        private void InitializeIfNeeded(Vector3 up)
+        {
+            if (_initialized)
+                return;
+
+            var forward = Vector3.ProjectOnPlane(_target.forward, up);
+            if (forward.sqrMagnitude < 0.0001f)
+                forward = Vector3.ProjectOnPlane(Vector3.forward, up);
+
+            _rotation = Quaternion.LookRotation(forward, up);
+            _lastUp = up;
+        }
+
+        /// <summary>Поворот по вертикали с ограничением, чтобы камера не кувыркалась.</summary>
+        private void ApplyPitch(float pitchDelta, Vector3 up)
+        {
+            if (Mathf.Abs(pitchDelta) < 0.0001f)
+                return;
+
+            var forward = _rotation * Vector3.forward;
+            var currentPitch = Mathf.Asin(Mathf.Clamp(Vector3.Dot(forward, up), -1f, 1f)) * Mathf.Rad2Deg;
+            var targetPitch = Mathf.Clamp(currentPitch + pitchDelta, _pitchLimits.x, _pitchLimits.y);
+            var applied = targetPitch - currentPitch;
+
+            if (Mathf.Abs(applied) > 0.0001f)
+                _rotation = _rotation * Quaternion.AngleAxis(-applied, Vector3.right);
         }
 
         /// <summary>Не даёт камере уйти за стену: сфера-луч от головы к желаемой точке.</summary>

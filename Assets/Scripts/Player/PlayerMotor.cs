@@ -34,7 +34,7 @@ namespace InvaderOfWorlds
         [SerializeField, Min(0f)] private float _groundStick = 3f;
 
         private CharacterController _controller;
-        private Vector3 _velocity;         // горизонтальная (касательная) скорость, м/с
+        private Vector3 _velocity;         // касательная скорость, м/с
         private float _verticalVelocity;   // вдоль «вверх» планеты, м/с
         private Vector3 _up = Vector3.up;
 
@@ -63,6 +63,11 @@ namespace InvaderOfWorlds
         {
             _up = _planet != null ? _planet.UpAt(transform.position) : Vector3.up;
 
+            // Скорость всегда должна лежать в касательной плоскости текущей точки.
+            // Иначе при движении по сфере её «вертикальная» часть начинает давить в грунт,
+            // и контроллер гасит движение — персонаж словно вязнет.
+            _velocity = Vector3.ProjectOnPlane(_velocity, _up);
+
             ReadInput(out var input, out var sprint, out var jump);
 
             var speed = sprint ? _sprintSpeed : _walkSpeed;
@@ -78,21 +83,50 @@ namespace InvaderOfWorlds
             KeepOnSurface();
         }
 
-        /// <summary>Направление ввода в касательной плоскости, относительно камеры.</summary>
+        /// <summary>
+        /// Направление ввода в касательной плоскости, относительно камеры.
+        ///
+        /// Базис строится из векторов камеры, а не только из её «вперёд»: если камера
+        /// смотрит почти вертикально вниз, проекция forward вырождается в ноль,
+        /// и персонаж останавливается. Тогда базис достраивается от правого вектора.
+        /// </summary>
         private Vector3 BuildMoveDirection(Vector2 input)
         {
             if (input.sqrMagnitude < 0.0001f)
                 return Vector3.zero;
 
-            var forward = _cameraTransform != null
-                ? Vector3.ProjectOnPlane(_cameraTransform.forward, _up).normalized
-                : Vector3.ProjectOnPlane(transform.forward, _up).normalized;
+            Vector3 forward;
+            Vector3 right;
 
-            // Если камера смотрит строго по нормали — берём текущий «вперёд» персонажа.
-            if (forward.sqrMagnitude < 0.0001f)
-                forward = Vector3.ProjectOnPlane(transform.forward, _up).normalized;
+            if (_cameraTransform != null)
+            {
+                forward = Vector3.ProjectOnPlane(_cameraTransform.forward, _up);
 
-            var right = Vector3.Cross(_up, forward);
+                if (forward.sqrMagnitude > 0.01f)
+                {
+                    forward.Normalize();
+                    right = Vector3.Cross(_up, forward);
+                }
+                else
+                {
+                    right = Vector3.ProjectOnPlane(_cameraTransform.right, _up);
+                    if (right.sqrMagnitude < 0.01f)
+                        return Vector3.zero;
+
+                    right.Normalize();
+                    forward = Vector3.Cross(right, _up);
+                }
+            }
+            else
+            {
+                forward = Vector3.ProjectOnPlane(transform.forward, _up);
+                if (forward.sqrMagnitude < 0.0001f)
+                    return Vector3.zero;
+
+                forward.Normalize();
+                right = Vector3.Cross(_up, forward);
+            }
+
             var direction = forward * input.y + right * input.x;
             return direction.sqrMagnitude > 1f ? direction.normalized : direction;
         }
@@ -130,18 +164,17 @@ namespace InvaderOfWorlds
             transform.rotation = Quaternion.Slerp(transform.rotation, target, _turnSpeed * Time.deltaTime);
         }
 
-        /// <summary>Страховка: если физика вытолкнула внутрь сферы — возвращаем на поверхность.</summary>
+        /// <summary>Страховка: если персонаж оказался внутри сферы — возвращаем на поверхность.</summary>
         private void KeepOnSurface()
         {
             if (_planet == null)
                 return;
 
             var distance = (transform.position - _planet.Center).magnitude;
-            if (distance >= _planet.Radius - 1f)
+            if (distance >= _planet.Radius - 0.05f)
                 return;
 
-            var corrected = _planet.SnapToSurface(transform.position, _controller.height * 0.5f + _controller.radius);
-            var push = corrected - transform.position;
+            var push = _planet.SnapToSurface(transform.position, 0.05f) - transform.position;
             _controller.Move(push);
         }
 
