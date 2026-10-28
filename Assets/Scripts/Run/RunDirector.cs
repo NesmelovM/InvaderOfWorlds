@@ -12,6 +12,7 @@ namespace InvaderOfWorlds
     {
         [SerializeField] private Health _playerHealth;
         [SerializeField, Min(0f)] private float _menuDelay = 0.8f;
+        [SerializeField] private string _hubSceneName = "Hub";
 
         private bool _dead;
         private float _deadAt;
@@ -86,9 +87,7 @@ namespace InvaderOfWorlds
         private void Restart()
         {
             Time.timeScale = 1f;
-
-            var scene = SceneManager.GetActiveScene();
-            SceneManager.LoadScene(scene.buildIndex >= 0 ? scene.buildIndex : 0);
+            SceneManager.LoadScene(_hubSceneName);
         }
 
         private void OnGUI()
@@ -123,7 +122,7 @@ namespace InvaderOfWorlds
             GUI.Label(new Rect(0f, top + 74f, Screen.width, 30f), $"Убито врагов: {RunSession.Kills}", _textStyle);
             GUI.Label(new Rect(0f, top + 106f, Screen.width, 30f),
                 $"Золото: {RunSession.Gold}    Опыт: {RunSession.Experience}", _textStyle);
-            GUI.Label(new Rect(0f, top + 160f, Screen.width, 30f), "R — новый забег", _textStyle);
+            GUI.Label(new Rect(0f, top + 160f, Screen.width, 30f), "R — вернуться в хаб", _textStyle);
         }
     }
 }

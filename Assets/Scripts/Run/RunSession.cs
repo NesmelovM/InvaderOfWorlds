@@ -18,6 +18,25 @@ namespace InvaderOfWorlds
             Kills++;
         }
 
+        /// <summary>Списать золото, если его хватает. Возвращает false, если не хватило.</summary>
+        public static bool TrySpend(int gold)
+        {
+            if (gold <= 0)
+                return true;
+
+            if (Gold < gold)
+                return false;
+
+            Gold -= gold;
+            return true;
+        }
+
+        /// <summary>Счётчик убийств обнуляется на каждый забег, накопления — нет.</summary>
+        public static void ResetKills()
+        {
+            Kills = 0;
+        }
+
         /// <summary>Полный сброс — понадобится при выходе в хаб.</summary>
         public static void Reset()
         {

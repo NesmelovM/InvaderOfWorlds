@@ -160,6 +160,7 @@ namespace InvaderOfWorlds.EditorTools
             var director = runObject.AddComponent<RunDirector>();
             director.Configure(health);
             runObject.AddComponent<RunHud>();
+            runObject.AddComponent<RunBootstrap>();
 
             var root = new GameObject("Test Enemies");
             var enemyColor = new Color(0.85f, 0.25f, 0.20f);

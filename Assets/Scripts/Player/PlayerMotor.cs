@@ -86,6 +86,16 @@ namespace InvaderOfWorlds
                 _groundRadius = SampleGroundRadius(_planet.UpAt(transform.position), out _groundNormal);
         }
 
+        /// <summary>Улучшение из хаба: множитель скорости применяется на старте забега.</summary>
+        public void ApplySpeedMultiplier(float multiplier)
+        {
+            if (multiplier <= 0f)
+                return;
+
+            _walkSpeed *= multiplier;
+            _sprintSpeed *= multiplier;
+        }
+
         private void Awake()
         {
             if (_cameraTransform == null && Camera.main != null)

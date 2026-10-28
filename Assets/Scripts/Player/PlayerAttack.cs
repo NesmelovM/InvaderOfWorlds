@@ -30,6 +30,15 @@ namespace InvaderOfWorlds
             _cameraTransform = cameraTransform;
         }
 
+        /// <summary>Улучшение из хаба: множитель урона применяется один раз на старте забега.</summary>
+        public void ApplyDamageMultiplier(float multiplier)
+        {
+            if (multiplier <= 0f)
+                return;
+
+            _damage *= multiplier;
+        }
+
         private void Awake()
         {
             if (_cameraTransform == null && Camera.main != null)
