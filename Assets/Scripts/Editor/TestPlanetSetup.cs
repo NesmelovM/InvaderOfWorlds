@@ -56,9 +56,9 @@ namespace InvaderOfWorlds.EditorTools
             var planet = planetObject.AddComponent<Planet>();
             planet.SetRadius(PlanetRadius);
 
-            // Коллайдер планеты — сфера радиусом с сам шар, иначе персонаж провалится.
-            var collider = planetObject.AddComponent<SphereCollider>();
-            collider.radius = PlanetRadius;
+            // Коллайдер планете не нужен: движение считается аналитически по сфере.
+            // Коллайдер-сфера только мешал бы проверке препятствий и провоцировал
+            // выталкивание персонажа физикой.
 
             // Визуал: примитив-сфера. Позже заменим на планету из LowPolyAlienWorld.
             var visual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -78,15 +78,8 @@ namespace InvaderOfWorlds.EditorTools
         {
             var playerObject = new GameObject("Player");
 
-            var controller = playerObject.AddComponent<CharacterController>();
-            controller.height = 1.8f;
-            controller.radius = 0.35f;
-            controller.center = new Vector3(0f, 0.9f, 0f);
-            controller.slopeLimit = 55f;
-            controller.stepOffset = 0.4f;
-            controller.skinWidth = 0.02f;
-
-            // Визуал: капсула без собственного коллайдера, иначе он конфликтует с контроллером.
+            // Визуал: капсула без коллайдера. Коллайдер персонажу не нужен —
+            // препятствия проверяются SphereCast'ом в самом моторе.
             var visual = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             visual.name = "Visual";
             Object.DestroyImmediate(visual.GetComponent<CapsuleCollider>());
@@ -96,7 +89,7 @@ namespace InvaderOfWorlds.EditorTools
 
             // Ставим на «северный полюс»: так сразу видно, что верх персонажа — от центра планеты.
             var up = Vector3.up;
-            playerObject.transform.position = planet.SurfacePoint(up) + up * 1.2f;
+            playerObject.transform.position = planet.SurfacePoint(up) + up * 0.02f;
             playerObject.transform.rotation = Quaternion.FromToRotation(Vector3.up, up);
 
             motor = playerObject.AddComponent<PlayerMotor>();

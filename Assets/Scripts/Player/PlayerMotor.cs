@@ -3,16 +3,18 @@ using UnityEngine;
 namespace InvaderOfWorlds
 {
     /// <summary>
-    /// Движение игрока по сфере на CharacterController.
+    /// Движение игрока по сфере без CharacterController.
     ///
-    /// Почему CharacterController, а не Rigidbody: на маленькой планете физический
-    /// персонаж дрожит на склонах и залипает на стыках, а контроллер даёт
-    /// предсказуемый шаг, скольжение по склону и работу с уступами.
+    /// Почему так: CharacterController рассчитан на плоский мир. Если держать его
+    /// прижатым к выпуклой поверхности, он проникает в сферу, физика выталкивает его
+    /// с огромной скоростью (в логах видели ccVel до 100 м/с), контакт теряется,
+    /// и горизонтальная скорость гасится. Персонаж «застревает» без всякой стены.
     ///
-    /// «Вверх» всегда равен нормали планеты в точке игрока, персонаж разворачивается
-    /// так, чтобы его локальная ось Y смотрела от центра планеты.
+    /// Здесь позиция считается аналитически: точка всегда лежит на сфере радиуса R,
+    /// высота прыжка — отдельная величина над поверхностью. Такое движение нельзя
+    /// «продавить» в грунт, потому что грунта как коллайдера нет вообще.
+    /// Препятствия (стены, постройки) обрабатываются отдельным SphereCast со скольжением.
     /// </summary>
-    [RequireComponent(typeof(CharacterController))]
     [DisallowMultipleComponent]
     public class PlayerMotor : MonoBehaviour
     {
@@ -27,24 +29,31 @@ namespace InvaderOfWorlds
         [SerializeField, Min(0f)] private float _acceleration = 45f;
         [SerializeField, Min(0f)] private float _turnSpeed = 12f;
 
-        [Header("Прыжок и прижатие к поверхности")]
+        [Header("Прыжок и гравитация")]
         [SerializeField, Min(0f)] private float _jumpHeight = 1.6f;
         [SerializeField, Min(0f)] private float _gravity = 25f;
-        [Tooltip("Скорость прижатия к земле, чтобы персонаж не «отрывался» на выпуклостях")]
-        [SerializeField, Min(0f)] private float _groundStick = 3f;
+
+        [Header("Геометрия")]
+        [Tooltip("Зазор между ступнями и поверхностью")]
+        [SerializeField, Min(0f)] private float _surfaceGap = 0.02f;
+        [Tooltip("Центр капсулы для проверки препятствий")]
+        [SerializeField, Min(0f)] private float _bodyCenter = 0.9f;
+        [SerializeField, Min(0.05f)] private float _bodyRadius = 0.35f;
+        [SerializeField] private LayerMask _obstacleMask = ~0;
 
         [Header("Отладка")]
-        [Tooltip("Пишет в консоль позицию, скорость и состояние опоры раз в 0.5 секунды")]
         [SerializeField] private bool _logMovement = true;
 
-        private CharacterController _controller;
-        private Vector3 _velocity;         // касательная скорость, м/с
-        private float _verticalVelocity;   // вдоль «вверх» планеты, м/с
+        private Vector3 _velocity;       // касательная скорость, м/с
+        private float _height;           // высота над поверхностью, м
+        private float _verticalSpeed;    // вдоль нормали, м/с
         private Vector3 _up = Vector3.up;
+        private bool _grounded = true;
 
         public Vector3 Up => _up;
-        public bool IsGrounded => _controller != null && _controller.isGrounded;
+        public bool IsGrounded => _grounded;
         public float CurrentSpeed => _velocity.magnitude;
+        public float Height => _height;
 
         /// <summary>
         /// Привязка к планете и камере. Нужна и редактору при сборке сцены,
@@ -54,22 +63,25 @@ namespace InvaderOfWorlds
         {
             _planet = planet;
             _cameraTransform = cameraTransform;
+            _grounded = true;
+            _height = 0f;
+            _verticalSpeed = 0f;
         }
 
         private void Awake()
         {
-            _controller = GetComponent<CharacterController>();
             if (_cameraTransform == null && Camera.main != null)
                 _cameraTransform = Camera.main.transform;
         }
 
         private void Update()
         {
-            _up = _planet != null ? _planet.UpAt(transform.position) : Vector3.up;
+            if (_planet == null)
+                return;
 
-            // Скорость всегда должна лежать в касательной плоскости текущей точки.
-            // Иначе при движении по сфере её «вертикальная» часть начинает давить в грунт,
-            // и контроллер гасит движение — персонаж словно вязнет.
+            _up = _planet.UpAt(transform.position);
+
+            // Скорость живёт в касательной плоскости текущей точки.
             _velocity = Vector3.ProjectOnPlane(_velocity, _up);
 
             ReadInput(out var input, out var sprint, out var jump);
@@ -78,67 +90,97 @@ namespace InvaderOfWorlds
             var desired = BuildMoveDirection(input) * speed;
             _velocity = Vector3.MoveTowards(_velocity, desired, _acceleration * Time.deltaTime);
 
-            ApplyGravityAndJump(jump);
-            AlignToSurface();
+            UpdateVertical(jump);
 
-            var motion = _velocity + _up * _verticalVelocity;
-            _controller.Move(motion * Time.deltaTime);
+            var delta = _velocity * Time.deltaTime;
+            delta = ResolveObstacles(delta);
 
-            KeepOnSurface();
+            ApplyDelta(delta);
 
             _debugLine = BuildDebugLine(input);
             LogState(input);
         }
 
-        private float _nextLogTime;
-        private string _debugLine = string.Empty;
-
-        private string BuildDebugLine(Vector2 input)
+        /// <summary>Вертикаль: прыжок и падение считаются отдельно от движения по поверхности.</summary>
+        private void UpdateVertical(bool jump)
         {
-            var distance = _planet != null ? (transform.position - _planet.Center).magnitude : 0f;
-            var upError = Vector3.Angle(transform.up, _up);
-            var cameraDotUp = _cameraTransform != null ? Vector3.Dot(_cameraTransform.forward, _up) : 0f;
-
-            return $"pos {transform.position:F1}  dist {distance:F2}  spd {CurrentSpeed:F2}  " +
-                   $"ccVel {_controller.velocity.magnitude:F2}  grounded {_controller.isGrounded}  " +
-                   $"flags {_controller.collisionFlags}  upErr {upError:F1}  camUp {cameraDotUp:F2}  input {input:F2}";
-        }
-
-        private void OnGUI()
-        {
-            if (!_logMovement)
-                return;
-
-            var style = new GUIStyle(GUI.skin.label) { fontSize = 14, normal = { textColor = Color.white } };
-            GUI.Label(new Rect(12f, 12f, 1200f, 24f), _debugLine, style);
-        }
-
-        /// <summary>
-        /// Диагностика: раз в полсекунды печатает состояние движения в лог.
-        /// Нужна, чтобы искать баги по числам, а не по ощущениям.
-        /// </summary>
-        private void LogState(Vector2 input)
-        {
-            if (!_logMovement || Time.time < _nextLogTime)
-                return;
-
-            _nextLogTime = Time.time + 0.5f;
-            Debug.Log("[MOVE] " + _debugLine);
-
-            if (input.sqrMagnitude > 0.1f && CurrentSpeed < 0.5f && Time.time > 1f)
+            if (_grounded)
             {
-                Debug.LogWarning($"[MOVE-STALL] pos={transform.position:F3} up={_up:F3} " +
-                                 $"transformUp={transform.up:F3} grounded={_controller.isGrounded} " +
-                                 $"flags={_controller.collisionFlags} motion={_velocity:F3}");
+                _height = 0f;
+                _verticalSpeed = 0f;
+
+                if (jump)
+                {
+                    _verticalSpeed = Mathf.Sqrt(2f * _gravity * _jumpHeight);
+                    _grounded = false;
+                }
+
+                return;
+            }
+
+            _verticalSpeed -= _gravity * Time.deltaTime;
+            _height += _verticalSpeed * Time.deltaTime;
+
+            if (_height <= 0f)
+            {
+                _height = 0f;
+                _verticalSpeed = 0f;
+                _grounded = true;
+            }
+        }
+
+        /// <summary>Переносит персонажа по касательной и ставит обратно на сферу.</summary>
+        private void ApplyDelta(Vector3 delta)
+        {
+            var nextPosition = transform.position + delta;
+
+            // Новая нормаль — уже в точке, куда идём: движение идёт по дуге большого круга.
+            var up = _planet.UpAt(nextPosition);
+            _up = up;
+
+            transform.position = _planet.Center + up * (_planet.Radius + _surfaceGap + _height);
+
+            // Разворот: сначала выравниваем «верх» по нормали, затем доворачиваем по движению.
+            var aligned = Quaternion.FromToRotation(transform.up, up) * transform.rotation;
+
+            var flatDelta = Vector3.ProjectOnPlane(delta, up);
+            if (flatDelta.sqrMagnitude > 0.000001f)
+            {
+                var target = Quaternion.LookRotation(flatDelta.normalized, up);
+                transform.rotation = Quaternion.Slerp(aligned, target, _turnSpeed * Time.deltaTime);
+            }
+            else
+            {
+                transform.rotation = aligned;
             }
         }
 
         /// <summary>
+        /// Препятствия: если путь перекрыт, скользим вдоль стены, а не останавливаемся.
+        /// Сама планета коллайдера не имеет, поэтому в проверку не попадает.
+        /// </summary>
+        private Vector3 ResolveObstacles(Vector3 delta)
+        {
+            var distance = delta.magnitude;
+            if (distance < 0.0001f)
+                return delta;
+
+            var origin = transform.position + _up * _bodyCenter;
+            var direction = delta / distance;
+
+            if (Physics.SphereCast(origin, _bodyRadius, direction, out var hit, distance + 0.05f,
+                    _obstacleMask, QueryTriggerInteraction.Ignore))
+            {
+                return Vector3.ProjectOnPlane(delta, hit.normal);
+            }
+
+            return delta;
+        }
+
+        /// <summary>
         /// Направление ввода в касательной плоскости, относительно камеры.
-        ///
-        /// Базис строится из векторов камеры, а не только из её «вперёд»: если камера
-        /// смотрит почти вертикально вниз, проекция forward вырождается в ноль,
-        /// и персонаж останавливается. Тогда базис достраивается от правого вектора.
+        /// Базис строится из forward, а если камера смотрит почти вертикально —
+        /// достраивается от правого вектора, чтобы направление не вырождалось.
         /// </summary>
         private Vector3 BuildMoveDirection(Vector2 input)
         {
@@ -181,51 +223,39 @@ namespace InvaderOfWorlds
             return direction.sqrMagnitude > 1f ? direction.normalized : direction;
         }
 
-        private void ApplyGravityAndJump(bool jump)
+        private float _nextLogTime;
+        private string _debugLine = string.Empty;
+
+        private string BuildDebugLine(Vector2 input)
         {
-            if (IsGrounded)
-            {
-                // Небольшое прижатие вместо нуля — иначе на выпуклой сфере персонаж «прыгает» на стыках.
-                _verticalVelocity = -_groundStick;
-
-                if (jump)
-                    _verticalVelocity = Mathf.Sqrt(2f * _gravity * _jumpHeight);
-            }
-            else
-            {
-                _verticalVelocity -= _gravity * Time.deltaTime;
-            }
-        }
-
-        /// <summary>Разворачивает капсулу так, чтобы её верх смотрел от центра планеты.</summary>
-        private void AlignToSurface()
-        {
-            var align = Quaternion.FromToRotation(transform.up, _up);
-            transform.rotation = align * transform.rotation;
-
-            if (_velocity.sqrMagnitude < 0.01f)
-                return;
-
-            var lookDirection = Vector3.ProjectOnPlane(_velocity, _up);
-            if (lookDirection.sqrMagnitude < 0.01f)
-                return;
-
-            var target = Quaternion.LookRotation(lookDirection, _up);
-            transform.rotation = Quaternion.Slerp(transform.rotation, target, _turnSpeed * Time.deltaTime);
-        }
-
-        /// <summary>Страховка: если персонаж оказался внутри сферы — возвращаем на поверхность.</summary>
-        private void KeepOnSurface()
-        {
-            if (_planet == null)
-                return;
-
             var distance = (transform.position - _planet.Center).magnitude;
-            if (distance >= _planet.Radius - 0.05f)
+            var upError = Vector3.Angle(transform.up, _up);
+
+            return $"pos {transform.position:F1}  dist {distance:F2}  spd {CurrentSpeed:F2}  " +
+                   $"height {_height:F2}  vSpeed {_verticalSpeed:F2}  grounded {_grounded}  " +
+                   $"upErr {upError:F1}  input {input:F2}";
+        }
+
+        private void OnGUI()
+        {
+            if (!_logMovement)
                 return;
 
-            var push = _planet.SnapToSurface(transform.position, 0.05f) - transform.position;
-            _controller.Move(push);
+            var style = new GUIStyle(GUI.skin.label) { fontSize = 14, normal = { textColor = Color.white } };
+            GUI.Label(new Rect(12f, 12f, 1200f, 24f), _debugLine, style);
+        }
+
+        private void LogState(Vector2 input)
+        {
+            if (!_logMovement || Time.time < _nextLogTime)
+                return;
+
+            _nextLogTime = Time.time + 0.5f;
+            Debug.Log("[MOVE] " + _debugLine);
+
+            if (input.sqrMagnitude > 0.1f && CurrentSpeed < 0.5f && Time.time > 1f)
+                Debug.LogWarning($"[MOVE-STALL] pos={transform.position:F3} up={_up:F3} " +
+                                 $"height={_height:F2} grounded={_grounded}");
         }
 
 #if ENABLE_LEGACY_INPUT_MANAGER
@@ -236,8 +266,6 @@ namespace InvaderOfWorlds
             jump = Input.GetButtonDown("Jump");
         }
 #else
-        // Проект на новом Input System: ввод подставит отдельный адаптер,
-        // чтобы движение не зависело от выбранной системы ввода.
         private static void ReadInput(out Vector2 move, out bool sprint, out bool jump)
         {
             move = Vector2.zero;
