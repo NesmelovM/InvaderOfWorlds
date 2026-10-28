@@ -3,21 +3,57 @@ using UnityEngine;
 namespace InvaderOfWorlds
 {
     /// <summary>
-    /// Состояние текущего забега: золото, опыт, счётчики.
-    /// Статика живёт дольше сцены, поэтому накопления переживают перезапуск
-    /// уровня — это и есть заготовка мета-прогресса.
+    /// Состояние забега и накопления.
+    ///
+    /// Важное различие: <see cref="RunGold"/> и <see cref="RunExperience"/> — добыча
+    /// текущего забега, она ещё не зачислена. <see cref="Gold"/> и
+    /// <see cref="Experience"/> — то, что уже лежит в кошельке.
+    /// Так можно списать долю при смерти и начислить всё при успешном уходе.
     /// </summary>
     public static class RunSession
     {
+        /// <summary>Всего золота в кошельке.</summary>
         public static int Gold { get; private set; }
+
+        /// <summary>Всего опыта.</summary>
         public static int Experience { get; private set; }
+
+        /// <summary>Золото, добытое в текущем забеге и ещё не зачисленное.</summary>
+        public static int RunGold { get; private set; }
+
+        /// <summary>Опыт текущего забега.</summary>
+        public static int RunExperience { get; private set; }
+
         public static int Kills { get; private set; }
 
         public static void RegisterKill(int gold, int experience)
         {
-            Gold += gold;
-            Experience += experience;
+            RunGold += gold;
+            RunExperience += experience;
             Kills++;
+        }
+
+        /// <summary>
+        /// Перевести добычу забега в кошелёк. <paramref name="share"/> — какая доля
+        /// доходит: 1 при успешном уходе, 0.7 при смерти.
+        /// </summary>
+        public static void CommitRun(float share)
+        {
+            share = Mathf.Clamp01(share);
+
+            Gold += Mathf.RoundToInt(RunGold * share);
+            Experience += Mathf.RoundToInt(RunExperience * share);
+
+            RunGold = 0;
+            RunExperience = 0;
+        }
+
+        /// <summary>Обнулить добычу забега перед новым заходом.</summary>
+        public static void ResetRun()
+        {
+            RunGold = 0;
+            RunExperience = 0;
+            Kills = 0;
         }
 
         /// <summary>Начислить золото вне боя — например стартовый капитал для прототипа.</summary>
@@ -45,21 +81,15 @@ namespace InvaderOfWorlds
         {
             Gold = Mathf.Max(0, gold);
             Experience = Mathf.Max(0, experience);
-            Kills = 0;
+            ResetRun();
         }
 
-        /// <summary>Счётчик убийств обнуляется на каждый забег, накопления — нет.</summary>
-        public static void ResetKills()
-        {
-            Kills = 0;
-        }
-
-        /// <summary>Полный сброс — понадобится при выходе в хаб.</summary>
+        /// <summary>Полный сброс.</summary>
         public static void Reset()
         {
             Gold = 0;
             Experience = 0;
-            Kills = 0;
+            ResetRun();
         }
     }
 }

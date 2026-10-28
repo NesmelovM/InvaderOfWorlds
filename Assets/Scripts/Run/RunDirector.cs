@@ -13,9 +13,15 @@ namespace InvaderOfWorlds
         [SerializeField] private Health _playerHealth;
         [SerializeField, Min(0f)] private float _menuDelay = 0.8f;
         [SerializeField] private string _hubSceneName = "Hub";
+        [Tooltip("Доля добычи, которая доходит до кошелька при смерти")]
+        [SerializeField, Range(0f, 1f)] private float _deathShare = 0.7f;
 
         private bool _dead;
         private float _deadAt;
+        private int _runGold;
+        private int _runExperience;
+        private int _keptGold;
+        private int _keptExperience;
         private GUIStyle _titleStyle;
         private GUIStyle _textStyle;
 
@@ -70,7 +76,16 @@ namespace InvaderOfWorlds
             if (attack != null)
                 attack.enabled = false;
 
-            Debug.Log($"[RUN] Игрок погиб. Убито: {RunSession.Kills}, золото: {RunSession.Gold}, опыт: {RunSession.Experience}");
+            Debug.Log($"[RUN] Игрок погиб. Убито: {RunSession.Kills}, " +
+                      $"добыто: {RunSession.RunGold} золота и {RunSession.RunExperience} опыта");
+
+            // При смерти доходит только часть добычи — остальное теряется.
+            _runGold = RunSession.RunGold;
+            _runExperience = RunSession.RunExperience;
+            _keptGold = Mathf.RoundToInt(_runGold * _deathShare);
+            _keptExperience = Mathf.RoundToInt(_runExperience * _deathShare);
+
+            RunSession.CommitRun(_deathShare);
 
             // Добыча за забег должна пережить даже закрытие игры.
             SaveSystem.Save();
@@ -124,8 +139,11 @@ namespace InvaderOfWorlds
             GUI.Label(new Rect(0f, top, Screen.width, 60f), "ВЫ ПОГИБЛИ", _titleStyle);
             GUI.Label(new Rect(0f, top + 74f, Screen.width, 30f), $"Убито врагов: {RunSession.Kills}", _textStyle);
             GUI.Label(new Rect(0f, top + 106f, Screen.width, 30f),
-                $"Золото: {RunSession.Gold}    Опыт: {RunSession.Experience}", _textStyle);
-            GUI.Label(new Rect(0f, top + 160f, Screen.width, 30f), "R — вернуться в хаб", _textStyle);
+                $"Добыто: {_runGold} золота, {_runExperience} опыта", _textStyle);
+            GUI.Label(new Rect(0f, top + 138f, Screen.width, 30f),
+                $"Зачислено {Mathf.RoundToInt(_deathShare * 100f)}%: " +
+                $"{_keptGold} золота, {_keptExperience} опыта", _textStyle);
+            GUI.Label(new Rect(0f, top + 178f, Screen.width, 30f), "R — вернуться в хаб", _textStyle);
         }
     }
 }

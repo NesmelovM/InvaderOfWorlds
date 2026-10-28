@@ -24,11 +24,12 @@ namespace InvaderOfWorlds
                 };
             }
 
-            var panel = new Rect(Screen.width - 348f, 10f, 336f, 34f);
+            var panel = new Rect(Screen.width - 500f, 10f, 488f, 34f);
             HealthBarDrawer.DrawRect(panel, new Color(0f, 0f, 0f, 0.45f));
 
             GUI.Label(new Rect(panel.x, panel.y + 6f, panel.width - 8f, 24f),
-                $"Золото {RunSession.Gold}   Опыт {RunSession.Experience}   Убито {RunSession.Kills}", _style);
+                $"Кошелёк {RunSession.Gold}   Опыт {RunSession.Experience}   " +
+                $"Забег +{RunSession.RunGold} / +{RunSession.RunExperience}   Убито {RunSession.Kills}", _style);
         }
     }
 }

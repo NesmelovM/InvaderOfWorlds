@@ -13,8 +13,8 @@ namespace InvaderOfWorlds
 
         private void Start()
         {
-            // Счётчик убийств — за забег, накопления — за всё время.
-            RunSession.ResetKills();
+            // Добыча прошлого забега уже зачислена, начинаем новый счёт.
+            RunSession.ResetRun();
 
             var player = GameObject.FindWithTag("Player");
 
