@@ -62,7 +62,7 @@ namespace InvaderOfWorlds
         /// <summary>Оружейная: покупка оружия и сборка набора в шесть слотов.</summary>
         private void DrawArmory()
         {
-            var panel = new Rect(470f, 24f, 430f, 400f);
+            var panel = new Rect(470f, 24f, 430f, 480f);
             HealthBarDrawer.DrawRect(panel, new Color(0f, 0f, 0f, 0.62f));
 
             GUI.Label(new Rect(panel.x + 18f, panel.y + 10f, 390f, 26f), "ОРУЖЕЙНАЯ", _titleStyle);

@@ -58,6 +58,16 @@ namespace InvaderOfWorlds
             {
                 Name = "Искра", Description = "мощный дальний выстрел", Kind = WeaponKind.Bolt,
                 Damage = 30f, Cooldown = 1.6f, Range = 14f, ProjectileSpeed = 22f, Cost = 220
+            },
+            new WeaponDef
+            {
+                Name = "Копьё", Description = "пробивает до четырёх целей", Kind = WeaponKind.Pierce,
+                Damage = 26f, Cooldown = 1.3f, Range = 13f, ProjectileSpeed = 30f, Cost = 240
+            },
+            new WeaponDef
+            {
+                Name = "Громовая цепь", Description = "молния по трём целям", Kind = WeaponKind.Chain,
+                Damage = 20f, Cooldown = 1.9f, Range = 9f, Cost = 280
             }
         };
 

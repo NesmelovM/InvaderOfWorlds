@@ -1,12 +1,15 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace InvaderOfWorlds
 {
     /// <summary>
-    /// Снаряд дальнего врага (и в будущем — игрока).
+    /// Снаряд игрока и врагов.
     ///
     /// Летит по прямой и каждый кадр проверяет путь сферой, поэтому не проскакивает
     /// сквозь цели на большой скорости. Своих не задевает.
+    /// Умеет пробивать несколько целей: тогда после попадания не исчезает,
+    /// а летит дальше, и одну и ту же цель второй раз не бьёт.
     /// </summary>
     public class Projectile : MonoBehaviour
     {
@@ -15,19 +18,22 @@ namespace InvaderOfWorlds
         [SerializeField, Min(0.1f)] private float _lifetime = 4f;
         [SerializeField, Min(0.02f)] private float _radius = 0.18f;
 
-        private readonly RaycastHit[] _hits = new RaycastHit[12];
+        private readonly RaycastHit[] _hits = new RaycastHit[16];
+        private readonly HashSet<int> _alreadyHit = new HashSet<int>();
 
         private Vector3 _direction;
         private Transform _owner;
         private float _life;
+        private int _pierceLeft;
 
-        public void Launch(Vector3 direction, float speed, float damage, Transform owner)
+        public void Launch(Vector3 direction, float speed, float damage, Transform owner, int pierce = 0)
         {
             _direction = direction.normalized;
             _speed = speed;
             _damage = damage;
             _owner = owner;
             _life = _lifetime;
+            _pierceLeft = Mathf.Max(0, pierce);
         }
 
         private void Update()
@@ -49,8 +55,7 @@ namespace InvaderOfWorlds
             var count = Physics.SphereCastNonAlloc(transform.position, _radius, _direction, _hits, distance, ~0,
                 QueryTriggerInteraction.Ignore);
 
-            var nearest = float.MaxValue;
-            IDamageable target = null;
+            var blocked = false;
 
             for (var i = 0; i < count; i++)
             {
@@ -62,19 +67,34 @@ namespace InvaderOfWorlds
                 if (_owner != null && hit.collider.transform.IsChildOf(_owner))
                     continue;
 
-                // Земля и стены останавливают снаряд, но урона не получают.
-                if (hit.distance < nearest)
-                {
-                    nearest = hit.distance;
+                var damageable = hit.collider.GetComponentInParent<IDamageable>();
 
-                    var damageable = hit.collider.GetComponentInParent<IDamageable>();
-                    target = damageable != null && damageable.IsAlive ? damageable : null;
+                if (damageable == null || !damageable.IsAlive)
+                {
+                    // Стена или земля: снаряд останавливается.
+                    blocked = true;
+                    continue;
                 }
+
+                var id = damageable.GetHashCode();
+
+                if (!_alreadyHit.Add(id))
+                    continue;
+
+                damageable.TakeDamage(_damage);
+
+                if (_pierceLeft > 0)
+                {
+                    _pierceLeft--;
+                    continue;
+                }
+
+                Destroy(gameObject);
+                return;
             }
 
-            if (nearest < float.MaxValue)
+            if (blocked)
             {
-                target?.TakeDamage(_damage);
                 Destroy(gameObject);
                 return;
             }

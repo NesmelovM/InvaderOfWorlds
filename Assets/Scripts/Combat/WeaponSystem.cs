@@ -12,6 +12,12 @@ namespace InvaderOfWorlds
         /// <summary>Снаряд в ближайшего врага.</summary>
         Bolt,
 
+        /// <summary>Пробивающий снаряд: задевает несколько целей подряд.</summary>
+        Pierce,
+
+        /// <summary>Молния: бьёт цель и перескакивает на соседних.</summary>
+        Chain,
+
         /// <summary>Волна вокруг героя, задевает всех в радиусе.</summary>
         Nova
     }
@@ -61,6 +67,7 @@ namespace InvaderOfWorlds
 
         private readonly Collider[] _targets = new Collider[24];
         private readonly RaycastHit[] _hits = new RaycastHit[16];
+        private readonly List<Transform> _chainVisited = new List<Transform>(4);
 
         public IReadOnlyList<WeaponSlot> Slots => _slots;
 
@@ -213,6 +220,15 @@ namespace InvaderOfWorlds
                         slot.Damage, transform, new Color(0.35f, 0.85f, 1f));
                     break;
 
+                case WeaponKind.Pierce:
+                    ProjectileFactory.Spawn(origin + direction * 0.4f, direction, slot.ProjectileSpeed,
+                        slot.Damage, transform, new Color(0.95f, 0.9f, 0.35f), pierce: 3);
+                    break;
+
+                case WeaponKind.Chain:
+                    FireChain(slot, origin, target);
+                    break;
+
                 case WeaponKind.Nova:
                     FireNova(slot, origin);
                     break;
@@ -254,6 +270,69 @@ namespace InvaderOfWorlds
             }
 
             bestTarget?.TakeDamage(slot.Damage);
+        }
+
+        /// <summary>
+        /// Молния: бьёт первую цель, затем перескакивает на ближайшую непоражённую.
+        /// С каждым прыжком урон падает — иначе толпа умирала бы от одного разряда.
+        /// </summary>
+        private void FireChain(WeaponSlot slot, Vector3 origin, Transform firstTarget)
+        {
+            _chainVisited.Clear();
+
+            var current = firstTarget;
+            var damage = slot.Damage;
+            const int jumps = 3;
+            const float jumpRadius = 6f;
+
+            for (var i = 0; i < jumps && current != null; i++)
+            {
+                var damageable = current.GetComponentInParent<IDamageable>();
+
+                if (damageable == null || !damageable.IsAlive)
+                    break;
+
+                damageable.TakeDamage(damage);
+                _chainVisited.Add(current);
+                damage *= 0.7f;
+
+                current = FindChainTarget(current.position, jumpRadius);
+            }
+        }
+
+        private Transform FindChainTarget(Vector3 position, float radius)
+        {
+            var count = Physics.OverlapSphereNonAlloc(position, radius, _targets, _enemyMask,
+                QueryTriggerInteraction.Ignore);
+
+            Transform nearest = null;
+            var best = float.MaxValue;
+
+            for (var i = 0; i < count; i++)
+            {
+                var candidate = _targets[i];
+
+                if (candidate == null || candidate.transform.IsChildOf(transform))
+                    continue;
+
+                if (_chainVisited.Contains(candidate.transform))
+                    continue;
+
+                var damageable = candidate.GetComponentInParent<IDamageable>();
+
+                if (damageable == null || !damageable.IsAlive)
+                    continue;
+
+                var distance = Vector3.Distance(position, candidate.bounds.center);
+
+                if (distance >= best)
+                    continue;
+
+                best = distance;
+                nearest = candidate.transform;
+            }
+
+            return nearest;
         }
 
         private void FireNova(WeaponSlot slot, Vector3 origin)
