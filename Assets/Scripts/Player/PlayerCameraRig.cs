@@ -44,6 +44,9 @@ namespace InvaderOfWorlds
         private Vector3 _smoothVelocity;
         private Vector3 _position;
         private bool _initialized;
+        private float _shakeTimer;
+        private float _shakeDuration;
+        private float _shakeStrength;
 
         /// <summary>Горизонтальное направление камеры — для прицеливания и оружия.</summary>
         public Vector3 PlanarForward
@@ -109,7 +112,24 @@ namespace InvaderOfWorlds
             }
 
             _position = Vector3.SmoothDamp(_position, desired, ref _smoothVelocity, _smoothTime);
-            transform.SetPositionAndRotation(_position, _rotation);
+
+            var shakeOffset = Vector3.zero;
+            if (_shakeTimer > 0f)
+            {
+                _shakeTimer -= Time.unscaledDeltaTime;
+                var fade = _shakeDuration <= 0f ? 1f : Mathf.Clamp01(_shakeTimer / _shakeDuration);
+                shakeOffset = Random.insideUnitSphere * (_shakeStrength * fade);
+            }
+
+            transform.SetPositionAndRotation(_position + shakeOffset, _rotation);
+        }
+
+        /// <summary>Короткая тряска камеры — отклик на полученный урон.</summary>
+        public void Shake(float strength, float duration)
+        {
+            _shakeStrength = strength;
+            _shakeDuration = Mathf.Max(0.01f, duration);
+            _shakeTimer = _shakeDuration;
         }
 
         private void InitializeIfNeeded(Vector3 up)

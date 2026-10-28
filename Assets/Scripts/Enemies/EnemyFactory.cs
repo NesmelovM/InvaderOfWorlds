@@ -31,6 +31,7 @@ namespace InvaderOfWorlds
             var healthComponent = enemy.AddComponent<Health>();
             healthComponent.Configure(health);
 
+            enemy.AddComponent<HitFlash>();
             enemy.AddComponent<EnemyHealthBar>();
 
             var brain = enemy.AddComponent<EnemyBrain>();
