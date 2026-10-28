@@ -32,8 +32,17 @@ namespace InvaderOfWorlds
             {
                 attack.ApplyDamageMultiplier(MetaProgress.DamageMultiplier + SkillTree.DamageBonus);
 
-                // Узел дерева открывает третье оружие — взрыв вокруг героя.
-                if (SkillTree.HasNova)
+                // Набор собирается в оружейной хаба, а не задаётся сценой.
+                if (Armory.Equipped.Count > 0)
+                {
+                    attack.ClearSlots();
+
+                    foreach (var id in Armory.Equipped)
+                        attack.TryEquip(Armory.ToSlot(id));
+                }
+
+                // Узел дерева открывает взрыв, если такого оружия ещё нет в наборе.
+                if (SkillTree.HasNova && !HasNovaEquipped())
                 {
                     attack.TryEquip(new WeaponSlot
                     {
@@ -64,6 +73,18 @@ namespace InvaderOfWorlds
             }
 
             return count;
+        }
+
+        /// <summary>Есть ли взрыв в собранном наборе — чтобы не дублировать его узлом дерева.</summary>
+        private static bool HasNovaEquipped()
+        {
+            foreach (var id in Armory.Equipped)
+            {
+                if (Armory.Catalog[id].Kind == WeaponKind.Nova)
+                    return true;
+            }
+
+            return false;
         }
     }
 }

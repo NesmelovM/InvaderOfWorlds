@@ -55,7 +55,53 @@ namespace InvaderOfWorlds
 
             DrawHeader();
             DrawShop();
+            DrawArmory();
             DrawTree();
+        }
+
+        /// <summary>Оружейная: покупка оружия и сборка набора в шесть слотов.</summary>
+        private void DrawArmory()
+        {
+            var panel = new Rect(470f, 24f, 430f, 400f);
+            HealthBarDrawer.DrawRect(panel, new Color(0f, 0f, 0f, 0.62f));
+
+            GUI.Label(new Rect(panel.x + 18f, panel.y + 10f, 390f, 26f), "ОРУЖЕЙНАЯ", _titleStyle);
+            GUI.Label(new Rect(panel.x + 18f, panel.y + 34f, 390f, 20f),
+                $"В наборе: {Armory.Equipped.Count}/{WeaponSystem.MaxSlots}    Слотов свободно: " +
+                $"{WeaponSystem.MaxSlots - Armory.Equipped.Count}", _hintStyle);
+
+            for (var i = 0; i < Armory.Catalog.Length; i++)
+            {
+                var weapon = Armory.Catalog[i];
+                var rowY = panel.y + 60f + i * 46f;
+
+                var owned = Armory.IsOwned(i);
+                var equipped = Armory.IsEquipped(i);
+
+                GUI.Label(new Rect(panel.x + 18f, rowY, 270f, 20f), weapon.Name, _textStyle);
+                GUI.Label(new Rect(panel.x + 18f, rowY + 18f, 270f, 18f),
+                    owned ? weapon.Description : $"{weapon.Description} · {weapon.Cost} золота", _hintStyle);
+
+                var caption = equipped ? "снять" : owned ? "взять" : $"купить · {weapon.Cost}";
+                var hasRoom = Armory.Equipped.Count < WeaponSystem.MaxSlots;
+
+                var previous = GUI.enabled;
+                GUI.enabled = equipped || (owned ? hasRoom : RunSession.Gold >= weapon.Cost);
+
+                if (GUI.Button(new Rect(panel.x + 296f, rowY + 2f, 116f, 32f), caption, _buttonStyle))
+                {
+                    if (equipped)
+                        Armory.TryUnequip(i);
+                    else if (owned)
+                        Armory.TryEquip(i);
+                    else if (Armory.TryBuy(i))
+                        Armory.TryEquip(i);
+
+                    SaveSystem.Save();
+                }
+
+                GUI.enabled = previous;
+            }
         }
 
         /// <summary>Дерево прокачки: узлы за опыт, часть требует предыдущих.</summary>

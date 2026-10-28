@@ -90,6 +90,12 @@ namespace InvaderOfWorlds
             return true;
         }
 
+        /// <summary>Очистить набор — перед сборкой нового в оружейной.</summary>
+        public void ClearSlots()
+        {
+            _slots.Clear();
+        }
+
         private void Awake()
         {
             if (_cameraTransform == null && Camera.main != null)
