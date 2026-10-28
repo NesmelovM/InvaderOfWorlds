@@ -11,7 +11,7 @@ namespace InvaderOfWorlds
     {
         [SerializeField, Min(1f)] private float _max = 100f;
         [SerializeField] private bool _destroyOnDeath = true;
-        [SerializeField] private bool _logDamage = true;
+
 
         private float _current;
 
@@ -54,9 +54,6 @@ namespace InvaderOfWorlds
 
             _current = Mathf.Max(0f, _current - amount);
             SoundBank.Hit(transform.position);
-
-            if (_logDamage)
-                Debug.Log($"[HP] {name}: -{amount:F0} → {_current:F0}/{_max:F0}");
 
             Changed?.Invoke(_current, _max);
 

@@ -48,8 +48,6 @@ namespace InvaderOfWorlds
             if (motor != null)
                 motor.ApplySpeedMultiplier(MetaProgress.SpeedMultiplier);
 
-            Debug.Log($"[RUN] Старт. Здоровье {maxHealth:F0}, урон ×{MetaProgress.DamageMultiplier:F2}, " +
-                      $"стартовое оружие: {Armory.Catalog[Armory.Equipped.Count > 0 ? Armory.Equipped[0] : 0].Name}");
         }
     }
 }

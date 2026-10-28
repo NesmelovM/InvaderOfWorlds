@@ -54,9 +54,6 @@ namespace InvaderOfWorlds
         [Tooltip("Предельный уклон, по которому можно идти, градусы")]
         [SerializeField, Range(0f, 90f)] private float _slopeLimit = 55f;
 
-        [Header("Отладка")]
-        [SerializeField] private bool _logMovement = true;
-
         private Vector3 _velocity;       // касательная скорость, м/с
         private float _height;           // высота над грунтом, м
         private float _verticalSpeed;    // вдоль нормали, м/с
@@ -133,9 +130,6 @@ namespace InvaderOfWorlds
             // Не даём пройти сквозь врагов: расталкиваем по касательной и снова сажаем на грунт.
             CharacterSeparation.Resolve(transform, _up, _bodyCenter, _bodyRadius, 0.6f);
             SnapToSurface();
-
-            _debugLine = BuildDebugLine(input);
-            LogState(input);
         }
 
         /// <summary>Возвращает персонажа на текущий грунт после расталкивания.</summary>
@@ -386,42 +380,6 @@ namespace InvaderOfWorlds
 
             var direction = forward * input.y + right * input.x;
             return direction.sqrMagnitude > 1f ? direction.normalized : direction;
-        }
-
-        private float _nextLogTime;
-        private string _debugLine = string.Empty;
-
-        private string BuildDebugLine(Vector2 input)
-        {
-            var distance = (transform.position - _planet.Center).magnitude;
-            var upError = Vector3.Angle(transform.up, _up);
-            var slope = Vector3.Angle(_groundNormal, _up);
-
-            return $"pos {transform.position:F1}  dist {distance:F2}  ground {_groundRadius:F2}  " +
-                   $"slope {slope:F0}°  spd {CurrentSpeed:F2}  height {_height:F2}  " +
-                   $"grounded {_grounded}  upErr {upError:F1}  input {input:F2}";
-        }
-
-        private void OnGUI()
-        {
-            if (!_logMovement)
-                return;
-
-            var style = new GUIStyle(GUI.skin.label) { fontSize = 14, normal = { textColor = Color.white } };
-            GUI.Label(new Rect(12f, 12f, 1200f, 24f), _debugLine, style);
-        }
-
-        private void LogState(Vector2 input)
-        {
-            if (!_logMovement || Time.time < _nextLogTime)
-                return;
-
-            _nextLogTime = Time.time + 0.5f;
-            Debug.Log("[MOVE] " + _debugLine);
-
-            if (input.sqrMagnitude > 0.1f && CurrentSpeed < 0.5f && Time.time > 1f)
-                Debug.LogWarning($"[MOVE-STALL] pos={transform.position:F3} up={_up:F3} " +
-                                 $"ground={_groundRadius:F2} height={_height:F2} grounded={_grounded}");
         }
 
 #if ENABLE_LEGACY_INPUT_MANAGER

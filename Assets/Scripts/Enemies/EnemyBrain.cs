@@ -255,7 +255,6 @@ namespace InvaderOfWorlds
                 return;
 
             damageable.TakeDamage(_damage);
-            Debug.Log($"[ENEMY] {name} ударил на {_damage:F0}");
         }
 
         private void SnapToGround(Vector3 position, Vector3 up)

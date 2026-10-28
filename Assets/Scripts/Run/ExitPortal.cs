@@ -59,7 +59,6 @@ namespace InvaderOfWorlds
             _open = true;
             ApplyColor(_openColor);
             SoundBank.Portal(transform.position);
-            Debug.Log("[PORTAL] Босс повержен, портал открыт.");
         }
 
         private void Update()
@@ -83,8 +82,6 @@ namespace InvaderOfWorlds
             RunSession.CommitRun(_bonusShare);
             SaveSystem.Save();
 
-            Debug.Log($"[PORTAL] Забег завершён победой. Убито: {RunSession.Kills}, " +
-                      $"в кошельке: {RunSession.Gold} золота, {RunSession.Experience} опыта");
 
             Time.timeScale = 1f;
             SceneManager.LoadScene(_hubSceneName);

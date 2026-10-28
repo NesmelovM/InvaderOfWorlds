@@ -76,14 +76,12 @@ namespace InvaderOfWorlds
         [Header("Слоты")]
         [SerializeField] private List<WeaponSlot> _slots = new List<WeaponSlot>(MaxSlots);
 
-        [Header("Отладка")]
-        [SerializeField] private bool _logShots;
-
         private readonly Collider[] _targets = new Collider[24];
         private readonly RaycastHit[] _hits = new RaycastHit[16];
         private readonly List<Transform> _chainVisited = new List<Transform>(4);
         private readonly List<Transform> _orbiterVisuals = new List<Transform>(2);
         private readonly List<float> _orbiterAngles = new List<float>(2);
+        private readonly Dictionary<float, Mesh> _slashMeshes = new Dictionary<float, Mesh>();
 
         private Transform _auraVisual;
         private Mesh _auraMesh;
@@ -485,13 +483,13 @@ namespace InvaderOfWorlds
                     FireMelee(slot, origin, direction);
                     break;
             }
-
-            if (_logShots)
-                Debug.Log($"[WEAPON] {slot.Kind} по {target.name} на {slot.Damage:F0}");
         }
 
         private void FireMelee(WeaponSlot slot, Vector3 origin, Vector3 direction)
         {
+            // Видимый замах: без него удар клинком и глефой выглядел как «ничего не произошло».
+            SpawnSlash(origin, direction, slot);
+
             var count = Physics.SphereCastNonAlloc(origin, _meleeRadius, direction, _hits, slot.Range,
                 _enemyMask, QueryTriggerInteraction.Ignore);
 
@@ -518,6 +516,32 @@ namespace InvaderOfWorlds
             }
 
             bestTarget?.TakeDamage(slot.Damage);
+        }
+
+        /// <summary>Дуга замаха. Меш кешируется по дальности, чтобы не создавать его на каждый удар.</summary>
+        private void SpawnSlash(Vector3 origin, Vector3 direction, WeaponSlot slot)
+        {
+            var slash = new GameObject("Slash");
+            var filter = slash.AddComponent<MeshFilter>();
+            filter.sharedMesh = GetSlashMesh(slot.Range);
+
+            var renderer = slash.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = EnemyFactory.GetMaterial(new Color(0.85f, 0.95f, 1f));
+
+            slash.transform.position = origin;
+            slash.transform.rotation = Quaternion.LookRotation(direction, transform.up);
+
+            slash.AddComponent<SlashEffect>().Launch(transform.up, 1f);
+        }
+
+        private Mesh GetSlashMesh(float range)
+        {
+            if (_slashMeshes.TryGetValue(range, out var mesh) && mesh != null)
+                return mesh;
+
+            mesh = ArcMesh.Create(range * 0.35f, range, 110f);
+            _slashMeshes[range] = mesh;
+            return mesh;
         }
 
         /// <summary>

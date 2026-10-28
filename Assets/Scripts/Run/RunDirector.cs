@@ -76,8 +76,6 @@ namespace InvaderOfWorlds
             if (attack != null)
                 attack.enabled = false;
 
-            Debug.Log($"[RUN] Игрок погиб. Убито: {RunSession.Kills}, " +
-                      $"добыто: {RunSession.RunGold} золота и {RunSession.RunExperience} опыта");
 
             // При смерти доходит только часть добычи — остальное теряется.
             _runGold = RunSession.RunGold;

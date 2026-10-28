@@ -66,7 +66,6 @@ namespace InvaderOfWorlds
                     SpawnEliteArcher(settlement.Center);
             }
 
-            Debug.Log($"[SettlementSpawner] Заселено поселений: {_generator.Settlements.Count}");
         }
 
         /// <summary>

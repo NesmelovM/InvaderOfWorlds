@@ -209,7 +209,6 @@ namespace InvaderOfWorlds
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
 
-            Debug.Log($"[LEVEL] Уровень {_level}, выбрано: {_cards[index].Title}");
         }
 
         private void OnGUI()

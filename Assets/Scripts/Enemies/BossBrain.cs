@@ -206,7 +206,6 @@ namespace InvaderOfWorlds
                 damageable.TakeDamage(_slamDamage);
             }
 
-            Debug.Log($"[BOSS] Удар по площади: {_slamDamage} урона в радиусе {_slamRadius}");
         }
 
         private void Volley()
@@ -225,7 +224,6 @@ namespace InvaderOfWorlds
                     _volleyDamage, transform, new Color(1f, 0.45f, 0.2f), planet: _planet);
             }
 
-            Debug.Log($"[BOSS] Веер: {_volleyCount} снарядов");
         }
 
         private void Summon()
@@ -246,7 +244,6 @@ namespace InvaderOfWorlds
                     new Color(0.7f, 0.35f, 0.25f), 40f, transform.parent);
             }
 
-            Debug.Log($"[BOSS] Призыв стражи: {_summonCount}");
         }
 
         private void MoveTowards(Vector3 position, Vector3 up, Vector3 toTarget)
