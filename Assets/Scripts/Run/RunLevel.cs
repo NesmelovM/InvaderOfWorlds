@@ -100,6 +100,7 @@ namespace InvaderOfWorlds
 
             _choosing = true;
             Time.timeScale = 0f;
+            SoundBank.LevelUp();
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }

@@ -150,14 +150,17 @@ namespace InvaderOfWorlds.EditorTools
             var attack = player.AddComponent<WeaponSystem>();
             attack.Configure(cameraObject.transform, planet);
 
+            // Оружие в руке: модель под текущий слот и замах при ударе.
+            player.AddComponent<WeaponVisual>();
+
             attack.TryEquip(new WeaponSlot
             {
-                Kind = WeaponKind.Melee, Damage = 34f, Cooldown = 0.5f, Range = 3.2f
+                Kind = WeaponKind.Melee, Icon = 0, Damage = 34f, Cooldown = 0.5f, Range = 3.2f
             });
 
             attack.TryEquip(new WeaponSlot
             {
-                Kind = WeaponKind.Bolt, Damage = 18f, Cooldown = 1.1f, Range = 11f, ProjectileSpeed = 26f
+                Kind = WeaponKind.Bolt, Icon = 1, Damage = 18f, Cooldown = 1.1f, Range = 11f, ProjectileSpeed = 26f
             });
 
             var spawnerObject = new GameObject("Settlement Spawner");

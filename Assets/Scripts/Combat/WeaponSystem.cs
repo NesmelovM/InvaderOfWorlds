@@ -45,6 +45,8 @@ namespace InvaderOfWorlds
         public float ProjectileSpeed = 24f;
         [Tooltip("Сколько атак за один тик: залп снарядов или несколько ударов")]
         public int Shots = 1;
+        [Tooltip("Индекс оружия в каталоге оружейной: по нему выбирается модель в руке")]
+        public int Icon = -1;
         public bool Enabled = true;
 
         [NonSerialized] public float NextFireTime;
@@ -90,6 +92,9 @@ namespace InvaderOfWorlds
         private float _auraMeshRange = -1f;
 
         public IReadOnlyList<WeaponSlot> Slots => _slots;
+
+        /// <summary>Слот выстрелил: на это подписан визуал оружия в руке.</summary>
+        public event System.Action<WeaponKind> Fired;
 
         public void Configure(Transform cameraTransform, Planet planet = null)
         {
@@ -500,8 +505,26 @@ namespace InvaderOfWorlds
 
                 default:
                     FireMelee(slot, origin, direction);
+                    SoundBank.Swing(origin);
                     break;
             }
+
+            switch (slot.Kind)
+            {
+                case WeaponKind.Bolt:
+                case WeaponKind.Pierce:
+                case WeaponKind.Homing:
+                case WeaponKind.Boomerang:
+                    SoundBank.Shot(origin);
+                    break;
+                case WeaponKind.Chain:
+                case WeaponKind.Nova:
+                case WeaponKind.Aura:
+                    SoundBank.Magic(origin);
+                    break;
+            }
+
+            Fired?.Invoke(slot.Kind);
         }
 
         private void FireMelee(WeaponSlot slot, Vector3 origin, Vector3 direction)

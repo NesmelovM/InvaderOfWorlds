@@ -47,6 +47,42 @@ namespace InvaderOfWorlds
             Play("portal", position, 0.6f);
         }
 
+        /// <summary>Свист замаха: шум с быстрым затуханием.</summary>
+        public static void Swing(Vector3 position)
+        {
+            Play("swing", position, 0.32f);
+        }
+
+        /// <summary>Магический удар: короткий взлёт тона.</summary>
+        public static void Magic(Vector3 position)
+        {
+            Play("magic", position, 0.3f);
+        }
+
+        /// <summary>Повышение уровня: восходящий аккорд.</summary>
+        public static void LevelUp()
+        {
+            Play("levelup", Vector3.zero, 0.55f);
+        }
+
+        /// <summary>Шаг: тихий глухой стук.</summary>
+        public static void Step(Vector3 position)
+        {
+            Play("step", position, 0.18f);
+        }
+
+        /// <summary>Нажатие кнопки интерфейса.</summary>
+        public static void Click()
+        {
+            Play("click", Vector3.zero, 0.28f);
+        }
+
+        /// <summary>Звон монеты: награда за убийство.</summary>
+        public static void Coin(Vector3 position)
+        {
+            Play("coin", position, 0.22f);
+        }
+
         private static void Play(string key, Vector3 position, float volume)
         {
             var clip = GetClip(key);
@@ -67,6 +103,12 @@ namespace InvaderOfWorlds
                 "hurt" => CreateTone("hurt", 0.18f, 180f, 90f, 0.6f),
                 "shot" => CreateTone("shot", 0.07f, 900f, 500f, 0.4f),
                 "portal" => CreateTone("portal", 0.9f, 220f, 880f, 0.4f),
+                "swing" => CreateNoise("swing", 0.14f, 0.55f),
+                "magic" => CreateTone("magic", 0.24f, 420f, 1100f, 0.35f),
+                "levelup" => CreateTone("levelup", 0.5f, 520f, 1040f, 0.45f),
+                "step" => CreateNoise("step", 0.07f, 0.3f),
+                "click" => CreateTone("click", 0.05f, 1200f, 700f, 0.3f),
+                "coin" => CreateTone("coin", 0.16f, 1400f, 1900f, 0.3f),
                 _ => null
             };
 

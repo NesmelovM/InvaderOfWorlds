@@ -58,6 +58,8 @@ namespace InvaderOfWorlds
         private float _height;           // высота над грунтом, м
         private float _verticalSpeed;    // вдоль нормали, м/с
         private Vector3 _up = Vector3.up;
+        private float _stepDistance;
+        [SerializeField, Min(0.5f)] private float _stepLength = 2.4f;
         private Vector3 _groundNormal = Vector3.up;
         private float _groundRadius;
         private bool _grounded = true;
@@ -134,6 +136,26 @@ namespace InvaderOfWorlds
             // Не даём пройти сквозь врагов: расталкиваем по касательной и снова сажаем на грунт.
             CharacterSeparation.Resolve(transform, _up, _bodyCenter, _bodyRadius, 0.6f);
             SnapToSurface();
+
+            UpdateFootsteps(delta.magnitude);
+        }
+
+        /// <summary>
+        /// Шаги: звук через каждые пару метров пути. Привязан к пройденной дистанции,
+        /// а не ко времени, поэтому шаги не частит при быстром беге.
+        /// </summary>
+        private void UpdateFootsteps(float moved)
+        {
+            if (!_grounded || moved < 0.0001f)
+                return;
+
+            _stepDistance += moved;
+
+            if (_stepDistance < _stepLength)
+                return;
+
+            _stepDistance = 0f;
+            SoundBank.Step(transform.position);
         }
 
         /// <summary>Возвращает персонажа на текущий грунт после расталкивания.</summary>

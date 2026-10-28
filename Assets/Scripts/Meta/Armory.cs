@@ -152,6 +152,7 @@ namespace InvaderOfWorlds
                 Range = def.Range,
                 ProjectileSpeed = def.ProjectileSpeed,
                 Shots = 1,
+                Icon = id,
                 Enabled = true
             };
 

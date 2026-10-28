@@ -39,6 +39,7 @@ namespace InvaderOfWorlds
 
         private void OnDied(Health health)
         {
+            SoundBank.Coin(transform.position);
             RunSession.RegisterKill(
                 Mathf.RoundToInt(_gold * Balance.GoldMultiplier),
                 Mathf.RoundToInt(_experience * Balance.ExperienceMultiplier));
