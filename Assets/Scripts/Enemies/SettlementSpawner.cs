@@ -17,6 +17,7 @@ namespace InvaderOfWorlds
         [Header("Настройки")]
         [SerializeField, Min(1)] private int _maxPerSettlement = 4;
         [SerializeField, Min(0f)] private float _spread = 9f;
+        [SerializeField, Min(1)] private int _placementAttempts = 24;
         [SerializeField, Min(1f)] private float _health = 60f;
         [SerializeField] private Color _color = new Color(0.78f, 0.22f, 0.18f);
         [SerializeField] private bool _spawnOnStart = true;
@@ -55,21 +56,21 @@ namespace InvaderOfWorlds
         }
 
         /// <summary>Ставит одного стража рядом с центром поселения, на поверхности.</summary>
+        /// <summary>
+        /// Ставит одного стража рядом с центром поселения. Место проверяется:
+        /// если точка занята стеной или постройкой — берётся соседняя.
+        /// </summary>
         public GameObject SpawnGuard(Vector3 around)
         {
-            var up = _planet.UpAt(around);
-            var tangent = Vector3.ProjectOnPlane(Random.onUnitSphere, up);
+            if (!SpawnPlacement.TryFindFreeGroundPosition(_planet, around, _spread, _placementAttempts,
+                    out var position, out var up))
+            {
+                Debug.LogWarning($"[SettlementSpawner] Не нашёл свободного места у {around}, ставлю в центре.", this);
+                position = around;
+                up = _planet.UpAt(around);
+            }
 
-            if (tangent.sqrMagnitude < 0.0001f)
-                tangent = Vector3.ProjectOnPlane(Vector3.forward, up);
-
-            var offset = tangent.normalized * Random.Range(0f, _spread);
-            var position = around + offset;
-            var direction = _planet.UpAt(position);
-            var ground = PlanetSurface.SampleGroundRadius(_planet, direction, 40f, ~0, null, out _);
-
-            return EnemyFactory.Spawn(_planet, _player, _planet.Center + direction * (ground + 0.02f),
-                _color, _health, transform);
+            return EnemyFactory.Spawn(_planet, _player, position, _color, _health, transform);
         }
     }
 }

@@ -39,7 +39,7 @@ namespace InvaderOfWorlds.EditorTools
             Selection.activeGameObject = player;
             Debug.Log($"[Invader of Worlds] Тестовая сцена собрана. Радиус планеты {PlanetRadius} м, " +
                       $"игрок на «северном полюсе». WASD, мышь, Space — прыжок, Shift — бег, ЛКМ — удар. " +
-                      $"Впереди в 18 м холм, слева в 12 м ступень, справа в 8 м стена, рядом два врага.");
+                      $"Слева ступень, справа стена, рядом два врага, холмы далеко.");
         }
 
         private static void CreateLight()
@@ -144,15 +144,24 @@ namespace InvaderOfWorlds.EditorTools
             var root = new GameObject("Test Enemies");
             var enemyColor = new Color(0.85f, 0.25f, 0.20f);
 
-            // По бокам от точки появления: ступень и стена стоят на других направлениях,
-            // так что враги не оказываются внутри чужого коллайдера.
-            EnemyFactory.Spawn(planet, player.transform,
-                planet.SurfacePoint(Quaternion.AngleAxis(3.5f, Vector3.forward) * Vector3.up),
-                enemyColor, 50f, root.transform);
+            // По бокам от точки появления. Позиция проверяется на пересечения,
+            // чтобы враг не оказался внутри ступени, стены или холма.
+            SpawnTestEnemy(planet, player.transform, root.transform, 3.5f, enemyColor, 50f);
+            SpawnTestEnemy(planet, player.transform, root.transform, -3.5f, enemyColor, 50f);
+        }
 
-            EnemyFactory.Spawn(planet, player.transform,
-                planet.SurfacePoint(Quaternion.AngleAxis(-3.5f, Vector3.forward) * Vector3.up),
-                enemyColor, 50f, root.transform);
+        private static void SpawnTestEnemy(Planet planet, Transform player, Transform parent, float angle,
+            Color color, float health)
+        {
+            var around = planet.SurfacePoint(Quaternion.AngleAxis(angle, Vector3.forward) * Vector3.up);
+
+            if (!SpawnPlacement.TryFindFreeGroundPosition(planet, around, 4f, 20, out var position, out _))
+            {
+                Debug.LogWarning("[TestPlanetSetup] Не нашёл свободного места для тестового врага, ставлю как есть.");
+                position = around;
+            }
+
+            EnemyFactory.Spawn(planet, player, position, color, health, parent);
         }
 
         /// <summary>
