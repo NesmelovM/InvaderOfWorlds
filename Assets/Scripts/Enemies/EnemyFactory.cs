@@ -164,6 +164,12 @@ namespace InvaderOfWorlds
 
             var shader = Shader.Find("Standard");
             var material = new Material(shader) { color = color };
+
+            // Низкополигональный мир должен быть матовым: с блеском по умолчанию
+            // гладкие холмы и песок вспыхивают белым бликом на скользящем угле.
+            material.SetFloat("_Glossiness", 0.05f);
+            material.SetFloat("_Metallic", 0f);
+
             Materials[color] = material;
             return material;
         }

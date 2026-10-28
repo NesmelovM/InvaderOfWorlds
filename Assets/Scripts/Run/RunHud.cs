@@ -22,7 +22,7 @@ namespace InvaderOfWorlds
         private void Awake()
         {
             if (_level == null)
-                _level = FindFirstObjectByType<RunLevel>();
+                _level = FindAnyObjectByType<RunLevel>();
         }
 
         private void OnGUI()

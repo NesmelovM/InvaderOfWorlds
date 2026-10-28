@@ -23,11 +23,15 @@ namespace InvaderOfWorlds.EditorTools
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-            CreateLight();
+            var lightObject = CreateLight();
             var planet = CreatePlanet();
             var player = CreatePlayer(planet, out var motor);
             var cameraObject = CreateCamera(out var cameraRig);
             var generator = CreateContent(planet);
+
+            // Солнце следует за игроком: иначе на обратной стороне планеты всегда ночь.
+            var sun = lightObject.AddComponent<SunFollower>();
+            sun.Configure(player.transform, planet);
 
             CreateCombat(planet, player, cameraObject, generator);
             CreateRuntimeSetup(planet, player, generator);
@@ -42,7 +46,7 @@ namespace InvaderOfWorlds.EditorTools
                       "создаются при запуске по случайному сиду.");
         }
 
-        private static void CreateLight()
+        private static GameObject CreateLight()
         {
             var lightObject = new GameObject("Directional Light");
             var light = lightObject.AddComponent<Light>();
@@ -51,6 +55,7 @@ namespace InvaderOfWorlds.EditorTools
             light.color = new Color(1f, 0.96f, 0.9f);
             light.shadows = LightShadows.Soft;
             lightObject.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+            return lightObject;
         }
 
         private static Planet CreatePlanet()
@@ -173,7 +178,7 @@ namespace InvaderOfWorlds.EditorTools
             var setupObject = new GameObject("Planet Runtime");
             var setup = setupObject.AddComponent<PlanetRuntimeSetup>();
 
-            var spawner = Object.FindFirstObjectByType<SettlementSpawner>();
+            var spawner = Object.FindAnyObjectByType<SettlementSpawner>();
 
             // Каталог биомов подхватываем автоматически, если он уже создан.
             var catalogGuids = AssetDatabase.FindAssets("t:BiomeCatalog");

@@ -26,7 +26,7 @@ namespace InvaderOfWorlds
                 _health = GetComponent<Health>();
 
             if (_cameraRig == null)
-                _cameraRig = FindFirstObjectByType<PlayerCameraRig>();
+                _cameraRig = FindAnyObjectByType<PlayerCameraRig>();
         }
 
         private void Start()

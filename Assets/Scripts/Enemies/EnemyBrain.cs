@@ -98,7 +98,7 @@ namespace InvaderOfWorlds
             _slotAngle = Random.Range(-_slotSpread, _slotSpread);
 
             if (_planet == null)
-                _planet = FindFirstObjectByType<Planet>();
+                _planet = FindAnyObjectByType<Planet>();
 
             if (_target == null)
             {

@@ -97,7 +97,11 @@ namespace InvaderOfWorlds
             var camera = Camera.main;
 
             if (camera != null)
+            {
+                // Иначе цвет неба из биома игнорируется: камера рисует скайбокс.
+                camera.clearFlags = CameraClearFlags.SolidColor;
                 camera.backgroundColor = _biome.SkyColor;
+            }
         }
 
         private void PlacePlayer()
@@ -109,7 +113,15 @@ namespace InvaderOfWorlds
             var up = _planet.UpAt(point);
 
             _player.position = _planet.Center + up * (_planet.Radius + 0.02f);
-            _player.rotation = Quaternion.FromToRotation(Vector3.up, up);
+
+            // Ориентация строго горизонтная: FromToRotation на противоположной точке
+            // планеты даёт «вниз головой», и камера смотрит в землю.
+            var forward = Vector3.ProjectOnPlane(Vector3.forward, up);
+
+            if (forward.sqrMagnitude < 0.01f)
+                forward = Vector3.ProjectOnPlane(Vector3.right, up);
+
+            _player.rotation = Quaternion.LookRotation(forward.normalized, up);
         }
 
         /// <summary>Холмы-куполы: меш повторяет кривизну планеты.</summary>

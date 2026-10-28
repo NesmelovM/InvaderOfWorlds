@@ -91,7 +91,7 @@ namespace InvaderOfWorlds
             _baseScale = transform.localScale;
 
             if (_planet == null)
-                _planet = FindFirstObjectByType<Planet>();
+                _planet = FindAnyObjectByType<Planet>();
 
             if (_target == null)
             {

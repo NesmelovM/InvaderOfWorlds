@@ -140,7 +140,7 @@ namespace InvaderOfWorlds
                 _cameraTransform = Camera.main.transform;
 
             if (_planet == null)
-                _planet = FindFirstObjectByType<Planet>();
+                _planet = FindAnyObjectByType<Planet>();
 
             if (_slots.Count == 0)
                 _slots.Add(new WeaponSlot());
