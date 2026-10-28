@@ -130,7 +130,6 @@ GameObject:
   - component: {fileID: 266877885}
   - component: {fileID: 266877884}
   - component: {fileID: 266877883}
-  - component: {fileID: 266877882}
   m_Layer: 0
   m_Name: Hub
   m_TagString: Untagged
@@ -138,18 +137,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &266877882
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 266877881}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: adfa93c63adeb814aa189982f4cf80c6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InvaderOfWorlds.RunHud
 --- !u!114 &266877883
 MonoBehaviour:
   m_ObjectHideFlags: 0

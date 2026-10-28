@@ -27,7 +27,6 @@ namespace InvaderOfWorlds.EditorTools
             var hubObject = new GameObject("Hub");
             hubObject.AddComponent<HubDirector>();
             hubObject.AddComponent<HubVisuals>();
-            hubObject.AddComponent<RunHud>();
 
             SaveScene(scene);
             Debug.Log("[Invader of Worlds] Хаб собран: статичная камера, магазин и портал. " +

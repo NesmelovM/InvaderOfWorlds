@@ -35,7 +35,11 @@ namespace InvaderOfWorlds
         private bool _choosing;
         private GUIStyle _titleStyle;
         private GUIStyle _textStyle;
+        private GUIStyle _hintStyle;
         private GUIStyle _buttonStyle;
+
+        /// <summary>Идёт выбор карточки: HUD забега в этот момент не рисуется.</summary>
+        public bool IsChoosing => _choosing;
 
         public int Level => _level;
 
@@ -227,59 +231,100 @@ namespace InvaderOfWorlds
             if (!_choosing)
                 return;
 
-            HealthBarDrawer.DrawRect(new Rect(0f, 0f, Screen.width, Screen.height),
-                new Color(0.02f, 0.03f, 0.06f, 0.82f));
+            // Самовосстановление: если по какой-то причине выбор активен, а карточек
+            // нет, экран залип бы с пустой паузой. Пересобираем или отпускаем игру.
+            if (_cards.Count == 0)
+            {
+                BuildCards();
+
+                if (_cards.Count == 0)
+                {
+                    _choosing = false;
+                    Time.timeScale = 1f;
+                    return;
+                }
+            }
 
             EnsureStyles();
+            UiCanvas.Begin();
 
-            GUI.Label(new Rect(0f, Screen.height * 0.16f, Screen.width, 40f),
+            HealthBarDrawer.DrawRect(new Rect(0f, 0f, UiCanvas.Width, UiCanvas.Height),
+                new Color(0.02f, 0.03f, 0.06f, 0.86f));
+
+            GUI.Label(new Rect(0f, 76f, UiCanvas.Width, 46f),
                 $"УРОВЕНЬ {_level} — выберите улучшение", _titleStyle);
 
-            var cardWidth = Mathf.Min(360f, (Screen.width - 120f) / 3f);
-            var totalWidth = cardWidth * _cards.Count + 24f * (_cards.Count - 1);
-            var startX = (Screen.width - totalWidth) * 0.5f;
-            var top = Screen.height * 0.28f;
-            var cardHeight = 200f;
+            GUI.Label(new Rect(0f, 122f, UiCanvas.Width, 28f),
+                "Забег продолжается после выбора", _hintStyle);
+
+            // Карточки в виртуальном холсте: 3 × 360 плюс отступы ровно по центру.
+            const float cardWidth = 360f;
+            const float cardHeight = 330f;
+            const float gap = 30f;
+            const float top = 190f;
+
+            var totalWidth = cardWidth * _cards.Count + gap * (_cards.Count - 1);
+            var startX = (UiCanvas.Width - totalWidth) * 0.5f;
 
             for (var i = 0; i < _cards.Count; i++)
             {
-                var rect = new Rect(startX + i * (cardWidth + 24f), top, cardWidth, cardHeight);
-                HealthBarDrawer.DrawRect(rect, new Color(0.12f, 0.14f, 0.2f, 0.95f));
+                var rect = new Rect(startX + i * (cardWidth + gap), top, cardWidth, cardHeight);
+                HealthBarDrawer.DrawRect(rect, new Color(0.11f, 0.13f, 0.19f, 0.98f));
+                HealthBarDrawer.DrawRect(new Rect(rect.x, rect.y, rect.width, 4f),
+                    new Color(0.95f, 0.80f, 0.45f, 0.9f));
 
-                GUI.Label(new Rect(rect.x + 16f, rect.y + 14f, rect.width - 32f, 30f), _cards[i].Title, _titleStyle);
-                GUI.Label(new Rect(rect.x + 16f, rect.y + 52f, rect.width - 32f, 90f), _cards[i].Description, _textStyle);
+                GUI.Label(new Rect(rect.x + 20f, rect.y + 20f, rect.width - 40f, 62f), _cards[i].Title,
+                    _titleStyle);
+                GUI.Label(new Rect(rect.x + 20f, rect.y + 92f, rect.width - 40f, 150f),
+                    _cards[i].Description, _textStyle);
 
-                if (GUI.Button(new Rect(rect.x + 16f, rect.y + cardHeight - 56f, rect.width - 32f, 40f),
+                if (GUI.Button(new Rect(rect.x + 20f, rect.y + cardHeight - 66f, rect.width - 40f, 46f),
                         "ВЗЯТЬ", _buttonStyle))
                 {
                     Choose(i);
                 }
             }
+
+            UiCanvas.End();
         }
 
         private void EnsureStyles()
         {
-            if (_titleStyle != null)
-                return;
-
-            _titleStyle = new GUIStyle(GUI.skin.label)
+            if (_titleStyle == null)
             {
-                fontSize = 24,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleCenter,
-                wordWrap = true,
-                normal = { textColor = new Color(0.95f, 0.85f, 0.55f) }
-            };
+                _titleStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 26,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleCenter,
+                    wordWrap = true,
+                    normal = { textColor = new Color(0.95f, 0.85f, 0.55f) }
+                };
+            }
 
-            _textStyle = new GUIStyle(GUI.skin.label)
+            if (_textStyle == null)
             {
-                fontSize = 15,
-                alignment = TextAnchor.UpperCenter,
-                wordWrap = true,
-                normal = { textColor = new Color(0.85f, 0.88f, 0.95f) }
-            };
+                _textStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 18,
+                    alignment = TextAnchor.UpperCenter,
+                    wordWrap = true,
+                    normal = { textColor = new Color(0.85f, 0.88f, 0.95f) }
+                };
+            }
 
-            _buttonStyle = new GUIStyle(GUI.skin.button) { fontSize = 16 };
+            if (_hintStyle == null)
+            {
+                _hintStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 16,
+                    alignment = TextAnchor.MiddleCenter,
+                    normal = { textColor = new Color(0.65f, 0.70f, 0.80f) }
+                };
+            }
+
+            if (_buttonStyle == null)
+                _buttonStyle = new GUIStyle(GUI.skin.button) { fontSize = 18 };
         }
     }
 }
