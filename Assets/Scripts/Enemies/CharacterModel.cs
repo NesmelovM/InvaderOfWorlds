@@ -5,12 +5,10 @@ namespace InvaderOfWorlds
     /// <summary>
     /// Ставит модель персонажа внутрь игрового объекта.
     ///
-    /// Две тонкости, на которых легко ошибиться:
-    /// 1. Модели из пака приходят с произвольным масштабом и пивотом — приводим рост
-    ///    и опускаем ступни на ноль.
-    /// 2. Высоту нельзя считать по мировым габаритам: персонаж стоит на сфере,
-    ///    у него своя ось «вверх», и мировой Y там ничего не значит. Считаем проекцию
-    ///    на локальную ось объекта.
+    /// Главная тонкость: персонаж стоит на сфере, и его «верх» — это нормаль планеты,
+    /// а не мировой Y. Поэтому и рост, и уровень ступней считаются вдоль локальной
+    /// оси объекта. Если считать по мировому габаритному боксу, у полюса всё
+    /// правильно, а на обратной стороне планеты модель раздувается и висит в воздухе.
     /// </summary>
     public static class CharacterModel
     {
@@ -28,20 +26,58 @@ namespace InvaderOfWorlds
             foreach (var collider in model.GetComponentsInChildren<Collider>(true))
                 Object.Destroy(collider);
 
-            var bounds = CalculateBounds(model);
-            var scale = height / Mathf.Max(0.01f, bounds.size.y);
-            model.transform.localScale = Vector3.one * scale;
+            model.transform.localPosition = Vector3.zero;
+            model.transform.localRotation = Quaternion.identity;
+            model.transform.localScale = Vector3.one;
 
-            // Высота ступней относительно объекта — проекция на его локальную ось «вверх».
-            bounds = CalculateBounds(model);
-            var feetOffset = Vector3.Dot(bounds.min - host.transform.position, host.transform.up);
-            model.transform.localPosition = new Vector3(0f, -feetOffset, 0f);
+            ComputeVerticalExtents(model, host.transform, out var minY, out var maxY);
+            var currentHeight = Mathf.Max(0.01f, maxY - minY);
+            model.transform.localScale = Vector3.one * (height / currentHeight);
+
+            // После масштабирования пересчитываем и опускаем ступни на ноль.
+            ComputeVerticalExtents(model, host.transform, out minY, out _);
+            model.transform.localPosition = new Vector3(0f, -minY, 0f);
             model.transform.localRotation = Quaternion.Euler(0f, yawOffset, 0f);
 
             if (tint.HasValue)
                 ApplyTint(model, tint.Value);
 
             return model;
+        }
+
+        /// <summary>
+        /// Нижняя и верхняя точки модели вдоль локальной оси «вверх» объекта.
+        /// Углы мирового AABB пересчитываются в локальные координаты — только так
+        /// результат не зависит от того, в какой точке сферы стоит персонаж.
+        /// </summary>
+        private static void ComputeVerticalExtents(GameObject model, Transform host, out float minY,
+            out float maxY)
+        {
+            minY = float.MaxValue;
+            maxY = float.MinValue;
+
+            foreach (var renderer in model.GetComponentsInChildren<Renderer>(true))
+            {
+                var bounds = renderer.bounds;
+
+                for (var i = 0; i < 8; i++)
+                {
+                    var corner = new Vector3(
+                        (i & 1) == 0 ? bounds.min.x : bounds.max.x,
+                        (i & 2) == 0 ? bounds.min.y : bounds.max.y,
+                        (i & 4) == 0 ? bounds.min.z : bounds.max.z);
+
+                    var local = host.InverseTransformPoint(corner);
+                    minY = Mathf.Min(minY, local.y);
+                    maxY = Mathf.Max(maxY, local.y);
+                }
+            }
+
+            if (minY > maxY)
+            {
+                minY = 0f;
+                maxY = 1f;
+            }
         }
 
         /// <summary>
@@ -54,21 +90,6 @@ namespace InvaderOfWorlds
 
             foreach (var renderer in model.GetComponentsInChildren<Renderer>(true))
                 renderer.sharedMaterial = material;
-        }
-
-        private static Bounds CalculateBounds(GameObject target)
-        {
-            var renderers = target.GetComponentsInChildren<Renderer>(true);
-
-            if (renderers.Length == 0)
-                return new Bounds(Vector3.zero, Vector3.one);
-
-            var bounds = renderers[0].bounds;
-
-            for (var i = 1; i < renderers.Length; i++)
-                bounds.Encapsulate(renderers[i].bounds);
-
-            return bounds;
         }
     }
 }
