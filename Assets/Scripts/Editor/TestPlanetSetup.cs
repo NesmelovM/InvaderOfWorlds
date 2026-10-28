@@ -70,7 +70,7 @@ namespace InvaderOfWorlds.EditorTools
             visual.transform.localScale = Vector3.one * PlanetRadius * 2f;
 
             var renderer = visual.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat");
+            renderer.sharedMaterial = GetOrCreateMaterial("TestPlanet", new Color(0.45f, 0.47f, 0.50f));
             renderer.shadowCastingMode = ShadowCastingMode.Off;
 
             return planet;
@@ -154,6 +154,7 @@ namespace InvaderOfWorlds.EditorTools
             mound.transform.position = planet.Center + direction * (planet.Radius - 2f);
             mound.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
             mound.transform.localScale = new Vector3(24f, 10f, 24f);
+            Paint(mound, GetOrCreateMaterial("TestHill", new Color(0.85f, 0.12f, 0.10f)));
         }
 
         /// <summary>Невысокая плита-ступень: проверяем подъём на 30 см.</summary>
@@ -165,6 +166,7 @@ namespace InvaderOfWorlds.EditorTools
             step.transform.position = planet.Center + direction * (planet.Radius + 0.15f);
             step.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
             step.transform.localScale = new Vector3(6f, 0.3f, 3f);
+            Paint(step, GetOrCreateMaterial("TestStep", new Color(0.95f, 0.45f, 0.05f)));
         }
 
         /// <summary>Стена: проверяем, что персонаж скользит вдоль неё, а не проходит насквозь.</summary>
@@ -176,6 +178,43 @@ namespace InvaderOfWorlds.EditorTools
             wall.transform.position = planet.Center + direction * (planet.Radius + 1.5f);
             wall.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
             wall.transform.localScale = new Vector3(6f, 3f, 0.5f);
+            Paint(wall, GetOrCreateMaterial("TestWall", new Color(0.95f, 0.20f, 0.15f)));
+        }
+
+        private static void Paint(GameObject target, Material material)
+        {
+            var renderer = target.GetComponent<Renderer>();
+            if (renderer != null)
+                renderer.sharedMaterial = material;
+        }
+
+        /// <summary>
+        /// Материал-ассет, чтобы цвет пережил сохранение сцены.
+        /// Красный нужен, чтобы объекты было видно на белой планете.
+        /// </summary>
+        private static Material GetOrCreateMaterial(string name, Color color)
+        {
+            const string folder = "Assets/Materials/Test";
+
+            if (!AssetDatabase.IsValidFolder("Assets/Materials"))
+                AssetDatabase.CreateFolder("Assets", "Materials");
+
+            if (!AssetDatabase.IsValidFolder(folder))
+                AssetDatabase.CreateFolder("Assets/Materials", "Test");
+
+            var path = $"{folder}/{name}.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+
+            if (material == null)
+            {
+                var shader = Shader.Find("Standard");
+                material = new Material(shader) { name = name };
+                AssetDatabase.CreateAsset(material, path);
+            }
+
+            material.color = color;
+            EditorUtility.SetDirty(material);
+            return material;
         }
 
         private static void SaveScene(UnityEngine.SceneManagement.Scene scene)
