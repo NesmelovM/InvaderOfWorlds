@@ -66,16 +66,19 @@ namespace InvaderOfWorlds
 
         /// <summary>
         /// Настройка боевых параметров из кода — используется элитой.
-        /// Масштаб меняет и модель, и «базовый» размер, от которого считается замах.
+        ///
+        /// Масштаб здесь не трогаем: он задаётся при создании тела. Раньше метод
+        /// умножал масштаб на «базовый», а тот заполняется в Awake — которого
+        /// в редакторе при AddComponent не бывает. В итоге модель получала
+        /// нулевой размер и была невидима.
         /// </summary>
-        public void ConfigureCombat(float damage, float attackCooldown, float attackRange, float speed, float scale)
+        public void ConfigureCombat(float damage, float attackCooldown, float attackRange, float speed)
         {
             _damage = damage;
             _attackCooldown = attackCooldown;
             _attackRange = attackRange;
             _speed = speed;
 
-            transform.localScale = _baseScale * scale;
             _baseScale = transform.localScale;
         }
 

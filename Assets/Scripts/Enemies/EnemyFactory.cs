@@ -54,7 +54,7 @@ namespace InvaderOfWorlds
 
             var brain = enemy.AddComponent<EnemyBrain>();
             brain.Configure(planet, target);
-            brain.ConfigureCombat(damage: 14f, attackCooldown: 1.8f, attackRange: 2.6f, speed: 2.6f, scale: 1f);
+            brain.ConfigureCombat(damage: 14f, attackCooldown: 1.8f, attackRange: 2.6f, speed: 2.6f);
 
             return enemy;
         }
