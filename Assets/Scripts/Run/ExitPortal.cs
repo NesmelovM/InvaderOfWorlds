@@ -95,7 +95,9 @@ namespace InvaderOfWorlds
         /// <summary>Дальше: та же планета с новым сидом и врагами в полтора раза злее.</summary>
         private void NextPlanet()
         {
+            Progress.AddPortal();
             RunState.AdvancePlanet();
+            SaveSystem.Save();
             Time.timeScale = 1f;
 
             var scene = SceneManager.GetActiveScene();

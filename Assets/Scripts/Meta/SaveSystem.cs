@@ -13,7 +13,10 @@ namespace InvaderOfWorlds
         public int healthLevel;
         public int speedLevel;
         public int skillMask;
-        public int ownedWeapons;        public string equippedWeapons = string.Empty;
+        public int ownedWeapons;
+        public string equippedWeapons = string.Empty;
+        public int portals;
+        public int selectedBiome;
     }
 
     /// <summary>
@@ -37,7 +40,9 @@ namespace InvaderOfWorlds
                 healthLevel = MetaProgress.HealthLevel,
                 speedLevel = MetaProgress.SpeedLevel,
                 ownedWeapons = Armory.OwnedMask,
-                equippedWeapons = Armory.SerializeEquipped()
+                equippedWeapons = Armory.SerializeEquipped(),
+                portals = Progress.TotalPortals,
+                selectedBiome = Progress.SelectedBiome
             };
 
             try
@@ -66,6 +71,7 @@ namespace InvaderOfWorlds
                 RunSession.Load(data.gold, data.experience);
                 MetaProgress.Load(data.damageLevel, data.healthLevel, data.speedLevel);
                 Armory.Load(data.ownedWeapons, data.equippedWeapons);
+                Progress.Load(data.portals, data.selectedBiome);
 
                 Debug.Log($"[SAVE] Прогресс загружен: золото {data.gold}, " +
                           $"урон {data.damageLevel}, здоровье {data.healthLevel}, скорость {data.speedLevel}");

@@ -4,28 +4,47 @@ using UnityEngine.SceneManagement;
 namespace InvaderOfWorlds
 {
     /// <summary>
-    /// Хаб — экран подготовки, а не прогулка. Слева постоянные улучшения за золото,
-    /// в центре оружейная, справа собранный набор и вход в портал.
+    /// Хаб как главное меню: три кнопки, выбор биома и портал.
     ///
-    /// Всё рисуется на виртуальном холсте 1280×720, поэтому раскладка не разъезжается
-    /// ни на маленьком окне, ни на большом мониторе.
+    /// Всё рисуется на виртуальном холсте 1280×720, поэтому раскладка одинаково
+    /// читается на любом разрешении окна.
     /// </summary>
     [DisallowMultipleComponent]
     public class HubDirector : MonoBehaviour
     {
+        private enum Screen
+        {
+            Main,
+            Shop,
+            Settings
+        }
+
         private const int ArmoryPageSize = 6;
+        private const string SensitivityKey = "iw.sensitivity";
+        private const string InvertKey = "iw.invert";
 
         [SerializeField] private string _planetSceneName = "TestPlanet";
+        [SerializeField] private BiomeCatalog _catalog;
+        [SerializeField] private HubBackdrop _backdrop;
 
         private GUIStyle _titleStyle;
-        private GUIStyle _panelStyle;
         private GUIStyle _textStyle;
         private GUIStyle _hintStyle;
         private GUIStyle _buttonStyle;
         private GUIStyle _slotStyle;
+        private GUIStyle _bigButtonStyle;
+        private GUIStyle _centerStyle;
+
+        private Screen _screen = Screen.Main;
         private int _armoryPage;
         private string _message = string.Empty;
         private float _messageUntil;
+
+        public void Configure(BiomeCatalog catalog, HubBackdrop backdrop)
+        {
+            _catalog = catalog;
+            _backdrop = backdrop;
+        }
 
         private void Start()
         {
@@ -33,11 +52,16 @@ namespace InvaderOfWorlds
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
 
-            if (SaveSystem.Load())
-                return;
-
-            if (RunSession.Gold == 0)
+            if (!SaveSystem.Load() && RunSession.Gold == 0)
                 RunSession.Grant(80);
+
+            if (_catalog == null)
+                _catalog = FindCatalog();
+
+            if (_backdrop == null)
+                _backdrop = GetComponent<HubBackdrop>();
+
+            RefreshBackdrop();
         }
 
         private void Update()
@@ -58,52 +82,199 @@ namespace InvaderOfWorlds
         private void OnGUI()
         {
             EnsureStyles();
-
             UiCanvas.Begin();
 
-            DrawBackdrop();
+            HealthBarDrawer.DrawRect(new Rect(0f, 0f, UiCanvas.Width, UiCanvas.Height),
+                new Color(0.02f, 0.03f, 0.05f, 0.45f));
+
             DrawHeader();
 
-            DrawShop(new Rect(40f, 132f, 380f, 480f));
-            DrawArmory(new Rect(440f, 132f, 420f, 480f));
-            DrawLoadout(new Rect(880f, 132f, 360f, 480f));
-            DrawFooter();
+            switch (_screen)
+            {
+                case Screen.Shop:
+                    DrawShopScreen();
+                    break;
+                case Screen.Settings:
+                    DrawSettingsScreen();
+                    break;
+                default:
+                    DrawMainScreen();
+                    break;
+            }
 
+            DrawFooter();
             UiCanvas.End();
         }
 
-        private void DrawBackdrop()
+        private void DrawMainScreen()
         {
-            HealthBarDrawer.DrawRect(new Rect(0f, 0f, UiCanvas.Width, UiCanvas.Height),
-                new Color(0.02f, 0.03f, 0.05f, 0.55f));
+            // Кнопки меню слева, чтобы башня и биом за ней оставались видны.
+            var panel = new Rect(40f, 132f, 420f, 480f);
+            HealthBarDrawer.DrawRect(panel, new Color(0.05f, 0.06f, 0.09f, 0.88f));
+
+            GUI.Label(new Rect(panel.x + 20f, panel.y + 12f, panel.width - 40f, 28f), "ГЛАВНОЕ",
+                _titleStyle);
+
+            if (GUI.Button(new Rect(panel.x + 20f, panel.y + 56f, panel.width - 40f, 62f), "ПОКУПКИ",
+                    _bigButtonStyle))
+                _screen = Screen.Shop;
+
+            if (GUI.Button(new Rect(panel.x + 20f, panel.y + 130f, panel.width - 40f, 62f), "НАСТРОЙКИ",
+                    _bigButtonStyle))
+                _screen = Screen.Settings;
+
+            DrawBiomeSelector(new Rect(panel.x + 20f, panel.y + 216f, panel.width - 40f, 170f), true);
+
+            var previous = GUI.enabled;
+            GUI.enabled = Armory.Equipped.Count > 0 || Armory.Catalog.Length > 0;
+
+            if (GUI.Button(new Rect(panel.x + 20f, panel.y + panel.height - 70f, panel.width - 40f, 50f),
+                    "В ПОРТАЛ  (E)", _bigButtonStyle))
+                EnterPortal();
+
+            GUI.enabled = previous;
+        }
+
+        private void DrawBiomeSelector(Rect rect, bool compact)
+        {
+            HealthBarDrawer.DrawRect(rect, new Color(1f, 1f, 1f, 0.05f));
+
+            var unlocked = _catalog != null ? _catalog.UnlockedCount(Progress.TotalPortals) : 1;
+            var index = _catalog != null ? Mathf.Clamp(Progress.SelectedBiome, 0, unlocked - 1) : 0;
+            var biome = _catalog != null ? _catalog.ForIndex(index) : null;
+
+            GUI.Label(new Rect(rect.x + 14f, rect.y + 8f, rect.width - 28f, 22f), "БИОМ", _hintStyle);
+
+            var arrowWidth = 48f;
+            var nameRect = new Rect(rect.x + arrowWidth + 12f, rect.y + 34f, rect.width - (arrowWidth + 12f) * 2f, 34f);
+
+            var previous = GUI.enabled;
+            GUI.enabled = index > 0;
+
+            if (GUI.Button(new Rect(rect.x + 10f, rect.y + 34f, arrowWidth, 34f), "◀", _buttonStyle))
+                SelectBiome(index - 1, unlocked);
+
+            GUI.enabled = index < unlocked - 1;
+
+            if (GUI.Button(new Rect(rect.x + rect.width - arrowWidth - 10f, rect.y + 34f, arrowWidth, 34f), "▶",
+                    _buttonStyle))
+                SelectBiome(index + 1, unlocked);
+
+            GUI.enabled = previous;
+
+            GUI.Label(nameRect, biome != null ? biome.Title : "нет биома", _centerStyle);
+
+            var nextLocked = _catalog != null && index + 1 < _catalog.Biomes.Count &&
+                             _catalog.Biomes[index + 1] != null
+                ? _catalog.Biomes[index + 1]
+                : null;
+
+            var hint = nextLocked != null
+                ? $"Следующий: {nextLocked.Title} — после {nextLocked.RequiredPortals} порталов " +
+                  $"(пройдено {Progress.TotalPortals})"
+                : "Все биомы открыты";
+
+            GUI.Label(new Rect(rect.x + 14f, rect.y + 76f, rect.width - 28f, 40f), hint, _hintStyle);
+        }
+
+        private void SelectBiome(int index, int unlocked)
+        {
+            Progress.SelectBiome(index, unlocked);
+            SaveSystem.Save();
+            RefreshBackdrop();
+        }
+
+        private void RefreshBackdrop()
+        {
+            if (_backdrop == null || _catalog == null)
+                return;
+
+            _backdrop.Show(_catalog.ForIndex(Progress.SelectedBiome));
+        }
+
+        private void DrawShopScreen()
+        {
+            DrawUpgrades(new Rect(40f, 132f, 380f, 480f));
+            DrawArmory(new Rect(440f, 132f, 420f, 480f));
+            DrawLoadout(new Rect(880f, 132f, 360f, 480f));
+
+            if (GUI.Button(new Rect(40f, 628f, 220f, 56f), "◀ НАЗАД", _bigButtonStyle))
+                _screen = Screen.Main;
+        }
+
+        private void DrawSettingsScreen()
+        {
+            var panel = new Rect(40f, 132f, 620f, 480f);
+            HealthBarDrawer.DrawRect(panel, new Color(0.05f, 0.06f, 0.09f, 0.9f));
+
+            GUI.Label(new Rect(panel.x + 20f, panel.y + 14f, panel.width - 40f, 28f), "НАСТРОЙКИ",
+                _titleStyle);
+
+            var sensitivity = PlayerPrefs.GetFloat(SensitivityKey, 2.2f);
+            GUI.Label(new Rect(panel.x + 20f, panel.y + 62f, 260f, 24f),
+                $"Чувствительность мыши: {sensitivity:F1}", _textStyle);
+
+            var newSensitivity = GUI.HorizontalSlider(
+                new Rect(panel.x + 300f, panel.y + 68f, panel.width - 340f, 20f), sensitivity, 0.4f, 6f);
+
+            if (!Mathf.Approximately(newSensitivity, sensitivity))
+            {
+                PlayerPrefs.SetFloat(SensitivityKey, newSensitivity);
+                PlayerPrefs.Save();
+            }
+
+            var invert = PlayerPrefs.GetInt(InvertKey, 0) == 1;
+
+            if (GUI.Toggle(new Rect(panel.x + 20f, panel.y + 108f, 280f, 28f), invert, " Инверсия мыши",
+                    GUI.skin.toggle) != invert)
+            {
+                PlayerPrefs.SetInt(InvertKey, invert ? 0 : 1);
+                PlayerPrefs.Save();
+            }
+
+            var quality = QualitySettings.GetQualityLevel();
+            GUI.Label(new Rect(panel.x + 20f, panel.y + 156f, 260f, 24f), "Качество графики", _textStyle);
+
+            if (GUI.Button(new Rect(panel.x + 300f, panel.y + 150f, 40f, 34f), "−", _buttonStyle))
+                QualitySettings.SetQualityLevel(Mathf.Max(0, quality - 1), true);
+
+            if (GUI.Button(new Rect(panel.x + 348f, panel.y + 150f, 40f, 34f), "+", _buttonStyle))
+                QualitySettings.SetQualityLevel(Mathf.Min(QualitySettings.names.Length - 1, quality + 1), true);
+
+            GUI.Label(new Rect(panel.x + 404f, panel.y + 156f, 200f, 24f),
+                QualitySettings.names[QualitySettings.GetQualityLevel()], _textStyle);
+
+            GUI.Label(new Rect(panel.x + 20f, panel.y + 210f, panel.width - 40f, 60f),
+                "Настройки сохраняются сразу и действуют на все забеги.", _hintStyle);
+
+            if (GUI.Button(new Rect(40f, 628f, 220f, 56f), "◀ НАЗАД", _bigButtonStyle))
+                _screen = Screen.Main;
         }
 
         private void DrawHeader()
         {
             var panel = new Rect(40f, 28f, 1200f, 84f);
-            HealthBarDrawer.DrawRect(panel, new Color(0.05f, 0.06f, 0.09f, 0.85f));
+            HealthBarDrawer.DrawRect(panel, new Color(0.05f, 0.06f, 0.09f, 0.9f));
 
             GUI.Label(new Rect(panel.x + 22f, panel.y + 12f, 600f, 34f), "БАШНЯ МАГОВ", _titleStyle);
-
             GUI.Label(new Rect(panel.x + 22f, panel.y + 48f, 600f, 24f),
-                "Выберите снаряжение и шагните в портал", _hintStyle);
+                $"Порталов пройдено: {Progress.TotalPortals}", _hintStyle);
 
             GUI.Label(new Rect(panel.x + 700f, panel.y + 14f, 480f, 30f),
                 $"Золото: {RunSession.Gold}", _titleStyle);
-
             GUI.Label(new Rect(panel.x + 700f, panel.y + 48f, 480f, 24f),
-                $"Опыт: {RunSession.Experience}    Улучшений куплено: {TotalLevels()}", _hintStyle);
+                $"Улучшений: {TotalLevels()}   Оружия в наборе: {Armory.Equipped.Count}",
+                _hintStyle);
         }
 
-        private void DrawShop(Rect panel)
+        private void DrawUpgrades(Rect panel)
         {
-            HealthBarDrawer.DrawRect(panel, new Color(0.05f, 0.06f, 0.09f, 0.85f));
+            HealthBarDrawer.DrawRect(panel, new Color(0.05f, 0.06f, 0.09f, 0.9f));
 
-            GUI.Label(new Rect(panel.x + 20f, panel.y + 12f, panel.width - 40f, 28f), "УЛУЧШЕНИЯ", _titleStyle);
-            GUI.Label(new Rect(panel.x + 20f, panel.y + 42f, panel.width - 40f, 20f),
-                "Действуют на каждый забег", _hintStyle);
+            GUI.Label(new Rect(panel.x + 20f, panel.y + 12f, panel.width - 40f, 28f), "УЛУЧШЕНИЯ",
+                _titleStyle);
 
-            var rowY = panel.y + 76f;
+            var rowY = panel.y + 52f;
 
             DrawUpgradeRow(new Rect(panel.x + 20f, rowY, panel.width - 40f, 96f), "Урон", "+15% к урону",
                 MetaProgress.DamageLevel, MetaProgress.DamageCost, MetaProgress.TryBuyDamage);
@@ -123,14 +294,11 @@ namespace InvaderOfWorlds
             GUI.Label(new Rect(rect.x + 14f, rect.y + 10f, rect.width - 28f, 24f), title, _textStyle);
             GUI.Label(new Rect(rect.x + 14f, rect.y + 36f, rect.width - 160f, 20f), effect, _hintStyle);
 
-            // Уровни показываем квадратиками: в стандартном шрифте нет ● и ○,
-            // они рисовались пустыми прямоугольниками.
             var pipSize = 16f;
-            var pipY = rect.y + 62f;
 
             for (var i = 0; i < MetaProgress.MaxLevel; i++)
             {
-                var pipRect = new Rect(rect.x + 14f + i * (pipSize + 6f), pipY, pipSize, pipSize);
+                var pipRect = new Rect(rect.x + 14f + i * (pipSize + 6f), rect.y + 62f, pipSize, pipSize);
                 HealthBarDrawer.DrawRect(pipRect, i < level
                     ? new Color(0.98f, 0.85f, 0.45f, 0.95f)
                     : new Color(1f, 1f, 1f, 0.12f));
@@ -156,7 +324,7 @@ namespace InvaderOfWorlds
 
         private void DrawArmory(Rect panel)
         {
-            HealthBarDrawer.DrawRect(panel, new Color(0.05f, 0.06f, 0.09f, 0.85f));
+            HealthBarDrawer.DrawRect(panel, new Color(0.05f, 0.06f, 0.09f, 0.9f));
 
             GUI.Label(new Rect(panel.x + 20f, panel.y + 12f, panel.width - 40f, 28f), "ОРУЖЕЙНАЯ",
                 _titleStyle);
@@ -171,11 +339,8 @@ namespace InvaderOfWorlds
             var rowY = panel.y + 72f;
 
             for (var i = 0; i < ArmoryPageSize && start + i < total; i++)
-            {
                 DrawWeaponRow(new Rect(panel.x + 20f, rowY + i * 50f, panel.width - 40f, 44f), start + i);
-            }
 
-            // Стрелки страниц — иначе тринадцать стволов не помещаются.
             var buttonY = panel.y + panel.height - 46f;
             var previous = GUI.enabled;
             GUI.enabled = _armoryPage > 0;
@@ -204,8 +369,8 @@ namespace InvaderOfWorlds
                 ? new Color(0.20f, 0.32f, 0.22f, 0.85f)
                 : new Color(1f, 1f, 1f, 0.05f));
 
-            GUI.Label(new Rect(rect.x + 12f, rect.y + 5f, rect.width - 150f, 22f), weapon.Name, _textStyle);
-            GUI.Label(new Rect(rect.x + 12f, rect.y + 25f, rect.width - 150f, 18f),
+            GUI.Label(new Rect(rect.x + 12f, rect.y + 4f, rect.width - 150f, 22f), weapon.Name, _textStyle);
+            GUI.Label(new Rect(rect.x + 12f, rect.y + 24f, rect.width - 150f, 18f),
                 owned ? weapon.Description : $"{weapon.Description} · {weapon.Cost} золота", _hintStyle);
 
             var caption = equipped ? "снять" : owned ? "взять" : $"{weapon.Cost}";
@@ -214,7 +379,7 @@ namespace InvaderOfWorlds
             var previous = GUI.enabled;
             GUI.enabled = equipped || (owned ? hasRoom : RunSession.Gold >= weapon.Cost);
 
-            if (GUI.Button(new Rect(rect.x + rect.width - 122f, rect.y + 6f, 110f, 34f), caption,
+            if (GUI.Button(new Rect(rect.x + rect.width - 122f, rect.y + 5f, 110f, 34f), caption,
                     _buttonStyle))
             {
                 if (equipped)
@@ -232,7 +397,7 @@ namespace InvaderOfWorlds
 
         private void DrawLoadout(Rect panel)
         {
-            HealthBarDrawer.DrawRect(panel, new Color(0.05f, 0.06f, 0.09f, 0.85f));
+            HealthBarDrawer.DrawRect(panel, new Color(0.05f, 0.06f, 0.09f, 0.9f));
 
             GUI.Label(new Rect(panel.x + 20f, panel.y + 12f, panel.width - 40f, 28f), "НАБОР", _titleStyle);
             GUI.Label(new Rect(panel.x + 20f, panel.y + 42f, panel.width - 40f, 20f),
@@ -262,19 +427,34 @@ namespace InvaderOfWorlds
 
         private void DrawFooter()
         {
-            var panel = new Rect(40f, 628f, 1200f, 64f);
+            if (_screen != Screen.Main)
+                return;
+
+            var panel = new Rect(480f, 628f, 760f, 56f);
             HealthBarDrawer.DrawRect(panel, new Color(0.05f, 0.06f, 0.09f, 0.85f));
 
-            if (Time.time < _messageUntil && _message.Length > 0)
-            {
-                GUI.Label(new Rect(panel.x + 20f, panel.y + 18f, panel.width - 40f, 28f), _message,
-                    _textStyle);
-                return;
-            }
+            var text = Time.time < _messageUntil && _message.Length > 0
+                ? _message
+                : "Смерть на планете оставит 30% добычи. У портала после босса: E — дальше, F — в хаб.";
 
-            GUI.Label(new Rect(panel.x + 20f, panel.y + 18f, panel.width - 40f, 28f),
-                "Смерть на планете оставит вам 30% добычи. Портал после босса: E — дальше, F — в хаб.",
-                _hintStyle);
+            GUI.Label(new Rect(panel.x + 16f, panel.y + 16f, panel.width - 32f, 26f), text, _hintStyle);
+        }
+
+        private static BiomeCatalog FindCatalog()
+        {
+            var catalog = Resources.Load<BiomeCatalog>("Biomes/Catalog");
+
+            if (catalog != null)
+                return catalog;
+
+#if UNITY_EDITOR
+            var guids = UnityEditor.AssetDatabase.FindAssets("t:BiomeCatalog");
+
+            if (guids.Length > 0)
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<BiomeCatalog>(
+                    UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]));
+#endif
+            return null;
         }
 
         private void Show(string message)
@@ -290,9 +470,6 @@ namespace InvaderOfWorlds
 
         private void EnsureStyles()
         {
-            // Каждый стиль проверяем отдельно: после правок код может выполняться
-            // на объекте, где часть стилей ещё не создана, и общий выход по первой
-            // готовой ссылке оставлял остальные null.
             if (_titleStyle == null)
             {
                 _titleStyle = new GUIStyle(GUI.skin.label)
@@ -302,9 +479,6 @@ namespace InvaderOfWorlds
                     normal = { textColor = new Color(0.98f, 0.87f, 0.55f) }
                 };
             }
-
-            if (_panelStyle == null)
-                _panelStyle = new GUIStyle(GUI.skin.label);
 
             if (_textStyle == null)
             {
@@ -322,6 +496,7 @@ namespace InvaderOfWorlds
                 {
                     fontSize = 15,
                     normal = { textColor = new Color(0.72f, 0.76f, 0.85f) },
+                    wordWrap = true,
                     clipping = TextClipping.Clip
                 };
             }
@@ -336,8 +511,26 @@ namespace InvaderOfWorlds
                 };
             }
 
+            if (_centerStyle == null)
+            {
+                _centerStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 24,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleCenter,
+                    normal = { textColor = new Color(0.98f, 0.90f, 0.65f) }
+                };
+            }
+
             if (_buttonStyle == null)
                 _buttonStyle = new GUIStyle(GUI.skin.button) { fontSize = 17 };
+
+            if (_bigButtonStyle == null)
+                _bigButtonStyle = new GUIStyle(GUI.skin.button)
+                {
+                    fontSize = 22,
+                    fontStyle = FontStyle.Bold
+                };
         }
     }
 }

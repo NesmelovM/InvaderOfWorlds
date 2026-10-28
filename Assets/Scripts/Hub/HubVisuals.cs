@@ -65,8 +65,78 @@ namespace InvaderOfWorlds
             }
         }
 
-        /// <summary>Башня: чем больше уровней, тем выше колонна и шире основание.</summary>
+        /// <summary>Башня из пака: с уровнями растёт целиком, сохраняя пропорции.</summary>
         private void BuildTower(int levels)
+        {
+            var prefab = Resources.Load<GameObject>("Hub/tower-castle_round");
+
+            if (prefab == null)
+            {
+                BuildPrimitiveTower(levels);
+                return;
+            }
+
+            var tower = Instantiate(prefab, _root);
+            tower.name = "Tower";
+            tower.transform.localPosition = Vector3.zero;
+            tower.transform.localRotation = Quaternion.identity;
+
+            // Высота 10 м плюс рост за купленные улучшения. Меряем мировые габариты
+            // дважды: после первого масштабирования они уточняются.
+            var targetHeight = 9f + levels * 0.7f;
+
+            for (var pass = 0; pass < 2; pass++)
+            {
+                MeasureWorld(tower, out var min, out var max);
+                var height = max - min;
+
+                if (height > 0.01f)
+                    tower.transform.localScale *= targetHeight / height;
+            }
+
+            MeasureWorld(tower, out var bottom, out _);
+            tower.transform.position -= Vector3.up * bottom;
+        }
+
+        /// <summary>
+        /// Границы объекта по вертикали в мировых координатах.
+        ///
+        /// Считаем по углам localBounds через матрицу трансформа:
+        /// Renderer.bounds сразу после Instantiate и масштабирования отдаёт
+        /// устаревшие значения, и подгонка высоты не срабатывает.
+        /// </summary>
+        private static void MeasureWorld(GameObject root, out float min, out float max)
+        {
+            min = float.MaxValue;
+            max = float.MinValue;
+
+            foreach (var renderer in root.GetComponentsInChildren<Renderer>())
+            {
+                var local = renderer.localBounds;
+                var matrix = renderer.transform.localToWorldMatrix;
+
+                for (var i = 0; i < 8; i++)
+                {
+                    var corner = new Vector3(
+                        (i & 1) == 0 ? local.min.x : local.max.x,
+                        (i & 2) == 0 ? local.min.y : local.max.y,
+                        (i & 4) == 0 ? local.min.z : local.max.z);
+
+                    var world = matrix.MultiplyPoint3x4(corner);
+                    min = Mathf.Min(min, world.y);
+                    max = Mathf.Max(max, world.y);
+                }
+            }
+
+            if (min > max)
+            {
+                min = 0f;
+                max = 0f;
+            }
+        }
+
+        /// <summary>Запасной вариант, если префаб не найден.</summary>
+        private void BuildPrimitiveTower(int levels)
         {
             var baseRadius = 4f + 0.18f * levels;
             var columnRadius = 1.3f + 0.05f * levels;
@@ -82,6 +152,38 @@ namespace InvaderOfWorlds
             var top = 0.5f + columnHeight;
             CreateSphere("Spire", new Vector3(0f, top + 0.4f, 0f), Vector3.one * (0.9f + 0.12f * levels),
                 new Color(0.85f, 0.75f, 0.35f));
+        }
+
+        /// <summary>Границы объекта по вертикали в координатах его родителя.</summary>
+        private static void MeasureVertical(GameObject root, out float min, out float max)
+        {
+            min = float.MaxValue;
+            max = float.MinValue;
+            var parent = root.transform.parent != null ? root.transform.parent : root.transform;
+
+            foreach (var renderer in root.GetComponentsInChildren<Renderer>())
+            {
+                var local = renderer.localBounds;
+                var matrix = renderer.transform.localToWorldMatrix;
+
+                for (var i = 0; i < 8; i++)
+                {
+                    var corner = new Vector3(
+                        (i & 1) == 0 ? local.min.x : local.max.x,
+                        (i & 2) == 0 ? local.min.y : local.max.y,
+                        (i & 4) == 0 ? local.min.z : local.max.z);
+
+                    var world = parent.InverseTransformPoint(matrix.MultiplyPoint3x4(corner));
+                    min = Mathf.Min(min, world.y);
+                    max = Mathf.Max(max, world.y);
+                }
+            }
+
+            if (min > max)
+            {
+                min = 0f;
+                max = 0f;
+            }
         }
 
         /// <summary>Кристаллы силы: по одному за уровень урона, свечение растёт.</summary>

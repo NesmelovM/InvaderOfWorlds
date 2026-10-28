@@ -68,7 +68,8 @@ namespace InvaderOfWorlds
             var seed = RunState.Seed == 0 ? 20261028 : RunState.Seed;
             var random = new System.Random(seed);
 
-            _biome = _catalog != null ? _catalog.ForPlanet(RunState.PlanetIndex) : null;
+            // Биом выбирается в хабе; если выбор не сделан — берём по прогрессу.
+            _biome = _catalog != null ? _catalog.ForIndex(Progress.SelectedBiome) : null;
             RunState.ActiveBiome = _biome;
 
             _generator.SetSeed(seed);

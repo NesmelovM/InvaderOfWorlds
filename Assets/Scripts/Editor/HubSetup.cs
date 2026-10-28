@@ -22,15 +22,40 @@ namespace InvaderOfWorlds.EditorTools
 
             CreateLight();
             CreateGround();
-            CreateCamera();
+            var cameraObject = CreateCamera();
+            CreateMage();
 
             var hubObject = new GameObject("Hub");
-            hubObject.AddComponent<HubDirector>();
+            var director = hubObject.AddComponent<HubDirector>();
             hubObject.AddComponent<HubVisuals>();
 
+            var backdrop = hubObject.AddComponent<HubBackdrop>();
+            backdrop.Configure(cameraObject.GetComponent<Camera>());
+
+            director.Configure(FindCatalog(), backdrop);
+
             SaveScene(scene);
-            Debug.Log("[Invader of Worlds] Хаб собран: статичная камера, магазин и портал. " +
-                      "Персонажем управлять не нужно — кликайте по кнопкам.");
+            Debug.Log("[Invader of Worlds] Хаб собран: башня из пака, маг у входа, пейзаж биома за башней.");
+        }
+
+        /// <summary>Маг стоит у подножия башни — это фигура игрока в хабе.</summary>
+        private static void CreateMage()
+        {
+            var mage = new GameObject("Mage");
+            mage.transform.position = new Vector3(0f, 0f, -5.5f);
+            mage.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+
+            CharacterModel.Attach(mage, "Characters/man-cult", 1.95f, 0f);
+        }
+
+        private static BiomeCatalog FindCatalog()
+        {
+            var guids = AssetDatabase.FindAssets("t:BiomeCatalog");
+
+            if (guids.Length == 0)
+                return null;
+
+            return AssetDatabase.LoadAssetAtPath<BiomeCatalog>(AssetDatabase.GUIDToAssetPath(guids[0]));
         }
 
         private static void CreateLight()
@@ -41,7 +66,8 @@ namespace InvaderOfWorlds.EditorTools
             light.intensity = 1.15f;
             light.color = new Color(0.85f, 0.88f, 1f);
             light.shadows = LightShadows.Soft;
-            lightObject.transform.rotation = Quaternion.Euler(42f, 145f, 0f);
+            // Свет со стороны камеры: иначе фасады башни и мага остаются в тени.
+            lightObject.transform.rotation = Quaternion.Euler(48f, 20f, 0f);
 
             RenderSettings.ambientLight = new Color(0.28f, 0.30f, 0.38f);
         }
@@ -57,20 +83,23 @@ namespace InvaderOfWorlds.EditorTools
             renderer.sharedMaterial = GetMaterial("HubGround", new Color(0.13f, 0.14f, 0.18f));
         }
 
-        private static void CreateCamera()
+        private static GameObject CreateCamera()
         {
             var cameraObject = new GameObject("Main Camera");
             cameraObject.tag = "MainCamera";
-            cameraObject.transform.position = new Vector3(0f, 9f, -24f);
-            cameraObject.transform.rotation = Quaternion.LookRotation(new Vector3(0f, 7f, 0f) - cameraObject.transform.position);
+            cameraObject.transform.position = new Vector3(0f, 7.5f, -31f);
+            cameraObject.transform.rotation = Quaternion.LookRotation(
+                new Vector3(0f, 5.5f, 3f) - cameraObject.transform.position);
 
             var camera = cameraObject.AddComponent<Camera>();
-            camera.fieldOfView = 55f;
+            camera.fieldOfView = 52f;
             camera.nearClipPlane = 0.1f;
             camera.farClipPlane = 500f;
+            camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color(0.02f, 0.03f, 0.07f);
 
             cameraObject.AddComponent<AudioListener>();
+            return cameraObject;
         }
 
         private static Material GetMaterial(string name, Color color)
