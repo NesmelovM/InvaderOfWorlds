@@ -33,6 +33,10 @@ namespace InvaderOfWorlds
         [Tooltip("Скорость прижатия к земле, чтобы персонаж не «отрывался» на выпуклостях")]
         [SerializeField, Min(0f)] private float _groundStick = 3f;
 
+        [Header("Отладка")]
+        [Tooltip("Пишет в консоль позицию, скорость и состояние опоры раз в 0.5 секунды")]
+        [SerializeField] private bool _logMovement = true;
+
         private CharacterController _controller;
         private Vector3 _velocity;         // касательная скорость, м/с
         private float _verticalVelocity;   // вдоль «вверх» планеты, м/с
@@ -81,6 +85,52 @@ namespace InvaderOfWorlds
             _controller.Move(motion * Time.deltaTime);
 
             KeepOnSurface();
+
+            _debugLine = BuildDebugLine(input);
+            LogState(input);
+        }
+
+        private float _nextLogTime;
+        private string _debugLine = string.Empty;
+
+        private string BuildDebugLine(Vector2 input)
+        {
+            var distance = _planet != null ? (transform.position - _planet.Center).magnitude : 0f;
+            var upError = Vector3.Angle(transform.up, _up);
+            var cameraDotUp = _cameraTransform != null ? Vector3.Dot(_cameraTransform.forward, _up) : 0f;
+
+            return $"pos {transform.position:F1}  dist {distance:F2}  spd {CurrentSpeed:F2}  " +
+                   $"ccVel {_controller.velocity.magnitude:F2}  grounded {_controller.isGrounded}  " +
+                   $"flags {_controller.collisionFlags}  upErr {upError:F1}  camUp {cameraDotUp:F2}  input {input:F2}";
+        }
+
+        private void OnGUI()
+        {
+            if (!_logMovement)
+                return;
+
+            var style = new GUIStyle(GUI.skin.label) { fontSize = 14, normal = { textColor = Color.white } };
+            GUI.Label(new Rect(12f, 12f, 1200f, 24f), _debugLine, style);
+        }
+
+        /// <summary>
+        /// Диагностика: раз в полсекунды печатает состояние движения в лог.
+        /// Нужна, чтобы искать баги по числам, а не по ощущениям.
+        /// </summary>
+        private void LogState(Vector2 input)
+        {
+            if (!_logMovement || Time.time < _nextLogTime)
+                return;
+
+            _nextLogTime = Time.time + 0.5f;
+            Debug.Log("[MOVE] " + _debugLine);
+
+            if (input.sqrMagnitude > 0.1f && CurrentSpeed < 0.5f && Time.time > 1f)
+            {
+                Debug.LogWarning($"[MOVE-STALL] pos={transform.position:F3} up={_up:F3} " +
+                                 $"transformUp={transform.up:F3} grounded={_controller.isGrounded} " +
+                                 $"flags={_controller.collisionFlags} motion={_velocity:F3}");
+            }
         }
 
         /// <summary>
