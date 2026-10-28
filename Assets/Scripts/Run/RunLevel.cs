@@ -99,6 +99,7 @@ namespace InvaderOfWorlds
                 return;
 
             _choosing = true;
+            UiState.Open();
             Time.timeScale = 0f;
             SoundBank.LevelUp();
             Cursor.lockState = CursorLockMode.None;
@@ -223,6 +224,7 @@ namespace InvaderOfWorlds
             _cards[index].Apply();
 
             _choosing = false;
+            UiState.Close();
             Time.timeScale = 1f;
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
@@ -243,6 +245,7 @@ namespace InvaderOfWorlds
                 if (_cards.Count == 0)
                 {
                     _choosing = false;
+                    UiState.Close();
                     Time.timeScale = 1f;
                     return;
                 }

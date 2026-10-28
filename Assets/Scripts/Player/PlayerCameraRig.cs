@@ -102,7 +102,7 @@ namespace InvaderOfWorlds
             _lastUp = up;
 
             // 2. Мышь: горизонталь — вокруг нормали, вертикаль — вокруг локальной оси X.
-            if (!IgnoreInput)
+            if (!IgnoreInput && !UiState.BlocksInput)
             {
                 ReadLook(out var look);
                 _rotation = Quaternion.AngleAxis(look.x * _sensitivity, up) * _rotation;

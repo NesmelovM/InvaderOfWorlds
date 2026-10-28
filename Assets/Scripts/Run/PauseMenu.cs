@@ -69,6 +69,11 @@ namespace InvaderOfWorlds
             _paused = !_paused;
             Time.timeScale = _paused ? 0f : 1f;
 
+            if (_paused)
+                UiState.Open();
+            else
+                UiState.Close();
+
             Cursor.lockState = _paused ? CursorLockMode.None : CursorLockMode.Locked;
             Cursor.visible = _paused;
 
@@ -80,6 +85,7 @@ namespace InvaderOfWorlds
         {
             _paused = false;
             _settings = false;
+            UiState.Close();
             Time.timeScale = 1f;
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
@@ -90,6 +96,7 @@ namespace InvaderOfWorlds
         {
             RunSession.CommitRun(Balance.DeathPenaltyShare);
             SaveSystem.Save();
+            UiState.Close();
 
             Time.timeScale = 1f;
             SceneManager.LoadScene(_hubSceneName);
