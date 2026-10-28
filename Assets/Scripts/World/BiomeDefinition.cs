@@ -43,8 +43,26 @@ namespace InvaderOfWorlds
         [Tooltip("Высота сегмента стены в метрах")]
         [Min(1f)] public float WallHeight = 3f;
 
-        [Header("Враги биома")]
-        [Tooltip("Одна модель человека с ригом на всех врагов: рост подгоняется по типу")]
-        public GameObject EnemyModel;
+        [Header("Враги биома: по модели на тип")]
+        [Tooltip("Мечник")]
+        public GameObject EnemyModel1;
+        [Tooltip("Лучник")]
+        public GameObject EnemyModel2;
+        [Tooltip("Элита")]
+        public GameObject EnemyModel3;
+        [Tooltip("Элитный лучник")]
+        public GameObject EnemyModel4;
+        [Tooltip("Босс")]
+        public GameObject EnemyModel5;
+        [Tooltip("Запасная модель: используется, если поле типа пустое")]
+        public GameObject EnemyModel6;
+
+        [Header("Модель с процедурной анимацией")]
+        [Tooltip("Одна модель на всех врагов, анимация считается кодом — как у игрока")]
+        public GameObject ProceduralModel;
+
+        [Header("Оружие")]
+        [Tooltip("Общий список: каждый персонаж и враг берёт случайную модель")]
+        public List<GameObject> Weapons = new List<GameObject>();
     }
 }

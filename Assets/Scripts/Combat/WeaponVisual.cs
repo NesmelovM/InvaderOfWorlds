@@ -37,6 +37,25 @@ namespace InvaderOfWorlds
         private WeaponSystem _weapons;
         private GameObject _model;
         private int _shownId = -1;
+        private GameObject _biomeWeapon;
+        private bool _weaponChosen;
+
+        /// <summary>Случайная модель оружия из списка биома, выбранная на этот забег.</summary>
+        private GameObject BiomeWeapon
+        {
+            get
+            {
+                if (!_weaponChosen)
+                {
+                    // Биом может быть ещё не назначен в первом кадре, поэтому
+                    // повторяем попытку, пока список оружия не станет доступен.
+                    _biomeWeapon = Characters.RandomWeapon();
+                    _weaponChosen = _biomeWeapon != null;
+                }
+
+                return _biomeWeapon;
+            }
+        }
         private float _swing;
         private Quaternion _restRotation;
         private Vector3 _restPosition;
@@ -88,15 +107,22 @@ namespace InvaderOfWorlds
         /// <summary>Показывает оружие из первого занятого слота.</summary>
         private void RefreshModel()
         {
-            // Оружие из конфига персонажей важнее каталога: так игроку можно
-            // назначить любую модель, не трогая оружейную.
-            var overrideWeapon = Characters.PlayerLook != null ? Characters.PlayerLook.Weapon : null;
+            // Сначала смотрим список оружия биома: модель выбирается случайно
+            // один раз на забег. Если список пуст — работает каталог оружейной.
+            var overrideWeapon = BiomeWeapon != null
+                ? BiomeWeapon
+                : Characters.PlayerLook != null
+                    ? Characters.PlayerLook.Weapon
+                    : null;
             var id = overrideWeapon != null ? -2 : (_weapons != null ? FindWeapon() : -1);
 
-            if (id == _shownId)
+            // Модель могли уничтожить вместе со старой моделью персонажа —
+            // тогда пересобираем, даже если оружие не менялось.
+            if (id == _shownId && _model != null)
                 return;
 
             _shownId = id;
+            EnsureSocket();
 
             if (_model != null)
                 Destroy(_model);
@@ -116,6 +142,40 @@ namespace InvaderOfWorlds
                 return;
 
             BuildModel(prefab);
+        }
+
+        /// <summary>
+        /// Сокет мог быть уничтожен вместе со старой моделью персонажа (её
+        /// пересобирает PlayerAppearance), поэтому создаём его заново при нужде.
+        /// </summary>
+        private void EnsureSocket()
+        {
+            if (_socket != null)
+                return;
+
+            var holder = transform;
+
+            foreach (var bone in GetComponentsInChildren<Transform>(true))
+            {
+                if (!string.Equals(bone.name, "RightHand", System.StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                holder = bone;
+                break;
+            }
+
+            var socket = new GameObject("Weapon Socket");
+            socket.transform.SetParent(holder, false);
+            socket.transform.localPosition = holder == transform
+                ? new Vector3(0.24f, 1.02f, 0.12f)
+                : Vector3.zero;
+            socket.transform.localRotation = holder == transform
+                ? Quaternion.Euler(-18f, 8f, -12f)
+                : Quaternion.Euler(0f, 0f, 90f);
+
+            _socket = socket.transform;
+            _restPosition = _socket.localPosition;
+            _restRotation = _socket.localRotation;
         }
 
         private void BuildModel(GameObject prefab)

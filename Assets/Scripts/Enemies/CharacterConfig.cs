@@ -76,8 +76,13 @@ namespace InvaderOfWorlds
         {
             var biome = RunState.ActiveBiome;
 
-            if (biome != null && biome.EnemyModel != null)
-                return new EnemyLook { Model = biome.EnemyModel, Height = DefaultHeight(type) };
+            if (biome != null)
+            {
+                var model = TypeModel(biome, type) ?? biome.EnemyModel6 ?? biome.ProceduralModel;
+
+                if (model != null)
+                    return new EnemyLook { Model = model, Height = DefaultHeight(type) };
+            }
 
             if (Config == null)
                 return null;
@@ -85,6 +90,52 @@ namespace InvaderOfWorlds
             return Pick(Config, type);
         }
 
+        /// <summary>Модель конкретного типа врага в биоме.</summary>
+        public static GameObject TypeModel(BiomeDefinition biome, EnemyType type)
+        {
+            return type switch
+            {
+                EnemyType.Melee => biome.EnemyModel1,
+                EnemyType.Ranged => biome.EnemyModel2,
+                EnemyType.Elite => biome.EnemyModel3,
+                EnemyType.EliteRanged => biome.EnemyModel4,
+                EnemyType.Boss => biome.EnemyModel5,
+                _ => biome.EnemyModel6
+            };
+        }
+
+        /// <summary>Случайная модель оружия из списка биома, если он заполнен.</summary>
+        public static GameObject RandomWeapon()
+        {
+            var biome = RunState.ActiveBiome;
+
+            if (biome == null || biome.Weapons == null || biome.Weapons.Count == 0)
+                return null;
+
+            var valid = 0;
+
+            foreach (var weapon in biome.Weapons)
+            {
+                if (weapon != null)
+                    valid++;
+            }
+
+            if (valid == 0)
+                return null;
+
+            var pick = UnityEngine.Random.Range(0, valid);
+
+            foreach (var weapon in biome.Weapons)
+            {
+                if (weapon == null)
+                    continue;
+
+                if (pick-- == 0)
+                    return weapon;
+            }
+
+            return null;
+        }
         public static float DefaultHeight(EnemyType type)
         {
             return type switch

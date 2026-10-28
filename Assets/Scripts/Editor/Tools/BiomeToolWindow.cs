@@ -26,7 +26,15 @@ namespace InvaderOfWorlds.EditorTools
         private float _wallHeight = 3f;
         private int _bigCount = 90;
         private int _smallCount = 600;
-        private GameObject _enemyModel;
+        private GameObject _enemy1;
+        private GameObject _enemy2;
+        private GameObject _enemy3;
+        private GameObject _enemy4;
+        private GameObject _enemy5;
+        private GameObject _enemy6;
+        private GameObject _proceduralModel;
+        private readonly System.Collections.Generic.List<GameObject> _weapons =
+            new System.Collections.Generic.List<GameObject>();
         private Color _ground = new Color(0.45f, 0.47f, 0.50f);
         private Color _hill = new Color(0.42f, 0.38f, 0.34f);
         private Color _sky = new Color(0.02f, 0.03f, 0.08f);
@@ -67,15 +75,48 @@ namespace InvaderOfWorlds.EditorTools
             _wallHeight = EditorGUILayout.FloatField("Высота сегмента, м", _wallHeight);
 
             EditorGUILayout.Space();
-            EditorGUILayout.Space();
             EditorGUILayout.LabelField("Враги биома", EditorStyles.boldLabel);
 
-            _enemyModel = (GameObject)EditorGUILayout.ObjectField("Модель врага (риг)", _enemyModel,
+            _enemy1 = (GameObject)EditorGUILayout.ObjectField("Мечник", _enemy1, typeof(GameObject), false);
+            _enemy2 = (GameObject)EditorGUILayout.ObjectField("Лучник", _enemy2, typeof(GameObject), false);
+            _enemy3 = (GameObject)EditorGUILayout.ObjectField("Элита", _enemy3, typeof(GameObject), false);
+            _enemy4 = (GameObject)EditorGUILayout.ObjectField("Элитный лучник", _enemy4, typeof(GameObject), false);
+            _enemy5 = (GameObject)EditorGUILayout.ObjectField("Босс", _enemy5, typeof(GameObject), false);
+            _enemy6 = (GameObject)EditorGUILayout.ObjectField("Запасная модель", _enemy6, typeof(GameObject), false);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Модель с процедурной анимацией", EditorStyles.boldLabel);
+            _proceduralModel = (GameObject)EditorGUILayout.ObjectField("Одна на всех врагов", _proceduralModel,
                 typeof(GameObject), false);
 
             EditorGUILayout.HelpBox(
-                "Одна модель на всех врагов биома. Рост подгоняется по типу: " +
-                "мечник 1.8, лучник 1.9, элита 2.5, элитный лучник 2.4, босс 4.2 м.",
+                "Пустое поле типа берёт запасную модель, а если и её нет — процедурную. " +
+                "Рост подгоняется по типу: 1.8 / 1.9 / 2.5 / 2.4 / 4.2 м.",
+                MessageType.Info);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Оружие (случайный подбор)", EditorStyles.boldLabel);
+
+            for (var i = 0; i < _weapons.Count; i++)
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    _weapons[i] = (GameObject)EditorGUILayout.ObjectField($"Оружие {i + 1}", _weapons[i],
+                        typeof(GameObject), false);
+
+                    if (GUILayout.Button("−", GUILayout.Width(28f)))
+                    {
+                        _weapons.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+
+            if (GUILayout.Button("+ Добавить оружие"))
+                _weapons.Add(null);
+
+            EditorGUILayout.HelpBox(
+                "Список общий для биома: каждый персонаж и враг берёт из него случайную модель.",
                 MessageType.Info);
 
             EditorGUILayout.Space();
@@ -122,7 +163,14 @@ namespace InvaderOfWorlds.EditorTools
             biome.Walls = LoadPrefabs(_wallsFolder, _wallFilter);
             biome.WallSegments = Mathf.Max(3, _wallSegments);
             biome.WallHeight = Mathf.Max(1f, _wallHeight);
-            biome.EnemyModel = _enemyModel;
+            biome.EnemyModel1 = _enemy1;
+            biome.EnemyModel2 = _enemy2;
+            biome.EnemyModel3 = _enemy3;
+            biome.EnemyModel4 = _enemy4;
+            biome.EnemyModel5 = _enemy5;
+            biome.EnemyModel6 = _enemy6;
+            biome.ProceduralModel = _proceduralModel;
+            biome.Weapons = new System.Collections.Generic.List<GameObject>(_weapons);
 
             var path = $"{BiomesFolder}/{_name}.asset";
             AssetDatabase.CreateAsset(biome, path);
