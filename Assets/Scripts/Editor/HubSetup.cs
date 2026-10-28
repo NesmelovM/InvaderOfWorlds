@@ -1,18 +1,18 @@
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace InvaderOfWorlds.EditorTools
 {
     /// <summary>
-    /// Собирает сцену хаба: небольшая планета, площадка башни, круг телепорта,
-    /// игрок и магазин улучшений. Хаб — отдельная сцена, чтобы забег и подготовка
-    /// не мешали друг другу.
+    /// Собирает сцену хаба как экран подготовки: статичная камера смотрит на башню,
+    /// меню — обычный GUI, персонажем управлять не нужно.
+    ///
+    /// Башня, кристаллы и золото создаются в рантайме компонентом HubVisuals
+    /// и растут по мере покупок.
     /// </summary>
     public static class HubSetup
     {
-        private const float PlanetRadius = 35f;
         private const string ScenePath = "Assets/Scenes/Hub.unity";
 
         [MenuItem("Invader of Worlds/Собрать хаб")]
@@ -21,25 +21,17 @@ namespace InvaderOfWorlds.EditorTools
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
             CreateLight();
-            var planet = CreatePlanet();
-            var player = CreatePlayer(planet, out var motor);
-            var cameraObject = CreateCamera(out var cameraRig);
-
-            motor.Configure(planet, cameraObject.transform);
-            cameraRig.Configure(player.transform, planet);
-
-            CreateTower(planet);
-            CreatePortalRing(planet);
+            CreateGround();
+            CreateCamera();
 
             var hubObject = new GameObject("Hub");
             hubObject.AddComponent<HubDirector>();
+            hubObject.AddComponent<HubVisuals>();
             hubObject.AddComponent<RunHud>();
 
             SaveScene(scene);
-            Selection.activeGameObject = player;
-
-            Debug.Log("[Invader of Worlds] Хаб собран. Ходите WASD, магазин слева сверху, " +
-                      "в портал — кнопка или E.");
+            Debug.Log("[Invader of Worlds] Хаб собран: статичная камера, магазин и портал. " +
+                      "Персонажем управлять не нужно — кликайте по кнопкам.");
         }
 
         private static void CreateLight()
@@ -47,114 +39,39 @@ namespace InvaderOfWorlds.EditorTools
             var lightObject = new GameObject("Directional Light");
             var light = lightObject.AddComponent<Light>();
             light.type = LightType.Directional;
-            light.intensity = 1.1f;
-            light.color = new Color(0.75f, 0.82f, 1f);
+            light.intensity = 1.15f;
+            light.color = new Color(0.85f, 0.88f, 1f);
             light.shadows = LightShadows.Soft;
-            lightObject.transform.rotation = Quaternion.Euler(35f, 140f, 0f);
+            lightObject.transform.rotation = Quaternion.Euler(42f, 145f, 0f);
+
+            RenderSettings.ambientLight = new Color(0.28f, 0.30f, 0.38f);
         }
 
-        private static Planet CreatePlanet()
+        private static void CreateGround()
         {
-            var planetObject = new GameObject("Planet");
-            var planet = planetObject.AddComponent<Planet>();
-            planet.SetRadius(PlanetRadius);
+            var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            ground.name = "Ground";
+            ground.transform.position = Vector3.zero;
+            ground.transform.localScale = Vector3.one * 12f;
 
-            var visual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            visual.name = "Visual";
-            Object.DestroyImmediate(visual.GetComponent<SphereCollider>());
-            visual.transform.SetParent(planetObject.transform, false);
-            visual.transform.localScale = Vector3.one * PlanetRadius * 2f;
-
-            var renderer = visual.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = GetMaterial("HubPlanet", new Color(0.22f, 0.26f, 0.34f));
-            renderer.shadowCastingMode = ShadowCastingMode.Off;
-
-            return planet;
+            var renderer = ground.GetComponent<Renderer>();
+            renderer.sharedMaterial = GetMaterial("HubGround", new Color(0.13f, 0.14f, 0.18f));
         }
 
-        private static GameObject CreatePlayer(Planet planet, out PlayerMotor motor)
-        {
-            var playerObject = new GameObject("Player");
-            playerObject.tag = "Player";
-
-            var body = playerObject.AddComponent<CapsuleCollider>();
-            body.height = 1.8f;
-            body.radius = 0.35f;
-            body.center = new Vector3(0f, 0.9f, 0f);
-
-            var visual = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            visual.name = "Visual";
-            Object.DestroyImmediate(visual.GetComponent<CapsuleCollider>());
-            visual.transform.SetParent(playerObject.transform, false);
-            visual.transform.localPosition = new Vector3(0f, 0.9f, 0f);
-            visual.transform.localScale = new Vector3(0.7f, 0.9f, 0.7f);
-
-            var up = Vector3.up;
-            playerObject.transform.position = planet.SurfacePoint(up) + up * 0.02f;
-            playerObject.transform.rotation = Quaternion.FromToRotation(Vector3.up, up);
-
-            motor = playerObject.AddComponent<PlayerMotor>();
-
-            var health = playerObject.AddComponent<Health>();
-            health.Configure(100f);
-            health.SetDestroyOnDeath(false);
-
-            playerObject.AddComponent<PlayerHud>();
-
-            return playerObject;
-        }
-
-        private static GameObject CreateCamera(out PlayerCameraRig rig)
+        private static void CreateCamera()
         {
             var cameraObject = new GameObject("Main Camera");
             cameraObject.tag = "MainCamera";
+            cameraObject.transform.position = new Vector3(0f, 9f, -24f);
+            cameraObject.transform.rotation = Quaternion.LookRotation(new Vector3(0f, 7f, 0f) - cameraObject.transform.position);
 
             var camera = cameraObject.AddComponent<Camera>();
-            camera.fieldOfView = 60f;
-            camera.nearClipPlane = 0.05f;
-            camera.farClipPlane = 2000f;
-            camera.backgroundColor = new Color(0.02f, 0.03f, 0.08f);
+            camera.fieldOfView = 55f;
+            camera.nearClipPlane = 0.1f;
+            camera.farClipPlane = 500f;
+            camera.backgroundColor = new Color(0.02f, 0.03f, 0.07f);
 
             cameraObject.AddComponent<AudioListener>();
-            rig = cameraObject.AddComponent<PlayerCameraRig>();
-
-            return cameraObject;
-        }
-
-        /// <summary>Площадка башни: широкая плита рядом с точкой появления.</summary>
-        private static void CreateTower(Planet planet)
-        {
-            var direction = Quaternion.AngleAxis(14f, Vector3.right) * Vector3.up;
-            var position = planet.Center + direction * (planet.Radius + 0.5f);
-
-            var platform = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            platform.name = "Tower Platform";
-            platform.transform.position = position;
-            platform.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
-            platform.transform.localScale = new Vector3(16f, 0.5f, 16f);
-            platform.GetComponent<Renderer>().sharedMaterial = GetMaterial("HubStone", new Color(0.55f, 0.52f, 0.48f));
-
-            var column = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            column.name = "Tower Column";
-            column.transform.position = planet.Center + direction * (planet.Radius + 4f);
-            column.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
-            column.transform.localScale = new Vector3(6f, 4f, 6f);
-            column.GetComponent<Renderer>().sharedMaterial = GetMaterial("HubStone", new Color(0.55f, 0.52f, 0.48f));
-        }
-
-        /// <summary>Круг телепорта — просто светящийся блин у ног игрока.</summary>
-        private static void CreatePortalRing(Planet planet)
-        {
-            var direction = Vector3.up;
-            var position = planet.Center + direction * (planet.Radius + 0.08f);
-
-            var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            ring.name = "Teleport Ring";
-            ring.transform.position = position;
-            ring.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
-            ring.transform.localScale = new Vector3(7f, 0.05f, 7f);
-            Object.DestroyImmediate(ring.GetComponent<Collider>());
-            ring.GetComponent<Renderer>().sharedMaterial = GetMaterial("HubPortal", new Color(0.25f, 0.85f, 0.95f));
         }
 
         private static Material GetMaterial(string name, Color color)

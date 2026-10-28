@@ -18,6 +18,13 @@ namespace InvaderOfWorlds
             Kills++;
         }
 
+        /// <summary>Начислить золото вне боя — например стартовый капитал для прототипа.</summary>
+        public static void Grant(int gold)
+        {
+            if (gold > 0)
+                Gold += gold;
+        }
+
         /// <summary>Списать золото, если его хватает. Возвращает false, если не хватило.</summary>
         public static bool TrySpend(int gold)
         {
