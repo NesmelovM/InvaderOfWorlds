@@ -217,8 +217,14 @@ namespace InvaderOfWorlds
 
             // Крупные объекты утапливаем на метр: стоят устойчиво и не висят краем на склоне.
             var sink = keepColliders ? 1f : 0f;
-            var lowest = LowestPointAlong(prop, up);
-            prop.transform.position += up * (-lowest - sink);
+
+            // Два прохода: после первого смещения габариты могут уточниться,
+            // второй убирает остаточный зазор.
+            for (var pass = 0; pass < 2; pass++)
+            {
+                var lowest = LowestPointAlong(prop, up);
+                prop.transform.position += up * (-lowest - sink);
+            }
         }
 
         /// <summary>
@@ -239,42 +245,65 @@ namespace InvaderOfWorlds
 
         private static float MeasureHeight(GameObject prop)
         {
-            var renderers = prop.GetComponentsInChildren<Renderer>(true);
-
-            if (renderers.Length == 0)
+            if (!TryGetCorners(prop, out var corners))
                 return 0f;
 
-            var bounds = renderers[0].bounds;
+            var min = float.MaxValue;
+            var max = float.MinValue;
 
-            for (var i = 1; i < renderers.Length; i++)
-                bounds.Encapsulate(renderers[i].bounds);
+            foreach (var corner in corners)
+            {
+                min = Mathf.Min(min, corner.y);
+                max = Mathf.Max(max, corner.y);
+            }
 
-            return bounds.size.y;
+            return max - min;
         }
 
         /// <summary>Самая низкая точка объекта относительно плоскости, перпендикулярной up.</summary>
         private static float LowestPointAlong(GameObject prop, Vector3 up)
         {
-            var renderers = prop.GetComponentsInChildren<Renderer>(true);
+            if (!TryGetCorners(prop, out var corners))
+                return 0f;
+
             var lowest = float.MaxValue;
+
+            foreach (var corner in corners)
+                lowest = Mathf.Min(lowest, Vector3.Dot(corner - prop.transform.position, up));
+
+            return lowest < float.MaxValue ? lowest : 0f;
+        }
+
+        /// <summary>
+        /// Углы габаритов в мировых координатах.
+        ///
+        /// Считаем от <see cref="Renderer.localBounds"/> через матрицу трансформа:
+        /// <see cref="Renderer.bounds"/> после смены масштаба и поворота может быть
+        /// ещё не пересчитан, и объекты «висят» в воздухе.
+        /// </summary>
+        private static bool TryGetCorners(GameObject prop, out Vector3[] corners)
+        {
+            var renderers = prop.GetComponentsInChildren<Renderer>(true);
+            var result = new System.Collections.Generic.List<Vector3>(renderers.Length * 8);
 
             foreach (var renderer in renderers)
             {
-                var bounds = renderer.bounds;
+                var local = renderer.localBounds;
+                var matrix = renderer.transform.localToWorldMatrix;
 
                 for (var i = 0; i < 8; i++)
                 {
                     var corner = new Vector3(
-                        (i & 1) == 0 ? bounds.min.x : bounds.max.x,
-                        (i & 2) == 0 ? bounds.min.y : bounds.max.y,
-                        (i & 4) == 0 ? bounds.min.z : bounds.max.z);
+                        (i & 1) == 0 ? local.min.x : local.max.x,
+                        (i & 2) == 0 ? local.min.y : local.max.y,
+                        (i & 4) == 0 ? local.min.z : local.max.z);
 
-                    var projection = Vector3.Dot(corner - prop.transform.position, up);
-                    lowest = Mathf.Min(lowest, projection);
+                    result.Add(matrix.MultiplyPoint3x4(corner));
                 }
             }
 
-            return lowest < float.MaxValue ? lowest : 0f;
+            corners = result.ToArray();
+            return corners.Length > 0;
         }
 
         /// <summary>Кольцо стен вокруг каждого поселения — прорыв остаётся задачей.</summary>
