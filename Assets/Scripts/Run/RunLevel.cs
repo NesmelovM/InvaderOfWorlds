@@ -73,7 +73,7 @@ namespace InvaderOfWorlds
 
         private void Update()
         {
-            if (_choosing)
+            if (_choosing || UiState.PauseOpen)
                 return;
 
             var experience = RunSession.RunExperience;
@@ -99,7 +99,7 @@ namespace InvaderOfWorlds
                 return;
 
             _choosing = true;
-            UiState.Open();
+            UiState.SetCards(true);
             Time.timeScale = 0f;
             SoundBank.LevelUp();
             Cursor.lockState = CursorLockMode.None;
@@ -224,8 +224,12 @@ namespace InvaderOfWorlds
             _cards[index].Apply();
 
             _choosing = false;
-            UiState.Close();
-            Time.timeScale = 1f;
+            UiState.SetCards(false);
+
+            // Пауза могла быть открыта раньше — тогда время не возвращаем.
+            if (!UiState.PauseOpen)
+                Time.timeScale = 1f;
+
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
 
@@ -245,7 +249,7 @@ namespace InvaderOfWorlds
                 if (_cards.Count == 0)
                 {
                     _choosing = false;
-                    UiState.Close();
+                    UiState.SetCards(false);
                     Time.timeScale = 1f;
                     return;
                 }

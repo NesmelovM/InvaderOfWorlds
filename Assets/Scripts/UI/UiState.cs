@@ -3,35 +3,44 @@ using UnityEngine;
 namespace InvaderOfWorlds
 {
     /// <summary>
-    /// Глобальное состояние интерфейса: открыто ли модальное окно — пауза или выбор
-    /// улучшения.
+    /// Состояние модальных окон: карточки улучшений и пауза.
     ///
-    /// Пока окно открыто, камера не должна слушать мышь: иначе она поворачивается
-    /// относительно персонажа, и после закрытия окна взгляд оказывается в другом месте.
+    /// Окна независимы: пауза может быть открыта, карточки — нет, и наоборот.
+    /// Раньше оба писали в один флаг, поэтому закрытие одного разблокировало
+    /// камеру и снимало паузу у второго.
     /// </summary>
     public static class UiState
     {
-        /// <summary>Открыто окно, которое забирает управление.</summary>
-        public static bool Modal { get; private set; }
+        /// <summary>Открыт выбор улучшения.</summary>
+        public static bool CardsOpen { get; private set; }
 
-        /// <summary>Камера и персонаж игнорируют ввод.</summary>
-        public static bool BlocksInput => Modal;
+        /// <summary>Открыта пауза.</summary>
+        public static bool PauseOpen { get; private set; }
 
-        /// <summary>Сбрасываем флаг при старте: статики живут дольше одной сессии Play.</summary>
+        /// <summary>Любое из окон забирает управление: камера и персонаж молчат.</summary>
+        public static bool BlocksInput => CardsOpen || PauseOpen;
+
+        public static void SetCards(bool open)
+        {
+            CardsOpen = open;
+        }
+
+        public static void SetPause(bool open)
+        {
+            PauseOpen = open;
+        }
+
+        public static void ResetAll()
+        {
+            CardsOpen = false;
+            PauseOpen = false;
+        }
+
+        /// <summary>Сбрасываем флаги при старте: статики живут дольше одной сессии Play.</summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
-            Modal = false;
-        }
-
-        public static void Open()
-        {
-            Modal = true;
-        }
-
-        public static void Close()
-        {
-            Modal = false;
+            ResetAll();
         }
     }
 }

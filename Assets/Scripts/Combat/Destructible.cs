@@ -57,6 +57,14 @@ namespace InvaderOfWorlds
         {
             var damage = 1f - Mathf.Clamp01(max <= 0f ? 1f : current / max);
 
+            // Стена может получить урон до Awake (её создают в рантайме),
+            // поэтому кеш поднимаем здесь же.
+            if (_block == null)
+                _block = new MaterialPropertyBlock();
+
+            if (_renderer == null)
+                _renderer = GetComponentInChildren<Renderer>();
+
             if (_renderer != null)
             {
                 _renderer.GetPropertyBlock(_block);
