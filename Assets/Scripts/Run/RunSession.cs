@@ -39,7 +39,8 @@ namespace InvaderOfWorlds
         /// </summary>
         public static void CommitRun(float share)
         {
-            share = Mathf.Clamp01(share);
+            // Доля может быть больше единицы: успешный уход даёт бонус.
+            share = Mathf.Max(0f, share);
 
             Gold += Mathf.RoundToInt(RunGold * share);
             Experience += Mathf.RoundToInt(RunExperience * share);

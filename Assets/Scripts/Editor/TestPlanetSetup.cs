@@ -27,8 +27,14 @@ namespace InvaderOfWorlds.EditorTools
             var player = CreatePlayer(planet, out var motor);
             var cameraObject = CreateCamera(planet, out var cameraRig);
             var generator = CreateContent(planet);
+
+            // Генерируем расстановку сразу, чтобы босса и портал можно было
+            // поставить в сцене, а не только в рантайме.
+            generator.Generate();
+
             CreateTerrainTest(planet);
             CreateCombat(planet, player, cameraObject, generator);
+            CreateBossEncounter(planet, player, generator);
 
             // Связываем игрока с планетой и камерой.
             motor.Configure(planet, cameraObject.transform);
@@ -199,6 +205,44 @@ namespace InvaderOfWorlds.EditorTools
             }
 
             EnemyFactory.SpawnElite(planet, player, position, parent);
+        }
+
+        /// <summary>
+        /// Босс и портал выхода в самой дальней точке планеты: до них надо дойти,
+        /// а портал открывается только после смерти босса.
+        /// </summary>
+        private static void CreateBossEncounter(Planet planet, GameObject player, PlanetContentGenerator generator)
+        {
+            var direction = planet.UpAt(generator.BossPortalPoint);
+            var root = new GameObject("Boss Arena");
+
+            var portal = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            portal.name = "Exit Portal";
+            portal.transform.SetParent(root.transform, false);
+            portal.transform.position = planet.Center + direction * (planet.Radius + 0.12f);
+            portal.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
+            portal.transform.localScale = new Vector3(8f, 0.08f, 8f);
+            Object.DestroyImmediate(portal.GetComponent<Collider>());
+            portal.GetComponent<Renderer>().sharedMaterial =
+                GetOrCreateMaterial("ExitPortal", new Color(0.45f, 0.12f, 0.12f));
+
+            var boss = EnemyFactory.SpawnBoss(planet, player.transform,
+                planet.Center + direction * (planet.Radius + 0.02f), root.transform);
+
+            var portalComponent = portal.AddComponent<ExitPortal>();
+            portalComponent.Configure(boss.GetComponent<Health>(), player.transform);
+
+            // Стража вокруг портала.
+            for (var i = 0; i < 3; i++)
+            {
+                var angle = 120f * i;
+                var offset = Quaternion.AngleAxis(angle, direction) * Vector3.forward * 6f;
+                var around = planet.Center + direction * planet.Radius + Vector3.ProjectOnPlane(offset, direction);
+
+                if (SpawnPlacement.TryFindFreeGroundPosition(planet, around, 3f, 12, out var position, out _, 2f))
+                    EnemyFactory.Spawn(planet, player.transform, position, new Color(0.75f, 0.30f, 0.20f), 60f,
+                        root.transform);
+            }
         }
 
         private static void SpawnTestRanged(Planet planet, Transform player, Transform parent, float angle)

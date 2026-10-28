@@ -28,7 +28,7 @@ namespace InvaderOfWorlds
         [SerializeField] private Planet _planet;
 
         [Header("Поселения")]
-        [SerializeField, Min(1)] private int _settlementsCount = 4;
+        [SerializeField, Min(1)] private int _settlementsCount = 8;
         [SerializeField, Range(3, 20)] private int _minGuards = 3;
         [SerializeField, Range(3, 20)] private int _maxGuards = 12;
         [SerializeField, Min(1f)] private float _settlementRadius = 14f;
@@ -37,7 +37,7 @@ namespace InvaderOfWorlds
 
         [Header("Ограничения расстановки")]
         [Tooltip("Минимальное угловое расстояние между поселениями, в градусах")]
-        [SerializeField, Min(0f)] private float _minAngleBetweenSettlements = 25f;
+        [SerializeField, Min(0f)] private float _minAngleBetweenSettlements = 18f;
 
         [Header("Прочее")]
         [SerializeField] private int _seed = 20261028;

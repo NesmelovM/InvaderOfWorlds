@@ -14,6 +14,7 @@ namespace InvaderOfWorlds
         private static readonly Color MeleeColor = new Color(0.78f, 0.22f, 0.18f);
         private static readonly Color RangedColor = new Color(0.35f, 0.45f, 0.85f);
         private static readonly Color EliteColor = new Color(0.55f, 0.10f, 0.35f);
+        private static readonly Color BossColor = new Color(0.42f, 0.04f, 0.12f);
 
         /// <summary>Ближний бой: подходит и бьёт рукой.</summary>
         public static GameObject Spawn(Planet planet, Transform target, Vector3 surfacePosition,
@@ -55,6 +56,20 @@ namespace InvaderOfWorlds
             var brain = enemy.AddComponent<EnemyBrain>();
             brain.Configure(planet, target);
             brain.ConfigureCombat(damage: 14f, attackCooldown: 1.8f, attackRange: 2.6f, speed: 2.6f);
+
+            return enemy;
+        }
+
+        /// <summary>Босс: крупный, живёт у портала выхода, владеет тремя умениями.</summary>
+        public static GameObject SpawnBoss(Planet planet, Transform target, Vector3 surfacePosition,
+            Transform parent)
+        {
+            var enemy = CreateBody(planet, surfacePosition, BossColor, 520f, parent,
+                new Vector3(2.4f, 2.8f, 2.4f), gold: 150, experience: 300);
+            enemy.name = "Boss";
+
+            var brain = enemy.AddComponent<BossBrain>();
+            brain.Configure(planet, target);
 
             return enemy;
         }
