@@ -135,7 +135,11 @@ namespace InvaderOfWorlds
                     continue;
 
                 var direction = RandomDirection(random);
-                var position = _planet.Center + direction * _planet.Radius;
+
+                // Крупные объекты слегка утапливаем в грунт: так они стоят устойчиво
+                // и не висят на склоне одним краем.
+                var inset = keepColliders ? 1f : 0f;
+                var position = _planet.Center + direction * (_planet.Radius - inset);
 
                 var prop = Instantiate(prefab, position, Quaternion.identity, root);
 
