@@ -97,7 +97,8 @@ namespace InvaderOfWorlds.EditorTools
             body.center = new Vector3(0f, 0.9f, 0f);
 
             // Визуал: модель рыцаря из пака, а если её нет — капсула.
-            var model = CharacterModel.Attach(playerObject, "Characters/man-knight", 1.8f, 0f);
+            var model = CharacterModel.Attach(playerObject, "Characters/man-knight", 1.8f, 0f,
+                new Color(0.92f, 0.84f, 0.52f));
 
             if (model == null)
             {

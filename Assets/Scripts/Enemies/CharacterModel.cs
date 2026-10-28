@@ -5,13 +5,17 @@ namespace InvaderOfWorlds
     /// <summary>
     /// Ставит модель персонажа внутрь игрового объекта.
     ///
-    /// Модели из пака приходят с произвольным масштабом и пивотом, поэтому здесь
-    /// они приводятся к нужному росту и ставятся ступнями на ноль. Если модель
-    /// не загрузилась, остаётся примитив — игра не ломается без ассетов.
+    /// Две тонкости, на которых легко ошибиться:
+    /// 1. Модели из пака приходят с произвольным масштабом и пивотом — приводим рост
+    ///    и опускаем ступни на ноль.
+    /// 2. Высоту нельзя считать по мировым габаритам: персонаж стоит на сфере,
+    ///    у него своя ось «вверх», и мировой Y там ничего не значит. Считаем проекцию
+    ///    на локальную ось объекта.
     /// </summary>
     public static class CharacterModel
     {
-        public static GameObject Attach(GameObject host, string resourcePath, float height, float yawOffset)
+        public static GameObject Attach(GameObject host, string resourcePath, float height, float yawOffset,
+            Color? tint = null)
         {
             var prefab = Resources.Load<GameObject>(resourcePath);
 
@@ -28,12 +32,28 @@ namespace InvaderOfWorlds
             var scale = height / Mathf.Max(0.01f, bounds.size.y);
             model.transform.localScale = Vector3.one * scale;
 
-            // После масштабирования пересчитываем границы и опускаем ступни на ноль.
+            // Высота ступней относительно объекта — проекция на его локальную ось «вверх».
             bounds = CalculateBounds(model);
-            model.transform.localPosition = new Vector3(0f, -bounds.min.y, 0f);
+            var feetOffset = Vector3.Dot(bounds.min - host.transform.position, host.transform.up);
+            model.transform.localPosition = new Vector3(0f, -feetOffset, 0f);
             model.transform.localRotation = Quaternion.Euler(0f, yawOffset, 0f);
 
+            if (tint.HasValue)
+                ApplyTint(model, tint.Value);
+
             return model;
+        }
+
+        /// <summary>
+        /// Перекрашивает модель одним материалом. В паке палитра без текстур,
+        /// поэтому цветной силуэт читается лучше исходных серых материалов.
+        /// </summary>
+        public static void ApplyTint(GameObject model, Color color)
+        {
+            var material = EnemyFactory.GetMaterial(color);
+
+            foreach (var renderer in model.GetComponentsInChildren<Renderer>(true))
+                renderer.sharedMaterial = material;
         }
 
         private static Bounds CalculateBounds(GameObject target)

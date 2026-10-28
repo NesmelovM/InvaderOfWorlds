@@ -91,7 +91,7 @@ namespace InvaderOfWorlds
             body.radius = radius;
             body.center = new Vector3(0f, height * 0.5f, 0f);
 
-            var model = CharacterModel.Attach(enemy, modelPath, height, 0f);
+            var model = CharacterModel.Attach(enemy, modelPath, height, 0f, color);
 
             if (model == null)
                 CreateFallbackVisual(enemy, color, height, radius);
