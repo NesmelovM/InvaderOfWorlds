@@ -91,7 +91,7 @@
 | Unity | последняя (Unity 6) | проект 2021.3.11f1 переедет, см. `MIGRATION-UNITY6.md` |
 | Render pipeline | Built-in | все ассеты сделаны под него |
 | Камера | собственный риг | Cinemachine FreeLook не работает на сфере |
-| Движение | CharacterController | предсказуемо на малых планетах, без дрожи Rigidbody |
+| Движение | аналитическое по сфере, без CharacterController | позиция всегда на радиусе R, высота прыжка отдельно; CC на выпуклой поверхности выбивает персонажа физикой (ccVel до 100 м/с) |
 | Ввод | Legacy Input Manager (`Both`) | ввод изолирован в двух местах, легко заменить |
 | Ассеты | LowPolyAlienWorld, polyperfect Low Poly Ultimate Pack | хватает на прототип |
 
