@@ -16,14 +16,26 @@ namespace InvaderOfWorlds
         [Tooltip("Сколько планет нужно пройти, чтобы открылся следующий биом")]
         [Min(1)] public int PlanetsPerBiome = 5;
 
-        /// <summary>Биом для планеты с указанным номером в забеге.</summary>
+        /// <summary>
+        /// Биом для планеты с указанным номером в забеге: берётся последний биом,
+        /// порог которого уже пройден. Пустыня с порогом 0 — стартовая.
+        /// </summary>
         public BiomeDefinition ForPlanet(int planetIndex)
         {
             if (Biomes.Count == 0)
                 return null;
 
-            var index = Mathf.Clamp(planetIndex / Mathf.Max(1, PlanetsPerBiome), 0, Biomes.Count - 1);
-            return Biomes[index];
+            BiomeDefinition result = null;
+
+            foreach (var biome in Biomes)
+            {
+                if (biome == null || planetIndex < biome.RequiredPortals)
+                    continue;
+
+                result = biome;
+            }
+
+            return result ?? Biomes[0];
         }
     }
 }
