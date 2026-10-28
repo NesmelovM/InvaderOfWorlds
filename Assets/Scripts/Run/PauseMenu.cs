@@ -26,6 +26,7 @@ namespace InvaderOfWorlds
 
         private bool _paused;
         private bool _settings;
+        private bool _confirmReset;
 
         public void Configure(RunLevel level, Health playerHealth)
         {
@@ -105,7 +106,7 @@ namespace InvaderOfWorlds
             HealthBarDrawer.DrawRect(new Rect(0f, 0f, UiCanvas.Width, UiCanvas.Height),
                 new Color(0.02f, 0.03f, 0.06f, 0.8f));
 
-            var panel = new Rect(340f, 150f, 600f, 420f);
+            var panel = new Rect(340f, 110f, 600f, 520f);
             HealthBarDrawer.DrawRect(panel, new Color(0.05f, 0.06f, 0.09f, 0.96f));
             HealthBarDrawer.DrawRect(new Rect(panel.x, panel.y, panel.width, 4f),
                 new Color(0.95f, 0.80f, 0.45f, 0.9f));
@@ -186,8 +187,37 @@ namespace InvaderOfWorlds
             GUI.Label(new Rect(x + 108f, y + 122f, 220f, 26f),
                 QualitySettings.names[QualitySettings.GetQualityLevel()], _textStyle);
 
-            if (GUI.Button(new Rect(x, y + 190f, width, 54f), "◀ НАЗАД", _buttonStyle))
+            DrawResetBlock(new Rect(x, y + 176f, width, 120f));
+
+            if (GUI.Button(new Rect(x, y + 312f, width, 50f), "◀ НАЗАД", _buttonStyle))
                 _settings = false;
+        }
+
+        /// <summary>Сброс сохранения прямо из паузы, с подтверждением.</summary>
+        private void DrawResetBlock(Rect area)
+        {
+            if (!_confirmReset)
+            {
+                if (GUI.Button(new Rect(area.x, area.y, area.width, 42f), "СБРОСИТЬ ПРОГРЕСС",
+                        _buttonStyle))
+                    _confirmReset = true;
+
+                return;
+            }
+
+            GUI.Label(new Rect(area.x, area.y, area.width, 22f),
+                "Удалятся золото, улучшения и купленное оружие.", _hintStyle);
+
+            if (GUI.Button(new Rect(area.x, area.y + 26f, (area.width - 10f) * 0.5f, 42f),
+                    "ДА, СБРОСИТЬ", _buttonStyle))
+            {
+                SaveSystem.ResetProgress();
+                _confirmReset = false;
+            }
+
+            if (GUI.Button(new Rect(area.x + (area.width + 10f) * 0.5f, area.y + 26f,
+                    (area.width - 10f) * 0.5f, 42f), "ОТМЕНА", _buttonStyle))
+                _confirmReset = false;
         }
 
         private void EnsureStyles()

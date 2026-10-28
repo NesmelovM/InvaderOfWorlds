@@ -37,6 +37,7 @@ namespace InvaderOfWorlds
 
         private Screen _screen = Screen.Main;
         private int _armoryPage;
+        private bool _confirmReset;
         private string _message = string.Empty;
         private float _messageUntil;
 
@@ -244,8 +245,10 @@ namespace InvaderOfWorlds
             GUI.Label(new Rect(panel.x + 404f, panel.y + 156f, 200f, 24f),
                 QualitySettings.names[QualitySettings.GetQualityLevel()], _textStyle);
 
-            GUI.Label(new Rect(panel.x + 20f, panel.y + 210f, panel.width - 40f, 60f),
+            GUI.Label(new Rect(panel.x + 20f, panel.y + 200f, panel.width - 40f, 26f),
                 "Настройки сохраняются сразу и действуют на все забеги.", _hintStyle);
+
+            DrawResetBlock(new Rect(panel.x + 20f, panel.y + 250f, panel.width - 40f, 130f));
 
             if (GUI.Button(new Rect(40f, 628f, 220f, 56f), "◀ НАЗАД", _bigButtonStyle))
                 _screen = Screen.Main;
@@ -423,6 +426,34 @@ namespace InvaderOfWorlds
                 EnterPortal();
 
             GUI.enabled = previous;
+        }
+
+        /// <summary>Сброс сохранения: два шага, чтобы не нажать случайно.</summary>
+        private void DrawResetBlock(Rect area)
+        {
+            if (!_confirmReset)
+            {
+                if (GUI.Button(new Rect(area.x, area.y, area.width, 46f), "СБРОСИТЬ ПРОГРЕСС",
+                        _buttonStyle))
+                    _confirmReset = true;
+
+                return;
+            }
+
+            GUI.Label(new Rect(area.x, area.y, area.width, 24f),
+                "Удалятся золото, улучшения и купленное оружие.", _hintStyle);
+
+            if (GUI.Button(new Rect(area.x, area.y + 30f, (area.width - 10f) * 0.5f, 44f), "ДА, СБРОСИТЬ",
+                    _buttonStyle))
+            {
+                SaveSystem.ResetProgress();
+                _confirmReset = false;
+                Show("Прогресс сброшен");
+            }
+
+            if (GUI.Button(new Rect(area.x + (area.width + 10f) * 0.5f, area.y + 30f,
+                    (area.width - 10f) * 0.5f, 44f), "ОТМЕНА", _buttonStyle))
+                _confirmReset = false;
         }
 
         private void DrawFooter()

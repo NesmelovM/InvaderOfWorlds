@@ -56,6 +56,37 @@ namespace InvaderOfWorlds
             }
         }
 
+        /// <summary>
+        /// Полный сброс: удаляет файл и возвращает всё к состоянию новой игры.
+        /// Нужен, когда прогресс сломан или хочется начать заново.
+        /// </summary>
+        public static void ResetProgress()
+        {
+            try
+            {
+                if (File.Exists(Path))
+                    File.Delete(Path);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"[SAVE] Не удалось удалить файл: {exception.Message}");
+            }
+
+            RunSession.Load(0, 0);
+            RunSession.ResetRun();
+            MetaProgress.Load(0, 0, 0);
+            Armory.Load(0b11, string.Empty);
+            Progress.Load(0, 0);
+            RunState.Reset();
+            Characters.ResetCache();
+
+            // Как в новой игре: немного золота на первый магазин.
+            RunSession.Grant(80);
+            Save();
+
+            Debug.Log("[SAVE] Прогресс сброшен");
+        }
+
         public static bool Load()
         {
             try
