@@ -24,6 +24,8 @@ namespace InvaderOfWorlds
         [SerializeField, Range(0f, 1f)] private float _rangedChance = 0.3f;
         [Tooltip("Ставить в каждое поселение одного элитного врага")]
         [SerializeField] private bool _elitePerSettlement = true;
+        [Tooltip("Ставить в каждое поселение элитного лучника")]
+        [SerializeField] private bool _eliteArcherPerSettlement = true;
         [SerializeField, Min(1f)] private float _health = 60f;
         [SerializeField] private Color _color = new Color(0.78f, 0.22f, 0.18f);
         [SerializeField] private bool _spawnOnStart = true;
@@ -59,6 +61,9 @@ namespace InvaderOfWorlds
 
                 if (_elitePerSettlement)
                     SpawnElite(settlement.Center);
+
+                if (_eliteArcherPerSettlement)
+                    SpawnEliteArcher(settlement.Center);
             }
 
             Debug.Log($"[SettlementSpawner] Заселено поселений: {_generator.Settlements.Count}");
@@ -91,14 +96,26 @@ namespace InvaderOfWorlds
 
         /// <summary>Элита крупнее обычной стражи, поэтому ей нужно больше свободного места.</summary>
         public GameObject SpawnElite(Vector3 around)
-        {
-            if (SpawnPlacement.TryFindFreeGroundPosition(_planet, around, _spread, _placementAttempts,
+        {            if (SpawnPlacement.TryFindFreeGroundPosition(_planet, around, _spread, _placementAttempts,
                     out var position, out _, _characterSpacing * 1.6f))
             {
                 return EnemyFactory.SpawnElite(_planet, _player, position, transform);
             }
 
             Debug.LogWarning($"[SettlementSpawner] Нет места для элиты у {around:F1}, пропущена.", this);
+            return null;
+        }
+
+        /// <summary>Элитный лучник — тоже крупный, ему нужен запас места.</summary>
+        public GameObject SpawnEliteArcher(Vector3 around)
+        {
+            if (SpawnPlacement.TryFindFreeGroundPosition(_planet, around, _spread, _placementAttempts,
+                    out var position, out _, _characterSpacing * 1.4f))
+            {
+                return EnemyFactory.SpawnEliteRanged(_planet, _player, position, transform);
+            }
+
+            Debug.LogWarning($"[SettlementSpawner] Нет места для элитного лучника у {around:F1}, пропущен.", this);
             return null;
         }
 

@@ -3,13 +3,27 @@ using UnityEngine;
 namespace InvaderOfWorlds
 {
     /// <summary>
-    /// Счётчик забега в правом верхнем углу: золото, опыт, убийства.
-    /// Виден всегда, чтобы было понятно, растёт ли награда за забег.
+    /// Счётчик забега в правом верхнем углу: уровень, опыт, золото и убийства.
+    /// Уровень с опытом видны постоянно — иначе непонятно, когда ждать карточку.
     /// </summary>
     [DisallowMultipleComponent]
     public class RunHud : MonoBehaviour
     {
+        [SerializeField] private RunLevel _level;
+
         private GUIStyle _style;
+        private GUIStyle _hintStyle;
+
+        public void Configure(RunLevel level)
+        {
+            _level = level;
+        }
+
+        private void Awake()
+        {
+            if (_level == null)
+                _level = FindFirstObjectByType<RunLevel>();
+        }
 
         private void OnGUI()
         {
@@ -22,14 +36,27 @@ namespace InvaderOfWorlds
                     alignment = TextAnchor.UpperRight,
                     normal = { textColor = Color.white }
                 };
+
+                _hintStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 14,
+                    alignment = TextAnchor.UpperRight,
+                    normal = { textColor = new Color(0.8f, 0.85f, 0.95f) }
+                };
             }
 
-            var panel = new Rect(Screen.width - 500f, 10f, 488f, 34f);
+            var panel = new Rect(Screen.width - 500f, 10f, 488f, 58f);
             HealthBarDrawer.DrawRect(panel, new Color(0f, 0f, 0f, 0.45f));
 
-            GUI.Label(new Rect(panel.x, panel.y + 6f, panel.width - 8f, 24f),
+            GUI.Label(new Rect(panel.x, panel.y + 4f, panel.width - 8f, 24f),
                 $"Кошелёк {RunSession.Gold}   Опыт {RunSession.Experience}   " +
                 $"Забег +{RunSession.RunGold} / +{RunSession.RunExperience}   Убито {RunSession.Kills}", _style);
+
+            var levelText = _level != null
+                ? $"Уровень {_level.Level}   до следующего: {Mathf.Max(0, _level.ExperienceForNext - _level.Experience)} опыта"
+                : "Уровень —";
+
+            GUI.Label(new Rect(panel.x, panel.y + 30f, panel.width - 8f, 22f), levelText, _hintStyle);
         }
     }
 }

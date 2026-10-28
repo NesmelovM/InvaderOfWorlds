@@ -68,6 +68,16 @@ namespace InvaderOfWorlds
             _target = target;
         }
 
+        /// <summary>Настройка боевых параметров из кода — используется элитным лучником.</summary>
+        public void ConfigureCombat(float damage, float cooldown, float windupTime, float shootRange, float speed)
+        {
+            _damage = damage;
+            _cooldown = cooldown;
+            _windupTime = windupTime;
+            _shootRange = shootRange;
+            _speed = speed;
+        }
+
         private void Awake()
         {
             _health = GetComponent<Health>();

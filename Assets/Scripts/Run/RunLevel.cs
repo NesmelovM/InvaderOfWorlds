@@ -39,6 +39,12 @@ namespace InvaderOfWorlds
 
         public int Level => _level;
 
+        /// <summary>Сколько опыта нужно до следующего уровня — для HUD.</summary>
+        public int ExperienceForNext => _experienceForNext;
+
+        /// <summary>Сколько опыта уже набрано в забеге.</summary>
+        public int Experience => RunSession.RunExperience;
+
         public void Configure(Health playerHealth, WeaponSystem weapons, Transform player)
         {
             _playerHealth = playerHealth;

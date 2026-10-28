@@ -17,6 +17,7 @@ namespace InvaderOfWorlds
         private static readonly Color MeleeColor = new Color(0.78f, 0.22f, 0.18f);
         private static readonly Color RangedColor = new Color(0.35f, 0.45f, 0.85f);
         private static readonly Color EliteColor = new Color(0.55f, 0.10f, 0.35f);
+        private static readonly Color EliteRangedColor = new Color(0.90f, 0.52f, 0.14f);
         private static readonly Color BossColor = new Color(0.42f, 0.04f, 0.12f);
 
         /// <summary>Ближний бой: подходит и бьёт рукой.</summary>
@@ -58,6 +59,21 @@ namespace InvaderOfWorlds
             var brain = enemy.AddComponent<EnemyBrain>();
             brain.Configure(planet, target);
             brain.ConfigureCombat(damage: 14f, attackCooldown: 1.8f, attackRange: 2.6f, speed: 2.6f);
+
+            return enemy;
+        }
+
+        /// <summary>Элитный лучник: крупнее обычного, стреляет чаще и дальше.</summary>
+        public static GameObject SpawnEliteRanged(Planet planet, Transform target, Vector3 surfacePosition,
+            Transform parent)
+        {
+            var enemy = CreateBody(planet, surfacePosition, EliteRangedColor, 140f, parent, 2.4f, 0.5f,
+                gold: 35, experience: 70, modelPath: "Characters/man-cult");
+            enemy.name = "Elite Archer";
+
+            var brain = enemy.AddComponent<RangedEnemyBrain>();
+            brain.Configure(planet, target);
+            brain.ConfigureCombat(damage: 12f, cooldown: 1.6f, windupTime: 0.5f, shootRange: 20f, speed: 2.4f);
 
             return enemy;
         }

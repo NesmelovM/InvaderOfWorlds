@@ -182,12 +182,14 @@ namespace InvaderOfWorlds.EditorTools
             var runObject = new GameObject("Run");
             var director = runObject.AddComponent<RunDirector>();
             director.Configure(health);
-            runObject.AddComponent<RunHud>();
             runObject.AddComponent<RunBootstrap>();
 
             // Повышение уровня внутри забега: карточки улучшений.
             var level = runObject.AddComponent<RunLevel>();
             level.Configure(health, attack, player.transform);
+
+            var hud = runObject.AddComponent<RunHud>();
+            hud.Configure(level);
 
             var root = new GameObject("Test Enemies");
             var enemyColor = new Color(0.85f, 0.25f, 0.20f);
@@ -202,6 +204,22 @@ namespace InvaderOfWorlds.EditorTools
 
             // Элита в 19 метрах впереди: там нет стены, её видно от точки появления.
             SpawnTestElite(planet, player.transform, root.transform, 12f);
+
+            // Элитный лучник с другой стороны — проверка дальней угрозы.
+            SpawnTestEliteRanged(planet, player.transform, root.transform, -12f);
+        }
+
+        private static void SpawnTestEliteRanged(Planet planet, Transform player, Transform parent, float angle)
+        {
+            var around = planet.SurfacePoint(Quaternion.AngleAxis(angle, Vector3.right) * Vector3.up);
+
+            if (!SpawnPlacement.TryFindFreeGroundPosition(planet, around, 4f, 20, out var position, out _, 2.4f))
+            {
+                Debug.LogWarning("[TestPlanetSetup] Не нашёл свободного места для элитного лучника, ставлю как есть.");
+                position = around;
+            }
+
+            EnemyFactory.SpawnEliteRanged(planet, player, position, parent);
         }
 
         private static void SpawnTestElite(Planet planet, Transform player, Transform parent, float angle)
