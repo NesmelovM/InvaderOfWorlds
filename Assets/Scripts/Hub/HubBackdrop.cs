@@ -59,8 +59,10 @@ namespace InvaderOfWorlds
             var ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
             ground.name = "Backdrop Ground";
             ground.transform.SetParent(_root, false);
-            ground.transform.position = new Vector3(0f, -0.6f, 32f);
-            ground.transform.localScale = new Vector3(120f, 1f, 55f);
+            // Земля покрывает и передний план: тогда цвет биома виден по всей сцене,
+            // а не только за башней.
+            ground.transform.position = new Vector3(0f, -0.6f, 14f);
+            ground.transform.localScale = new Vector3(130f, 1f, 95f);
 
             var collider = ground.GetComponent<Collider>();
 

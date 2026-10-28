@@ -415,6 +415,9 @@ namespace InvaderOfWorlds
             var portalComponent = portal.AddComponent<ExitPortal>();
             portalComponent.Configure(boss.GetComponent<Health>(), _player);
 
+            // Закрытый портал уже светится искрами — видно, куда идти.
+            PortalVfx.Attach(portal.transform, new Color(0.85f, 0.25f, 0.30f));
+
             for (var i = 0; i < 3; i++)
             {
                 var angle = 120f * i;

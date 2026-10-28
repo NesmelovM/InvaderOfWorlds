@@ -21,7 +21,8 @@ namespace InvaderOfWorlds.EditorTools
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
             CreateLight();
-            CreateGround();
+            // Землю строит HubBackdrop в цвете выбранного биома,
+            // поэтому отдельная тёмная плоскость здесь не нужна.
             var cameraObject = CreateCamera();
             CreateMage();
 
@@ -38,14 +39,53 @@ namespace InvaderOfWorlds.EditorTools
             Debug.Log("[Invader of Worlds] Хаб собран: башня из пака, маг у входа, пейзаж биома за башней.");
         }
 
-        /// <summary>Маг стоит у подножия башни — это фигура игрока в хабе.</summary>
+        /// <summary>Маг стоит у подножия башни — фигура игрока в хабе, рядом зона отдыха.</summary>
         private static void CreateMage()
         {
             var mage = new GameObject("Mage");
-            mage.transform.position = new Vector3(0f, 0f, -5.5f);
+            mage.transform.position = new Vector3(2.6f, 0f, -8.6f);
             mage.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
 
-            CharacterModel.Attach(mage, "Characters/man-cult", 1.95f, 0f);
+            // Тёмная мантия: модель из пака одноцветная, поэтому красим её сами.
+            CharacterModel.Attach(mage, "Characters/man-cult", 2.2f, 0f, new Color(0.22f, 0.10f, 0.32f));
+
+            CreateRestArea(new Vector3(7.2f, 0f, -6.2f));
+        }
+
+        /// <summary>Шезлонг, полотенце, сумка и столик — башня мага, но отдыхать тоже надо.</summary>
+        private static void CreateRestArea(Vector3 origin)
+        {
+            var root = new GameObject("Rest Area").transform;
+            root.position = origin;
+
+            var items = new[]
+            {
+                ("Hub/lounger", new Vector3(0f, 0f, 0f), 175f),
+                ("Hub/towel-beach", new Vector3(1.6f, 0f, 0.9f), 15f),
+                ("Hub/beach-bag", new Vector3(-1.7f, 0f, 0.8f), 40f),
+                ("Hub/ball-beach", new Vector3(-0.6f, 0.25f, 2.1f), 0f),
+                ("Hub/chair-wood", new Vector3(2.6f, 0f, -0.4f), 210f)
+            };
+
+            foreach (var (path, offset, yaw) in items)
+            {
+                var prefab = Resources.Load<GameObject>(path);
+
+                if (prefab == null)
+                {
+                    Debug.LogWarning($"[Hub] Не найден префаб {path}");
+                    continue;
+                }
+
+                var instance = Object.Instantiate(prefab, root);
+                instance.name = prefab.name;
+                instance.transform.localPosition = offset;
+                instance.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
+
+                // Мебель не должна быть препятствием в хабе.
+                foreach (var collider in instance.GetComponentsInChildren<Collider>(true))
+                    Object.DestroyImmediate(collider);
+            }
         }
 
         private static BiomeCatalog FindCatalog()
@@ -63,13 +103,13 @@ namespace InvaderOfWorlds.EditorTools
             var lightObject = new GameObject("Directional Light");
             var light = lightObject.AddComponent<Light>();
             light.type = LightType.Directional;
-            light.intensity = 1.15f;
-            light.color = new Color(0.85f, 0.88f, 1f);
+            light.intensity = 0.75f;
+            light.color = new Color(1f, 0.93f, 0.82f);
             light.shadows = LightShadows.Soft;
             // Свет со стороны камеры: иначе фасады башни и мага остаются в тени.
             lightObject.transform.rotation = Quaternion.Euler(48f, 20f, 0f);
 
-            RenderSettings.ambientLight = new Color(0.28f, 0.30f, 0.38f);
+            RenderSettings.ambientLight = new Color(0.22f, 0.24f, 0.30f);
         }
 
         private static void CreateGround()
