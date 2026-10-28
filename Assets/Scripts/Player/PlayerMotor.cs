@@ -42,6 +42,16 @@ namespace InvaderOfWorlds
         public bool IsGrounded => _controller != null && _controller.isGrounded;
         public float CurrentSpeed => _velocity.magnitude;
 
+        /// <summary>
+        /// Привязка к планете и камере. Нужна и редактору при сборке сцены,
+        /// и рантайму, когда игрок создаётся на поверхности после телепорта.
+        /// </summary>
+        public void Configure(Planet planet, Transform cameraTransform)
+        {
+            _planet = planet;
+            _cameraTransform = cameraTransform;
+        }
+
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();

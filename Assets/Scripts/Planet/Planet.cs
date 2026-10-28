@@ -15,6 +15,12 @@ namespace InvaderOfWorlds
         public float Radius => _radius;
         public Vector3 Center => transform.position;
 
+        /// <summary>Задаёт радиус из кода (сборка сцены, рантайм-генерация).</summary>
+        public void SetRadius(float radius)
+        {
+            _radius = Mathf.Max(1f, radius);
+        }
+
         /// <summary>Нормаль поверхности в произвольной точке мира.</summary>
         public Vector3 UpAt(Vector3 worldPosition)
         {

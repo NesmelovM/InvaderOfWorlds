@@ -47,6 +47,12 @@ namespace InvaderOfWorlds
         public Vector3 BossPortalPoint { get; private set; }
         public IReadOnlyList<Settlement> Settlements => _settlements;
 
+        /// <summary>Привязка генератора к планете.</summary>
+        public void Configure(Planet planet)
+        {
+            _planet = planet;
+        }
+
         /// <summary>Сколько всего стражи на планете — для планирования волн и наград.</summary>
         public int TotalGuards
         {

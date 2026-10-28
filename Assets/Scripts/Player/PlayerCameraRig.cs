@@ -41,6 +41,14 @@ namespace InvaderOfWorlds
         /// <summary>Горизонтальное направление камеры в касательной плоскости.</summary>
         public Vector3 PlanarForward => _forward;
 
+        /// <summary>Привязка камеры к цели и планете.</summary>
+        public void Configure(Transform target, Planet planet)
+        {
+            _target = target;
+            _planet = planet;
+            _initialized = false;
+        }
+
         private void Start()
         {
             if (_lockCursor)
