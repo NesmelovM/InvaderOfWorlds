@@ -41,16 +41,19 @@ namespace InvaderOfWorlds
 
             var up = _target != null && _planet != null ? _planet.UpAt(_target.position) : Vector3.up;
 
-            // Кадр строим от локального «вверх» игрока, а не через FromToRotation:
-            // у противоположных векторов ось поворота не определена, и на южном
-            // полюсе свет разворачивался так, что вся поверхность уходила в тень.
+            // Направление света строим напрямую от локального «вверх», а не композицией
+            // поворотов: иначе при неудачном базисе солнце светит вдоль поверхности
+            // и всё под игроком уходит в тень.
             var forward = Vector3.ProjectOnPlane(Vector3.forward, up);
 
             if (forward.sqrMagnitude < 0.01f)
                 forward = Vector3.ProjectOnPlane(Vector3.right, up);
 
-            var frame = Quaternion.LookRotation(forward.normalized, up);
-            transform.rotation = frame * Quaternion.Euler(_angles);
+            var azimuth = Quaternion.AngleAxis(_angles.y, up) * forward.normalized;
+            var elevation = _angles.x * Mathf.Deg2Rad;
+            var direction = (-up * Mathf.Sin(elevation) + azimuth * Mathf.Cos(elevation)).normalized;
+
+            transform.rotation = Quaternion.LookRotation(direction, up);
         }
     }
 }

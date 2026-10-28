@@ -48,6 +48,12 @@ namespace InvaderOfWorlds
         private float _shakeDuration;
         private float _shakeStrength;
 
+        /// <summary>
+        /// Режим съёмки: мышь не влияет на камеру. Нужен автотестам — курсор в редакторе
+        /// живёт своей жизнью, и любое движение мыши уводит кадр.
+        /// </summary>
+        public bool IgnoreInput { get; set; }
+
         /// <summary>Горизонтальное направление камеры — для прицеливания и оружия.</summary>
         public Vector3 PlanarForward
         {
@@ -96,9 +102,12 @@ namespace InvaderOfWorlds
             _lastUp = up;
 
             // 2. Мышь: горизонталь — вокруг нормали, вертикаль — вокруг локальной оси X.
-            ReadLook(out var look);
-            _rotation = Quaternion.AngleAxis(look.x * _sensitivity, up) * _rotation;
-            ApplyPitch(look.y * _sensitivity * (_invertVertical ? -1f : 1f), up);
+            if (!IgnoreInput)
+            {
+                ReadLook(out var look);
+                _rotation = Quaternion.AngleAxis(look.x * _sensitivity, up) * _rotation;
+                ApplyPitch(look.y * _sensitivity * (_invertVertical ? -1f : 1f), up);
+            }
 
             // 3. Позиция: плечо, отвод назад, проверка на препятствия.
             var pivot = _target.position + up * _pivotHeight;
