@@ -18,7 +18,7 @@ namespace InvaderOfWorlds.EditorTools
         private BalanceConfig _config;
         private Vector2 _scroll;
 
-        [MenuItem("Invader of Worlds/Баланс")]
+        [MenuItem("Инструменты разработчика/Баланс", false, 30)]
         public static void Open()
         {
             GetWindow<BalanceWindow>("Баланс");
@@ -154,7 +154,7 @@ namespace InvaderOfWorlds.EditorTools
         }
 
         /// <summary>Создаёт конфиг, если его ещё нет. Вызывается и из окна, и из консоли.</summary>
-        [MenuItem("Invader of Worlds/Создать конфиг баланса")]
+        [MenuItem("Инструменты разработчика/Создать конфиг баланса", false, 31)]
         public static BalanceConfig EnsureConfig()
         {
             var existing = AssetDatabase.LoadAssetAtPath<BalanceConfig>(AssetPath);

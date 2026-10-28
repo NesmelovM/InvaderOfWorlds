@@ -15,7 +15,7 @@ namespace InvaderOfWorlds.EditorTools
     {
         private const string ScenePath = "Assets/Scenes/Hub.unity";
 
-        [MenuItem("Invader of Worlds/Собрать хаб")]
+        [MenuItem("Инструменты разработчика/Сцены/Собрать хаб", false, 51)]
         public static void Build()
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);

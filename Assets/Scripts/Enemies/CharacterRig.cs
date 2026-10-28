@@ -48,6 +48,12 @@ namespace InvaderOfWorlds
 
         private void Awake()
         {
+            // Параметры анимации берём из конфига персонажей, если он есть.
+            _stepSpeed = Characters.StepSpeed;
+            _legAmplitude = Characters.LegAmplitude;
+            _armAmplitude = Characters.ArmAmplitude;
+            _attackDuration = Characters.AttackDuration;
+
             CacheBones();
             CacheBaseRotations();
 

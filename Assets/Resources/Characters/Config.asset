@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9985192399b3e9479c6af094fa8124e, type: 3}
+  m_Name: Config
+  m_EditorClassIdentifier: Assembly-CSharp::InvaderOfWorlds.CharacterConfig
+  Melee:
+    Model: {fileID: 919132149155446097, guid: ded1fa50f7eaef2439c5659849a39287, type: 3}
+    Weapon: {fileID: 1000011153640270, guid: dffba8244aeb1844494d47159ea57cd8, type: 3}
+    Height: 1.8
+    WeaponScale: 1
+  Ranged:
+    Model: {fileID: 919132149155446097, guid: d2a92702c0b6db0479db7bd5542d2d92, type: 3}
+    Weapon: {fileID: 1141772967033842, guid: 8c1fca15743f4094bb0d8527430b9954, type: 3}
+    Height: 1.9
+    WeaponScale: 1
+  Elite:
+    Model: {fileID: 919132149155446097, guid: f3a79e6b8053cfd48abdfb5de69cefce, type: 3}
+    Weapon: {fileID: 102628, guid: 98dd9025e252b0044870c8ec10c14c8b, type: 3}
+    Height: 2.5
+    WeaponScale: 1
+  EliteRanged:
+    Model: {fileID: 919132149155446097, guid: d2a92702c0b6db0479db7bd5542d2d92, type: 3}
+    Weapon: {fileID: 1141772967033842, guid: 8c1fca15743f4094bb0d8527430b9954, type: 3}
+    Height: 2.4
+    WeaponScale: 1
+  Boss:
+    Model: {fileID: 919132149155446097, guid: 730bce8509788664da6fe5f8a30a2ba0, type: 3}
+    Weapon: {fileID: 9017739727520688121, guid: b5f8d2ce6f6541240b4d1dd8d2e59b6f, type: 3}
+    Height: 4.2
+    WeaponScale: 1
+  StepSpeed: 8.5
+  LegAmplitude: 32
+  ArmAmplitude: 26
+  AttackDuration: 0.28

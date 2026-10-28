@@ -13,7 +13,7 @@ namespace InvaderOfWorlds.EditorTools
     {
         private const string BuildPath = "Builds/Windows/InvaderOfWorlds.exe";
 
-        [MenuItem("Invader of Worlds/Собрать Windows-билд")]
+        [MenuItem("Инструменты разработчика/Собрать Windows-билд", false, 70)]
         public static void BuildWindows()
         {
             var options = new BuildPlayerOptions

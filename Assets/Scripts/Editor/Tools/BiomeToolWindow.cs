@@ -35,7 +35,7 @@ namespace InvaderOfWorlds.EditorTools
         private Color _hill = new Color(0.42f, 0.38f, 0.34f);
         private Color _sky = new Color(0.02f, 0.03f, 0.08f);
 
-        [MenuItem("Invader of Worlds/Биомы")]
+        [MenuItem("Инструменты разработчика/Биомы", false, 10)]
         public static void Open()
         {
             GetWindow<BiomeToolWindow>("Биомы");
@@ -197,7 +197,7 @@ namespace InvaderOfWorlds.EditorTools
         /// Стартовый набор: бедная пустыня из Египта и Индия, открывающаяся после пяти порталов.
         /// Вызывается и из меню, и из командной строки при сборке проекта.
         /// </summary>
-        [MenuItem("Invader of Worlds/Создать стартовые биомы")]
+        [MenuItem("Инструменты разработчика/Создать стартовые биомы", false, 11)]
         public static void CreateStarterBiomes()
         {
             const string packFolder = "Assets/Additions Assets/polyperfect/Low Poly Ultimate Pack/M/- Prefabs_M";

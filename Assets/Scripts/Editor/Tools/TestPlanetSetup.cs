@@ -18,7 +18,7 @@ namespace InvaderOfWorlds.EditorTools
         private const float PlanetRadius = 90f;
         private const string ScenePath = "Assets/Scenes/TestPlanet.unity";
 
-        [MenuItem("Invader of Worlds/Собрать тестовую планету")]
+        [MenuItem("Инструменты разработчика/Сцены/Собрать планету", false, 50)]
         public static void Build()
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);

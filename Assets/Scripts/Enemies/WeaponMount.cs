@@ -10,8 +10,11 @@ namespace InvaderOfWorlds
     {
         public static GameObject Attach(GameObject host, string modelPath, float length = 1f)
         {
-            var prefab = Resources.Load<GameObject>(modelPath);
+            return Attach(host, Resources.Load<GameObject>(modelPath), length);
+        }
 
+        public static GameObject Attach(GameObject host, GameObject prefab, float length = 1f)
+        {
             if (prefab == null)
                 return null;
 

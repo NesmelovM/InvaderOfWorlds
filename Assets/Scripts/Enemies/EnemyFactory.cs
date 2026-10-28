@@ -24,8 +24,13 @@ namespace InvaderOfWorlds
         public static GameObject Spawn(Planet planet, Transform target, Vector3 surfacePosition,
             Color color, float health, Transform parent)
         {
-            var enemy = CreateBody(planet, surfacePosition, color, health, parent, 1.8f, 0.35f,
-                gold: 5, experience: 10, modelPath: "Characters/man-soldier_Rig", weaponPath: "Weapons/sword", modelOverride: RunState.ActiveBiome?.MeleeModel);
+            var look = Characters.Get(EnemyType.Melee);
+            var height = look != null ? look.Height : 1.8f;
+
+            var enemy = CreateBody(planet, surfacePosition, color, health, parent, height, 0.35f,
+                gold: 5, experience: 10, modelPath: "Characters/man-soldier_Rig", weaponPath: "Weapons/sword",
+                modelOverride: look?.Model != null ? look.Model : RunState.ActiveBiome?.MeleeModel,
+                weaponOverride: look?.Weapon);
             enemy.name = "Guard";
 
             var brain = enemy.AddComponent<EnemyBrain>();
@@ -39,8 +44,13 @@ namespace InvaderOfWorlds
         public static GameObject SpawnRanged(Planet planet, Transform target, Vector3 surfacePosition,
             float health, Transform parent)
         {
-            var enemy = CreateBody(planet, surfacePosition, RangedColor, health, parent, 1.9f, 0.33f,
-                gold: 7, experience: 14, modelPath: "Characters/man-cult_Rig", weaponPath: "Weapons/bow", modelOverride: RunState.ActiveBiome?.RangedModel);
+            var look = Characters.Get(EnemyType.Ranged);
+            var height = look != null ? look.Height : 1.9f;
+
+            var enemy = CreateBody(planet, surfacePosition, RangedColor, health, parent, height, 0.33f,
+                gold: 7, experience: 14, modelPath: "Characters/man-cult_Rig", weaponPath: "Weapons/bow",
+                modelOverride: look?.Model != null ? look.Model : RunState.ActiveBiome?.RangedModel,
+                weaponOverride: look?.Weapon);
             enemy.name = "Archer";
 
             var brain = enemy.AddComponent<RangedEnemyBrain>();
@@ -54,8 +64,13 @@ namespace InvaderOfWorlds
         public static GameObject SpawnElite(Planet planet, Transform target, Vector3 surfacePosition,
             Transform parent)
         {
-            var enemy = CreateBody(planet, surfacePosition, EliteColor, 180f, parent, 2.5f, 0.5f,
-                gold: 25, experience: 50, modelPath: "Characters/man-knight_Rig", weaponPath: "Weapons/hammer", modelOverride: RunState.ActiveBiome?.EliteModel);
+            var look = Characters.Get(EnemyType.Elite);
+            var height = look != null ? look.Height : 2.5f;
+
+            var enemy = CreateBody(planet, surfacePosition, EliteColor, 180f, parent, height, 0.5f,
+                gold: 25, experience: 50, modelPath: "Characters/man-knight_Rig", weaponPath: "Weapons/hammer",
+                modelOverride: look?.Model != null ? look.Model : RunState.ActiveBiome?.EliteModel,
+                weaponOverride: look?.Weapon);
             enemy.name = "Elite";
 
             var brain = enemy.AddComponent<EnemyBrain>();
@@ -70,8 +85,13 @@ namespace InvaderOfWorlds
         public static GameObject SpawnEliteRanged(Planet planet, Transform target, Vector3 surfacePosition,
             Transform parent)
         {
-            var enemy = CreateBody(planet, surfacePosition, EliteRangedColor, 140f, parent, 2.4f, 0.5f,
-                gold: 35, experience: 70, modelPath: "Characters/man-cult_Rig", weaponPath: "Weapons/bow", modelOverride: RunState.ActiveBiome?.EliteArcherModel);
+            var look = Characters.Get(EnemyType.EliteRanged);
+            var height = look != null ? look.Height : 2.4f;
+
+            var enemy = CreateBody(planet, surfacePosition, EliteRangedColor, 140f, parent, height, 0.5f,
+                gold: 35, experience: 70, modelPath: "Characters/man-cult_Rig", weaponPath: "Weapons/bow",
+                modelOverride: look?.Model != null ? look.Model : RunState.ActiveBiome?.EliteArcherModel,
+                weaponOverride: look?.Weapon);
             enemy.name = "Elite Archer";
 
             var brain = enemy.AddComponent<RangedEnemyBrain>();
@@ -86,8 +106,13 @@ namespace InvaderOfWorlds
         public static GameObject SpawnBoss(Planet planet, Transform target, Vector3 surfacePosition,
             Transform parent)
         {
-            var enemy = CreateBody(planet, surfacePosition, BossColor, 520f, parent, 4.2f, 0.9f,
-                gold: 150, experience: 300, modelPath: "Characters/giant_Rig", weaponPath: "Weapons/club-zulu", modelOverride: RunState.ActiveBiome?.BossModel);
+            var look = Characters.Get(EnemyType.Boss);
+            var height = look != null ? look.Height : 4.2f;
+
+            var enemy = CreateBody(planet, surfacePosition, BossColor, 520f, parent, height, 0.9f,
+                gold: 150, experience: 300, modelPath: "Characters/giant_Rig", weaponPath: "Weapons/club-zulu",
+                modelOverride: look?.Model != null ? look.Model : RunState.ActiveBiome?.BossModel,
+                weaponOverride: look?.Weapon);
             enemy.name = "Boss";
 
             var brain = enemy.AddComponent<BossBrain>();
@@ -99,7 +124,7 @@ namespace InvaderOfWorlds
 
         private static GameObject CreateBody(Planet planet, Vector3 surfacePosition, Color color, float health,
             Transform parent, float height, float radius, int gold, int experience, string modelPath,
-            string weaponPath = null, GameObject modelOverride = null)
+            string weaponPath = null, GameObject modelOverride = null, GameObject weaponOverride = null)
         {
             var up = planet.UpAt(surfacePosition);
 
@@ -125,7 +150,9 @@ namespace InvaderOfWorlds
                 // Процедурная анимация по костям и оружие в правой руке.
                 enemy.AddComponent<CharacterRig>();
 
-                if (!string.IsNullOrEmpty(weaponPath))
+                if (weaponOverride != null)
+                    WeaponMount.Attach(enemy, weaponOverride, height * 0.55f);
+                else if (!string.IsNullOrEmpty(weaponPath))
                     WeaponMount.Attach(enemy, weaponPath, height * 0.55f);
             }
 
