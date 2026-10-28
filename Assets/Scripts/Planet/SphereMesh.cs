@@ -53,12 +53,12 @@ namespace InvaderOfWorlds
                     var next = current + segments + 1;
 
                     triangles[t++] = current;
-                    triangles[t++] = next;
                     triangles[t++] = current + 1;
+                    triangles[t++] = next;
 
                     triangles[t++] = current + 1;
-                    triangles[t++] = next;
                     triangles[t++] = next + 1;
+                    triangles[t++] = next;
                 }
             }
 

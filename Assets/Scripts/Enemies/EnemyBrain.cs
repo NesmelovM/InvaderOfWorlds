@@ -157,6 +157,9 @@ namespace InvaderOfWorlds
             var moveDirection = (toSlot.normalized + ComputeAvoidance(up) * _avoidStrength).normalized;
             var step = moveDirection * (_speed * Time.deltaTime);
 
+            // Стены и постройки обходим так же, как игрок: физика движение не разрешает.
+            step = CharacterObstacles.Slide(transform, up, 0.9f, 0.35f, step, ~0);
+
             var nextPosition = position + step;
             var nextUp = _planet.UpAt(nextPosition);
             var ground = PlanetSurface.SampleGroundRadius(_planet, nextUp, _terrainHeight, _groundMask,

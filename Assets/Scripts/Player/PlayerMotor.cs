@@ -50,7 +50,7 @@ namespace InvaderOfWorlds
         [Tooltip("Насколько рельеф может подниматься над базовой сферой, м")]
         [SerializeField, Min(0f)] private float _terrainHeight = 40f;
         [Tooltip("Максимальная высота ступени, на которую персонаж заходит без прыжка")]
-        [SerializeField, Min(0f)] private float _maxStepHeight = 0.45f;
+        [SerializeField, Min(0f)] private float _maxStepHeight = 1.2f;
         [Tooltip("Предельный уклон, по которому можно идти, градусы")]
         [SerializeField, Range(0f, 90f)] private float _slopeLimit = 55f;
 

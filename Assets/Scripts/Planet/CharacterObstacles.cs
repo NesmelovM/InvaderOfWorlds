@@ -1,0 +1,82 @@
+using UnityEngine;
+
+namespace InvaderOfWorlds
+{
+    /// <summary>
+    /// Столкновение персонажей со стенами и постройками.
+    ///
+    /// Движение аналитическое, физика его не разрешает, поэтому каждый шаг
+    /// проверяется сферой. Персонажи друг друга не считают препятствием —
+    /// для них есть отдельное расталкивание.
+    /// </summary>
+    public static class CharacterObstacles
+    {
+        private static readonly RaycastHit[] Buffer = new RaycastHit[12];
+
+        /// <summary>
+        /// Подрезает шаг, если впереди стена. Возвращает скорректированное смещение.
+        /// </summary>
+        public static Vector3 Slide(Transform self, Vector3 up, float bodyHeight, float radius,
+            Vector3 delta, LayerMask mask)
+        {
+            var distance = delta.magnitude;
+
+            if (distance < 0.0001f)
+                return delta;
+
+            var origin = self.position + up * bodyHeight;
+            var direction = delta / distance;
+
+            var count = Physics.SphereCastNonAlloc(origin, radius, direction, Buffer, distance + 0.05f, mask,
+                QueryTriggerInteraction.Ignore);
+
+            var blocked = false;
+
+            for (var i = 0; i < count; i++)
+            {
+                var hit = Buffer[i];
+
+                if (hit.collider == null)
+                    continue;
+
+                if (hit.collider.transform.IsChildOf(self))
+                    continue;
+
+                // Другие персонажи — не стена.
+                if (hit.collider.GetComponentInParent<EnemyMarker>() != null)
+                    continue;
+
+                blocked = true;
+                break;
+            }
+
+            if (!blocked)
+                return delta;
+
+            // Скользим вдоль плоскости стены, а не упираемся в неё намертво.
+            var normal = GetBlockingNormal(origin, direction, distance, mask);
+            return Vector3.ProjectOnPlane(delta, normal);
+        }
+
+        private static Vector3 GetBlockingNormal(Vector3 origin, Vector3 direction, float distance, LayerMask mask)
+        {
+            var count = Physics.SphereCastNonAlloc(origin, 0.35f, direction, Buffer, distance + 0.05f, mask,
+                QueryTriggerInteraction.Ignore);
+
+            for (var i = 0; i < count; i++)
+            {
+                var hit = Buffer[i];
+
+                if (hit.collider == null)
+                    continue;
+
+                if (hit.collider.GetComponentInParent<EnemyMarker>() != null)
+                    continue;
+
+                return hit.normal;
+            }
+
+            return direction * -1f;
+        }
+    }
+}

@@ -253,6 +253,8 @@ namespace InvaderOfWorlds
         {
             var direction = Vector3.ProjectOnPlane(toTarget, up).normalized;
             var step = direction * (_speed * Time.deltaTime);
+
+            step = CharacterObstacles.Slide(transform, up, 1.6f, 0.9f, step, ~0);
             var nextPosition = position + step;
             var nextUp = _planet.UpAt(nextPosition);
             var ground = PlanetSurface.SampleGroundRadius(_planet, nextUp, _terrainHeight, _groundMask,
