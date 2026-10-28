@@ -120,8 +120,20 @@ namespace InvaderOfWorlds
 
             ApplyDelta(delta);
 
+            // Не даём пройти сквозь врагов: расталкиваем по касательной и снова сажаем на грунт.
+            CharacterSeparation.Resolve(transform, _up, _bodyCenter, _bodyRadius, 0.6f);
+            SnapToSurface();
+
             _debugLine = BuildDebugLine(input);
             LogState(input);
+        }
+
+        /// <summary>Возвращает персонажа на текущий грунт после расталкивания.</summary>
+        private void SnapToSurface()
+        {
+            _up = _planet.UpAt(transform.position);
+            _groundRadius = SampleGroundRadius(_up, out _groundNormal);
+            transform.position = _planet.Center + _up * (_groundRadius + _surfaceGap + _height);
         }
 
         /// <summary>Вертикаль: прыжок и падение считаются отдельно от движения по поверхности.</summary>

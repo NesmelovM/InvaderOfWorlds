@@ -82,6 +82,13 @@ namespace InvaderOfWorlds.EditorTools
             var playerObject = new GameObject("Player");
             playerObject.tag = "Player";
 
+            // Коллайдер нужен не для физики, а чтобы другие персонажи «видели» игрока
+            // при расталкивании. Движение по-прежнему аналитическое.
+            var body = playerObject.AddComponent<CapsuleCollider>();
+            body.height = 1.8f;
+            body.radius = 0.35f;
+            body.center = new Vector3(0f, 0.9f, 0f);
+
             // Визуал: капсула без коллайдера. Коллайдер персонажу не нужен —
             // препятствия проверяются SphereCast'ом в самом моторе.
             var visual = GameObject.CreatePrimitive(PrimitiveType.Capsule);

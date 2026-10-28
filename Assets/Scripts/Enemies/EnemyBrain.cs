@@ -88,6 +88,8 @@ namespace InvaderOfWorlds
             if (distance <= _attackRange)
             {
                 SnapToGround(position, up);
+                CharacterSeparation.Resolve(transform, up, 0.9f, 0.35f, 0.9f);
+                SnapToGround(transform.position, up);
                 FaceTowards(toTarget, up);
                 TryBeginWindup();
                 return;
@@ -96,6 +98,8 @@ namespace InvaderOfWorlds
             if (distance > _aggroRadius)
             {
                 SnapToGround(position, up);
+                CharacterSeparation.Resolve(transform, up, 0.9f, 0.35f, 0.9f);
+                SnapToGround(transform.position, up);
                 return;
             }
 
@@ -119,6 +123,10 @@ namespace InvaderOfWorlds
 
             transform.position = _planet.Center + nextUp * (ground + _surfaceGap);
             FaceTowards(step, nextUp);
+
+            // Упираемся в соседа или в игрока, а не проходим сквозь них.
+            CharacterSeparation.Resolve(transform, nextUp, 0.9f, 0.35f, 0.9f);
+            SnapToGround(transform.position, nextUp);
         }
 
         private void TryBeginWindup()
