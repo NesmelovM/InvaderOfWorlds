@@ -27,8 +27,8 @@ namespace InvaderOfWorlds
         [SerializeField] private Transform _cameraTransform;
 
         [Header("Скорости")]
-        [SerializeField, Min(0f)] private float _walkSpeed = 6f;
-        [SerializeField, Min(0f)] private float _sprintSpeed = 9f;
+        [SerializeField, Min(0f)] private float _walkSpeed = 10f;
+        [SerializeField, Min(0f)] private float _sprintSpeed = 20f;
         [SerializeField, Min(0f)] private float _acceleration = 45f;
         [SerializeField, Min(0f)] private float _turnSpeed = 12f;
 

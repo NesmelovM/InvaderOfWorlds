@@ -134,6 +134,8 @@ namespace InvaderOfWorlds.EditorTools
             var health = player.AddComponent<Health>();
             health.Configure(100f);
 
+            player.AddComponent<PlayerHud>();
+
             var attack = player.AddComponent<PlayerAttack>();
             attack.Configure(cameraObject.transform);
 
