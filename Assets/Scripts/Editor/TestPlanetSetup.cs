@@ -86,8 +86,9 @@ namespace InvaderOfWorlds.EditorTools
             body.radius = 0.35f;
             body.center = new Vector3(0f, 0.9f, 0f);
 
-            var model = CharacterModel.Attach(playerObject, "Characters/man-knight", 1.8f, 0f,
-                new Color(0.92f, 0.84f, 0.52f));
+            // Игрок — тот же маг, что стоит у башни в хабе: одна фигура на всю игру.
+            var model = CharacterModel.Attach(playerObject, "Characters/man-cult", 1.95f, 0f,
+                new Color(0.16f, 0.07f, 0.23f));
 
             if (model == null)
             {
