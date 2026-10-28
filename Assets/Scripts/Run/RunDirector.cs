@@ -14,7 +14,7 @@ namespace InvaderOfWorlds
         [SerializeField, Min(0f)] private float _menuDelay = 0.8f;
         [SerializeField] private string _hubSceneName = "Hub";
         [Tooltip("Доля добычи, которая доходит до кошелька при смерти")]
-        [SerializeField, Range(0f, 1f)] private float _deathShare = 0.7f;
+        [SerializeField, Range(0f, 1f)] private float _deathShare = 0.3f;
 
         private bool _dead;
         private float _deadAt;
@@ -143,7 +143,10 @@ namespace InvaderOfWorlds
             GUI.Label(new Rect(0f, top + 138f, Screen.width, 30f),
                 $"Зачислено {Mathf.RoundToInt(_deathShare * 100f)}%: " +
                 $"{_keptGold} золота, {_keptExperience} опыта", _textStyle);
-            GUI.Label(new Rect(0f, top + 178f, Screen.width, 30f), "R — вернуться в хаб", _textStyle);
+            GUI.Label(new Rect(0f, top + 170f, Screen.width, 30f),
+                $"Потеряно {Mathf.RoundToInt((1f - _deathShare) * 100f)}%: " +
+                $"{_runGold - _keptGold} золота, {_runExperience - _keptExperience} опыта", _textStyle);
+            GUI.Label(new Rect(0f, top + 210f, Screen.width, 30f), "R — вернуться в хаб", _textStyle);
         }
     }
 }
