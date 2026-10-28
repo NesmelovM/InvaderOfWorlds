@@ -20,6 +20,10 @@ namespace InvaderOfWorlds.EditorTools
         private int _requiredPortals;
         private DefaultAsset _bigFolder;
         private DefaultAsset _smallFolder;
+        private DefaultAsset _wallsFolder;
+        private string _wallFilter = "wall|stone|block|pillar|ruin|fence";
+        private int _wallSegments = 6;
+        private float _wallHeight = 3f;
         private int _bigCount = 90;
         private int _smallCount = 600;
         private Color _ground = new Color(0.45f, 0.47f, 0.50f);
@@ -52,6 +56,14 @@ namespace InvaderOfWorlds.EditorTools
 
             _smallFolder = (DefaultAsset)EditorGUILayout.ObjectField("Папка: мелочь", _smallFolder, typeof(DefaultAsset), false);
             _smallCount = EditorGUILayout.IntField("Количество мелочи", _smallCount);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Убежища монстров (стены поселений)", EditorStyles.boldLabel);
+
+            _wallsFolder = (DefaultAsset)EditorGUILayout.ObjectField("Папка: стены", _wallsFolder, typeof(DefaultAsset), false);
+            _wallFilter = EditorGUILayout.TextField("Фильтр по имени", _wallFilter);
+            _wallSegments = EditorGUILayout.IntField("Сегментов в кольце", _wallSegments);
+            _wallHeight = EditorGUILayout.FloatField("Высота сегмента, м", _wallHeight);
 
             EditorGUILayout.Space();
             _ground = EditorGUILayout.ColorField("Цвет поверхности", _ground);
@@ -94,6 +106,9 @@ namespace InvaderOfWorlds.EditorTools
             biome.SmallProps = _smallCount;
             biome.Big = LoadPrefabs(_bigFolder);
             biome.Small = LoadPrefabs(_smallFolder);
+            biome.Walls = LoadPrefabs(_wallsFolder, _wallFilter);
+            biome.WallSegments = Mathf.Max(3, _wallSegments);
+            biome.WallHeight = Mathf.Max(1f, _wallHeight);
 
             var path = $"{BiomesFolder}/{_name}.asset";
             AssetDatabase.CreateAsset(biome, path);
@@ -115,7 +130,7 @@ namespace InvaderOfWorlds.EditorTools
             Debug.Log($"[BIOMES] «{biome.Title}» добавлен в каталог, позиция {_catalog.Biomes.Count}");
         }
 
-        private static List<GameObject> LoadPrefabs(DefaultAsset folder)
+        private static List<GameObject> LoadPrefabs(DefaultAsset folder, string nameFilter = null)
         {
             var result = new List<GameObject>();
 
@@ -124,14 +139,27 @@ namespace InvaderOfWorlds.EditorTools
 
             var path = AssetDatabase.GetAssetPath(folder);
             var guids = AssetDatabase.FindAssets("t:Prefab", new[] { path });
+            var filtered = new List<GameObject>();
 
             foreach (var guid in guids)
             {
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
 
-                if (prefab != null)
-                    result.Add(prefab);
+                if (prefab == null)
+                    continue;
+
+                result.Add(prefab);
+
+                if (string.IsNullOrWhiteSpace(nameFilter) || System.Text.RegularExpressions.Regex.IsMatch(
+                        prefab.name, nameFilter, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                {
+                    filtered.Add(prefab);
+                }
             }
+
+            // Фильтр ничего не нашёл — лучше взять всё, чем оставить биом без стен.
+            if (!string.IsNullOrWhiteSpace(nameFilter) && filtered.Count > 0)
+                return filtered;
 
             return result;
         }
@@ -158,10 +186,10 @@ namespace InvaderOfWorlds.EditorTools
             var nature = $"{packFolder}/Nature_M";
 
             var desert = Create("Пустыня", 0, new Color(0.72f, 0.62f, 0.42f), new Color(0.60f, 0.50f, 0.34f),
-                new Color(0.55f, 0.45f, 0.30f), egypt, nature, 70, 500);
+                new Color(0.55f, 0.45f, 0.30f), egypt, nature, 70, 500, egypt, "wall|stone|block|pillar|ruin|column");
 
             var indiaBiome = Create("Индия", 5, new Color(0.42f, 0.52f, 0.36f), new Color(0.34f, 0.42f, 0.30f),
-                new Color(0.20f, 0.30f, 0.28f), india, nature, 100, 700);
+                new Color(0.20f, 0.30f, 0.28f), india, nature, 100, 700, india, "wall|stone|block|pillar|ruin|column");
 
             var catalog = AssetDatabase.LoadAssetAtPath<BiomeCatalog>(CatalogPath);
 
@@ -183,7 +211,8 @@ namespace InvaderOfWorlds.EditorTools
         }
 
         private static BiomeDefinition Create(string title, int requiredPortals, Color ground, Color hill,
-            Color sky, string bigFolder, string smallFolder, int bigCount, int smallCount)
+            Color sky, string bigFolder, string smallFolder, int bigCount, int smallCount,
+            string wallsFolder = null, string wallFilter = null)
         {
             var biome = AssetDatabase.LoadAssetAtPath<BiomeDefinition>($"{BiomesFolder}/{title}.asset");
 
@@ -202,14 +231,18 @@ namespace InvaderOfWorlds.EditorTools
             biome.SmallProps = smallCount;
             biome.Big = LoadPrefabsByPath(bigFolder);
             biome.Small = LoadPrefabsByPath(smallFolder);
+            biome.Walls = string.IsNullOrEmpty(wallsFolder) ? biome.Walls : LoadPrefabsByPath(wallsFolder, wallFilter);
+            biome.WallSegments = 6;
+            biome.WallHeight = 3f;
 
             EditorUtility.SetDirty(biome);
             return biome;
         }
 
-        private static List<GameObject> LoadPrefabsByPath(string folderPath)
+        private static List<GameObject> LoadPrefabsByPath(string folderPath, string nameFilter = null)
         {
             var result = new List<GameObject>();
+            var filtered = new List<GameObject>();
 
             if (!AssetDatabase.IsValidFolder(folderPath))
             {
@@ -221,9 +254,20 @@ namespace InvaderOfWorlds.EditorTools
             {
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
 
-                if (prefab != null)
-                    result.Add(prefab);
+                if (prefab == null)
+                    continue;
+
+                result.Add(prefab);
+
+                if (!string.IsNullOrWhiteSpace(nameFilter) && System.Text.RegularExpressions.Regex.IsMatch(
+                        prefab.name, nameFilter, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                {
+                    filtered.Add(prefab);
+                }
             }
+
+            if (!string.IsNullOrWhiteSpace(nameFilter) && filtered.Count > 0)
+                return filtered;
 
             return result;
         }

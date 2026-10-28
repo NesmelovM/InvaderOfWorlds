@@ -168,3 +168,13 @@ MonoBehaviour:
   - {fileID: 1000013172576746, guid: cd89d42d1f4ee4776baffddf076c3958, type: 3}
   - {fileID: 1000014109055006, guid: 5c9de7283eb7304419a30532403d04e6, type: 3}
   - {fileID: 1102042703788146, guid: 8dfca704eb0cf4e9c81773e2df7ef913, type: 3}
+  Walls:
+  - {fileID: 8502959739254510782, guid: 9dfa873f5046d074eb58b0f5f9336340, type: 3}
+  - {fileID: 3916896223245741503, guid: 6479adc4ff57e30468b3523b59d8c9dd, type: 3}
+  - {fileID: 2851002715493738400, guid: f3bbb5c87c2cf9c4facd887326dd12a8, type: 3}
+  - {fileID: 8757133195427251931, guid: 2fcd900b0f8d7f34ea70112c65c3a783, type: 3}
+  - {fileID: 8965008891541643121, guid: 141849fb1b5198e458320e76f9438d68, type: 3}
+  - {fileID: 7719815975330648776, guid: 01d3e5b5f2399b7468dec7d626191b00, type: 3}
+  - {fileID: 1184891785919542449, guid: d3747a8b7a13db0499828bb262bb7a86, type: 3}
+  WallSegments: 6
+  WallHeight: 3

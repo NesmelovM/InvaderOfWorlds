@@ -306,12 +306,17 @@ namespace InvaderOfWorlds
             return corners.Length > 0;
         }
 
-        /// <summary>Кольцо стен вокруг каждого поселения — прорыв остаётся задачей.</summary>
+        /// <summary>
+        /// Кольцо стен вокруг каждого поселения — прорыв остаётся задачей.
+        /// Если у биома заданы префабы убежищ, кольцо собирается из них,
+        /// иначе из простых блоков.
+        /// </summary>
         private void SpawnSettlementWalls(System.Random random)
         {
             var root = new GameObject("Settlement Walls").transform;
             var material = EnemyFactory.GetMaterial(new Color(0.52f, 0.48f, 0.43f));
-            const int segments = 6;
+            var segments = _biome != null ? Mathf.Max(3, _biome.WallSegments) : 6;
+            var wallHeight = _biome != null ? Mathf.Max(1f, _biome.WallHeight) : 2.4f;
 
             foreach (var settlement in _generator.Settlements)
             {
@@ -323,6 +328,12 @@ namespace InvaderOfWorlds
                     var offset = Quaternion.AngleAxis(angle, up) * Vector3.forward * (settlement.Radius * 0.6f);
                     var position = settlement.Center + Vector3.ProjectOnPlane(offset, up);
                     var direction = _planet.UpAt(position);
+
+                    if (_biome != null && _biome.Walls.Count > 0)
+                    {
+                        SpawnBiomeWall(random, root, position, direction, angle, wallHeight);
+                        continue;
+                    }
 
                     var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     wall.name = "Settlement Wall";
@@ -338,6 +349,34 @@ namespace InvaderOfWorlds
                     wall.AddComponent<Destructible>();
                 }
             }
+        }
+
+        /// <summary>Сегмент убежища из префаба биома: подгоняем по высоте и сажаем на грунт.</summary>
+        private void SpawnBiomeWall(System.Random random, Transform root, Vector3 position, Vector3 direction,
+            float angle, float targetHeight)
+        {
+            var prefab = _biome.Walls[random.Next(_biome.Walls.Count)];
+
+            if (prefab == null)
+                return;
+
+            var wall = Instantiate(prefab, _planet.Center + direction * _planet.Radius, Quaternion.identity, root);
+            wall.name = "Settlement Wall";
+
+            var height = MeasureHeight(wall);
+
+            if (height > 0.01f)
+                wall.transform.localScale *= targetHeight / height;
+
+            wall.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction) *
+                                      Quaternion.Euler(0f, angle + (float)random.NextDouble() * 40f, 0f);
+
+            var lowest = LowestPointAlong(wall, direction);
+            wall.transform.position += direction * (-lowest - 0.5f);
+
+            var health = wall.AddComponent<Health>();
+            health.Configure(140f * Mathf.Max(1f, RunState.Difficulty));
+            wall.AddComponent<Destructible>();
         }
 
         /// <summary>Босс и портал в самой дальней точке от входа.</summary>

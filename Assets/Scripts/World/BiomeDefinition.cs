@@ -32,5 +32,15 @@ namespace InvaderOfWorlds
 
         [Header("Мелочь (сквозь неё проходим)")]
         public List<GameObject> Small = new List<GameObject>();
+
+        [Header("Убежища монстров")]
+        [Tooltip("Из этих префабов собирается кольцо вокруг поселения. Пусто — обычные стены")]
+        public List<GameObject> Walls = new List<GameObject>();
+
+        [Tooltip("Сколько сегментов в кольце вокруг поселения")]
+        [Min(3)] public int WallSegments = 6;
+
+        [Tooltip("Высота сегмента стены в метрах")]
+        [Min(1f)] public float WallHeight = 3f;
     }
 }
