@@ -166,30 +166,41 @@ namespace InvaderOfWorlds
                 PlayerPrefs.Save();
             }
 
+            var volume = InvaderOfWorlds.AudioSettings.Volume;
+
+            GUI.Label(new Rect(x, y + 34f, width - 220f, 26f),
+                $"Громкость: {Mathf.RoundToInt(volume * 100f)}%", _textStyle);
+
+            var newVolume = GUI.HorizontalSlider(new Rect(x + width - 200f, y + 40f, 200f, 20f),
+                volume, 0f, 1f);
+
+            if (!Mathf.Approximately(newVolume, volume))
+                InvaderOfWorlds.AudioSettings.Volume = newVolume;
+
             var invert = PlayerPrefs.GetInt(InvertKey, 0) == 1;
 
-            if (GUI.Toggle(new Rect(x, y + 44f, width, 28f), invert, " Инверсия мыши",
+            if (GUI.Toggle(new Rect(x, y + 76f, width, 28f), invert, " Инверсия мыши",
                     GUI.skin.toggle) != invert)
             {
                 PlayerPrefs.SetInt(InvertKey, invert ? 0 : 1);
                 PlayerPrefs.Save();
             }
 
-            GUI.Label(new Rect(x, y + 88f, width, 26f), "Качество графики", _textStyle);
+            GUI.Label(new Rect(x, y + 116f, width, 26f), "Качество графики", _textStyle);
 
-            if (GUI.Button(new Rect(x, y + 116f, 44f, 36f), "−", _buttonStyle))
+            if (GUI.Button(new Rect(x, y + 144f, 44f, 36f), "−", _buttonStyle))
                 QualitySettings.SetQualityLevel(Mathf.Max(0, QualitySettings.GetQualityLevel() - 1), true);
 
-            if (GUI.Button(new Rect(x + 52f, y + 116f, 44f, 36f), "+", _buttonStyle))
+            if (GUI.Button(new Rect(x + 52f, y + 144f, 44f, 36f), "+", _buttonStyle))
                 QualitySettings.SetQualityLevel(
                     Mathf.Min(QualitySettings.names.Length - 1, QualitySettings.GetQualityLevel() + 1), true);
 
-            GUI.Label(new Rect(x + 108f, y + 122f, 220f, 26f),
+            GUI.Label(new Rect(x + 108f, y + 150f, 220f, 26f),
                 QualitySettings.names[QualitySettings.GetQualityLevel()], _textStyle);
 
-            DrawResetBlock(new Rect(x, y + 176f, width, 120f));
+            DrawResetBlock(new Rect(x, y + 200f, width, 120f));
 
-            if (GUI.Button(new Rect(x, y + 312f, width, 50f), "◀ НАЗАД", _buttonStyle))
+            if (GUI.Button(new Rect(x, y + 330f, width, 50f), "◀ НАЗАД", _buttonStyle))
                 _settings = false;
         }
 

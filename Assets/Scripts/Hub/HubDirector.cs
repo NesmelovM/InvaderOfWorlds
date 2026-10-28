@@ -224,9 +224,20 @@ namespace InvaderOfWorlds
                 PlayerPrefs.Save();
             }
 
+            var volume = InvaderOfWorlds.AudioSettings.Volume;
+
+            GUI.Label(new Rect(panel.x + 20f, panel.y + 104f, 260f, 24f),
+                $"Громкость: {Mathf.RoundToInt(volume * 100f)}%", _textStyle);
+
+            var newVolume = GUI.HorizontalSlider(new Rect(panel.x + 300f, panel.y + 110f,
+                panel.width - 340f, 20f), volume, 0f, 1f);
+
+            if (!Mathf.Approximately(newVolume, volume))
+                InvaderOfWorlds.AudioSettings.Volume = newVolume;
+
             var invert = PlayerPrefs.GetInt(InvertKey, 0) == 1;
 
-            if (GUI.Toggle(new Rect(panel.x + 20f, panel.y + 108f, 280f, 28f), invert, " Инверсия мыши",
+            if (GUI.Toggle(new Rect(panel.x + 20f, panel.y + 146f, 280f, 28f), invert, " Инверсия мыши",
                     GUI.skin.toggle) != invert)
             {
                 PlayerPrefs.SetInt(InvertKey, invert ? 0 : 1);
@@ -234,21 +245,21 @@ namespace InvaderOfWorlds
             }
 
             var quality = QualitySettings.GetQualityLevel();
-            GUI.Label(new Rect(panel.x + 20f, panel.y + 156f, 260f, 24f), "Качество графики", _textStyle);
+            GUI.Label(new Rect(panel.x + 20f, panel.y + 190f, 260f, 24f), "Качество графики", _textStyle);
 
-            if (GUI.Button(new Rect(panel.x + 300f, panel.y + 150f, 40f, 34f), "−", _buttonStyle))
+            if (GUI.Button(new Rect(panel.x + 300f, panel.y + 184f, 40f, 34f), "−", _buttonStyle))
                 QualitySettings.SetQualityLevel(Mathf.Max(0, quality - 1), true);
 
-            if (GUI.Button(new Rect(panel.x + 348f, panel.y + 150f, 40f, 34f), "+", _buttonStyle))
+            if (GUI.Button(new Rect(panel.x + 348f, panel.y + 184f, 40f, 34f), "+", _buttonStyle))
                 QualitySettings.SetQualityLevel(Mathf.Min(QualitySettings.names.Length - 1, quality + 1), true);
 
-            GUI.Label(new Rect(panel.x + 404f, panel.y + 156f, 200f, 24f),
+            GUI.Label(new Rect(panel.x + 404f, panel.y + 190f, 200f, 24f),
                 QualitySettings.names[QualitySettings.GetQualityLevel()], _textStyle);
 
-            GUI.Label(new Rect(panel.x + 20f, panel.y + 200f, panel.width - 40f, 26f),
+            GUI.Label(new Rect(panel.x + 20f, panel.y + 230f, panel.width - 40f, 26f),
                 "Настройки сохраняются сразу и действуют на все забеги.", _hintStyle);
 
-            DrawResetBlock(new Rect(panel.x + 20f, panel.y + 250f, panel.width - 40f, 130f));
+            DrawResetBlock(new Rect(panel.x + 20f, panel.y + 270f, panel.width - 40f, 130f));
 
             if (GUI.Button(new Rect(40f, 628f, 220f, 56f), "◀ НАЗАД", _bigButtonStyle))
                 _screen = Screen.Main;
