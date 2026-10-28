@@ -5,15 +5,16 @@ namespace InvaderOfWorlds
     /// <summary>
     /// Ставит модель персонажа внутрь игрового объекта.
     ///
-    /// Главная тонкость: персонаж стоит на сфере, и его «верх» — это нормаль планеты,
-    /// а не мировой Y. Поэтому и рост, и уровень ступней считаются вдоль локальной
-    /// оси объекта. Если считать по мировому габаритному боксу, у полюса всё
-    /// правильно, а на обратной стороне планеты модель раздувается и висит в воздухе.
+    /// Две тонкости, обе про то, что персонаж живёт на сфере:
+    /// 1. Рост и уровень ступней считаются вдоль локальной оси «вверх», а не мировой:
+    ///    на обратной стороне планеты мировой Y ничего не значит.
+    /// 2. Точки берутся по вершинам мешей, а не по габаритному боксу: у больших
+    ///    моделей бокс бывает заметно шире силуэта, и персонаж повисает.
     /// </summary>
     public static class CharacterModel
     {
         public static GameObject Attach(GameObject host, string resourcePath, float height, float yawOffset,
-            Color? tint = null)
+            Color? tint = null, float verticalOffset = 0f)
         {
             var prefab = Resources.Load<GameObject>(resourcePath);
 
@@ -34,9 +35,9 @@ namespace InvaderOfWorlds
             var currentHeight = Mathf.Max(0.01f, maxY - minY);
             model.transform.localScale = Vector3.one * (height / currentHeight);
 
-            // После масштабирования пересчитываем и опускаем ступни на ноль.
+            // После масштабирования пересчитываем и ставим ступни на ноль.
             ComputeVerticalExtents(model, host.transform, out minY, out _);
-            model.transform.localPosition = new Vector3(0f, -minY, 0f);
+            model.transform.localPosition = new Vector3(0f, -minY + verticalOffset, 0f);
             model.transform.localRotation = Quaternion.Euler(0f, yawOffset, 0f);
 
             if (tint.HasValue)
@@ -46,37 +47,69 @@ namespace InvaderOfWorlds
         }
 
         /// <summary>
-        /// Нижняя и верхняя точки модели вдоль локальной оси «вверх» объекта.
-        /// Углы мирового AABB пересчитываются в локальные координаты — только так
-        /// результат не зависит от того, в какой точке сферы стоит персонаж.
+        /// Нижняя и верхняя точки модели вдоль локальной оси «вверх» объекта-хозяина.
+        /// Считаем по вершинам мешей — это точнее габаритного бокса.
         /// </summary>
         private static void ComputeVerticalExtents(GameObject model, Transform host, out float minY,
             out float maxY)
         {
             minY = float.MaxValue;
             maxY = float.MinValue;
+            var found = false;
 
-            foreach (var renderer in model.GetComponentsInChildren<Renderer>(true))
+            foreach (var filter in model.GetComponentsInChildren<MeshFilter>(true))
             {
-                var bounds = renderer.bounds;
+                var mesh = filter.sharedMesh;
 
-                for (var i = 0; i < 8; i++)
+                if (mesh == null)
+                    continue;
+
+                var matrix = filter.transform.localToWorldMatrix;
+
+                foreach (var vertex in mesh.vertices)
                 {
-                    var corner = new Vector3(
-                        (i & 1) == 0 ? bounds.min.x : bounds.max.x,
-                        (i & 2) == 0 ? bounds.min.y : bounds.max.y,
-                        (i & 4) == 0 ? bounds.min.z : bounds.max.z);
-
-                    var local = host.InverseTransformPoint(corner);
+                    var local = host.InverseTransformPoint(matrix.MultiplyPoint3x4(vertex));
                     minY = Mathf.Min(minY, local.y);
                     maxY = Mathf.Max(maxY, local.y);
+                    found = true;
                 }
             }
 
-            if (minY > maxY)
+            // Скиннинг: вершины в покое не отражают позу, берём его границы.
+            foreach (var skinned in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                SampleBounds(skinned.bounds, host, ref minY, ref maxY);
+                found = true;
+            }
+
+            if (found && minY <= maxY)
+                return;
+
+            foreach (var renderer in model.GetComponentsInChildren<Renderer>(true))
+            {
+                SampleBounds(renderer.bounds, host, ref minY, ref maxY);
+                found = true;
+            }
+
+            if (!found)
             {
                 minY = 0f;
                 maxY = 1f;
+            }
+        }
+
+        private static void SampleBounds(Bounds bounds, Transform host, ref float minY, ref float maxY)
+        {
+            for (var i = 0; i < 8; i++)
+            {
+                var corner = new Vector3(
+                    (i & 1) == 0 ? bounds.min.x : bounds.max.x,
+                    (i & 2) == 0 ? bounds.min.y : bounds.max.y,
+                    (i & 4) == 0 ? bounds.min.z : bounds.max.z);
+
+                var local = host.InverseTransformPoint(corner);
+                minY = Mathf.Min(minY, local.y);
+                maxY = Mathf.Max(maxY, local.y);
             }
         }
 

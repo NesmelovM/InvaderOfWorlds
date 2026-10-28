@@ -70,14 +70,14 @@ namespace InvaderOfWorlds.EditorTools
             // Коллайдер-сфера только мешал бы проверке препятствий и провоцировал
             // выталкивание персонажа физикой.
 
-            // Визуал: примитив-сфера. Позже заменим на планету из LowPolyAlienWorld.
-            var visual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            visual.name = "Visual";
-            Object.DestroyImmediate(visual.GetComponent<SphereCollider>());
+            // Визуал: гладкая сфера, а не примитив Unity — на 90 метрах примитив гранёный.
+            var visual = new GameObject("Visual");
+            var filter = visual.AddComponent<MeshFilter>();
+            var meshRenderer = visual.AddComponent<MeshRenderer>();
+            filter.sharedMesh = SphereMesh.Create(PlanetRadius);
             visual.transform.SetParent(planetObject.transform, false);
-            visual.transform.localScale = Vector3.one * PlanetRadius * 2f;
 
-            var renderer = visual.GetComponent<MeshRenderer>();
+            var renderer = meshRenderer;
             renderer.sharedMaterial = GetOrCreateMaterial("TestPlanet", new Color(0.45f, 0.47f, 0.50f));
             renderer.shadowCastingMode = ShadowCastingMode.Off;
 
