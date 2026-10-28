@@ -145,6 +145,7 @@ namespace InvaderOfWorlds
                         return;
 
                     _playerHealth.IncreaseMax(20f);
+                    RunState.HealthBonus += 20f;
                     _playerHealth.Heal(_playerHealth.Max);
                 }
             });
@@ -159,6 +160,7 @@ namespace InvaderOfWorlds
 
                     if (motor != null)
                         motor.ApplySpeedMultiplier(1.08f);
+                    RunState.SpeedMultiplier *= 1.08f;
                 }
             });
 

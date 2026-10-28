@@ -104,10 +104,11 @@ namespace InvaderOfWorlds
             if (_planet == null)
                 _planet = FindAnyObjectByType<Planet>();
 
-            // Скорости берём из конфига баланса: их правят в инструменте.
+            // Скорости берём из конфига баланса и множителя забега:
+            // карточки «Лёгкость» должны переживать переход на новую планету.
             _rig = GetComponent<CharacterRig>();
-            _walkSpeed = Balance.WalkSpeed;
-            _sprintSpeed = Balance.SprintSpeed;
+            _walkSpeed = Balance.WalkSpeed * RunState.SpeedMultiplier;
+            _sprintSpeed = Balance.SprintSpeed * RunState.SpeedMultiplier;
         }
 
         private void Update()

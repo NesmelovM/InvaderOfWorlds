@@ -19,6 +19,8 @@ namespace InvaderOfWorlds
         public static float EnemySpeedMultiplier = 1f;
         public static float HealPerKill;
         public static float WeaponDamageMultiplier = 1f;
+        public static float HealthBonus;
+        public static float SpeedMultiplier = 1f;
 
         /// <summary>Идентификаторы оружия из оружейной, которые несёт игрок.</summary>
         public static readonly List<int> Loadout = new List<int>();
@@ -34,6 +36,8 @@ namespace InvaderOfWorlds
             EnemySpeedMultiplier = 1f;
             HealPerKill = 0f;
             WeaponDamageMultiplier = 1f;
+            HealthBonus = 0f;
+            SpeedMultiplier = 1f;
             Loadout.Clear();
             ActiveBiome = null;
             Seed = Random.Range(1, int.MaxValue);

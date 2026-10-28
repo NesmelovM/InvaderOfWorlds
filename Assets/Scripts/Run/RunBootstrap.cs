@@ -37,7 +37,7 @@ namespace InvaderOfWorlds
 
             if (health != null)
             {
-                health.Configure(Balance.PlayerHealth + MetaProgress.HealthBonus);
+                health.Configure(Balance.PlayerHealth + MetaProgress.HealthBonus + RunState.HealthBonus);
                 RunModifiers.PlayerHealth = health;
             }
 
