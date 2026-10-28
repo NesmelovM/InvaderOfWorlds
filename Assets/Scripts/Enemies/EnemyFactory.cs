@@ -19,7 +19,8 @@ namespace InvaderOfWorlds
         public static GameObject Spawn(Planet planet, Transform target, Vector3 surfacePosition,
             Color color, float health, Transform parent)
         {
-            var enemy = CreateBody(planet, surfacePosition, color, health, parent, new Vector3(0.7f, 0.9f, 0.7f));
+            var enemy = CreateBody(planet, surfacePosition, color, health, parent, new Vector3(0.7f, 0.9f, 0.7f),
+                gold: 5, experience: 10);
             enemy.name = "Guard";
 
             var brain = enemy.AddComponent<EnemyBrain>();
@@ -32,7 +33,8 @@ namespace InvaderOfWorlds
         public static GameObject SpawnRanged(Planet planet, Transform target, Vector3 surfacePosition,
             float health, Transform parent)
         {
-            var enemy = CreateBody(planet, surfacePosition, RangedColor, health, parent, new Vector3(0.65f, 0.95f, 0.65f));
+            var enemy = CreateBody(planet, surfacePosition, RangedColor, health, parent, new Vector3(0.65f, 0.95f, 0.65f),
+                gold: 7, experience: 14);
             enemy.name = "Archer";
 
             var brain = enemy.AddComponent<RangedEnemyBrain>();
@@ -46,7 +48,8 @@ namespace InvaderOfWorlds
             Transform parent)
         {
             var scale = new Vector3(1.25f, 1.5f, 1.25f);
-            var enemy = CreateBody(planet, surfacePosition, EliteColor, 180f, parent, scale);
+            var enemy = CreateBody(planet, surfacePosition, EliteColor, 180f, parent, scale,
+                gold: 25, experience: 50);
             enemy.name = "Elite";
 
             var brain = enemy.AddComponent<EnemyBrain>();
@@ -57,7 +60,7 @@ namespace InvaderOfWorlds
         }
 
         private static GameObject CreateBody(Planet planet, Vector3 surfacePosition, Color color, float health,
-            Transform parent, Vector3 scale)
+            Transform parent, Vector3 scale, int gold, int experience)
         {
             var up = planet.UpAt(surfacePosition);
 
@@ -79,6 +82,9 @@ namespace InvaderOfWorlds
 
             var bar = enemy.AddComponent<EnemyHealthBar>();
             bar.Configure(healthComponent, 2f * scale.y + 0.1f);
+
+            var reward = enemy.AddComponent<EnemyReward>();
+            reward.Configure(gold, experience);
 
             return enemy;
         }

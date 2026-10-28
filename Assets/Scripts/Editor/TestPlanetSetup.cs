@@ -141,6 +141,9 @@ namespace InvaderOfWorlds.EditorTools
             var health = player.AddComponent<Health>();
             health.Configure(100f);
 
+            // Игрок остаётся в сцене после смерти: на нём камера, меню и итоги забега.
+            health.SetDestroyOnDeath(false);
+
             player.AddComponent<HitFlash>();
             player.AddComponent<PlayerDamageFeedback>();
             player.AddComponent<PlayerHud>();
@@ -151,6 +154,12 @@ namespace InvaderOfWorlds.EditorTools
             var spawnerObject = new GameObject("Settlement Spawner");
             var spawner = spawnerObject.AddComponent<SettlementSpawner>();
             spawner.Configure(planet, generator, player.transform);
+
+            // Управление забегом: смерть, итоги, перезапуск и счётчик наград.
+            var runObject = new GameObject("Run");
+            var director = runObject.AddComponent<RunDirector>();
+            director.Configure(health);
+            runObject.AddComponent<RunHud>();
 
             var root = new GameObject("Test Enemies");
             var enemyColor = new Color(0.85f, 0.25f, 0.20f);
@@ -310,6 +319,28 @@ namespace InvaderOfWorlds.EditorTools
             const string path = folder + "/TestPlanet.unity";
             EditorSceneManager.SaveScene(scene, path);
             AssetDatabase.Refresh();
+
+            // Сцена должна быть в Build Settings, иначе перезапуск забега по R
+            // попытается загрузить индекс -1 и ничего не произойдёт.
+            var scenes = EditorBuildSettings.scenes;
+            var alreadyRegistered = false;
+
+            foreach (var entry in scenes)
+            {
+                if (entry.path != path)
+                    continue;
+
+                alreadyRegistered = true;
+                break;
+            }
+
+            if (alreadyRegistered)
+                return;
+
+            var updated = new EditorBuildSettingsScene[scenes.Length + 1];
+            updated[0] = new EditorBuildSettingsScene(path, true);
+            System.Array.Copy(scenes, 0, updated, 1, scenes.Length);
+            EditorBuildSettings.scenes = updated;
         }
     }
 }

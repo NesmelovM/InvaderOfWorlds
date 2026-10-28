@@ -38,6 +38,15 @@ namespace InvaderOfWorlds
             Changed?.Invoke(_current, _max);
         }
 
+        /// <summary>
+        /// Остаётся ли объект в сцене после смерти. Игроку нужно остаться:
+        /// на нём висят камера, меню и итоги забега.
+        /// </summary>
+        public void SetDestroyOnDeath(bool value)
+        {
+            _destroyOnDeath = value;
+        }
+
         public void TakeDamage(float amount)
         {
             if (!IsAlive || amount <= 0f)
