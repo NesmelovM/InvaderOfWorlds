@@ -25,7 +25,7 @@ namespace InvaderOfWorlds
             Color color, float health, Transform parent)
         {
             var enemy = CreateBody(planet, surfacePosition, color, health, parent, 1.8f, 0.35f,
-                gold: 5, experience: 10, modelPath: "Characters/man-soldier", modelOverride: RunState.ActiveBiome?.MeleeModel);
+                gold: 5, experience: 10, modelPath: "Characters/man-soldier_Rig", weaponPath: "Weapons/sword", modelOverride: RunState.ActiveBiome?.MeleeModel);
             enemy.name = "Guard";
 
             var brain = enemy.AddComponent<EnemyBrain>();
@@ -40,7 +40,7 @@ namespace InvaderOfWorlds
             float health, Transform parent)
         {
             var enemy = CreateBody(planet, surfacePosition, RangedColor, health, parent, 1.9f, 0.33f,
-                gold: 7, experience: 14, modelPath: "Characters/man-cult", modelOverride: RunState.ActiveBiome?.RangedModel);
+                gold: 7, experience: 14, modelPath: "Characters/man-cult_Rig", weaponPath: "Weapons/bow", modelOverride: RunState.ActiveBiome?.RangedModel);
             enemy.name = "Archer";
 
             var brain = enemy.AddComponent<RangedEnemyBrain>();
@@ -55,7 +55,7 @@ namespace InvaderOfWorlds
             Transform parent)
         {
             var enemy = CreateBody(planet, surfacePosition, EliteColor, 180f, parent, 2.5f, 0.5f,
-                gold: 25, experience: 50, modelPath: "Characters/man-knight-soldier", modelOverride: RunState.ActiveBiome?.EliteModel);
+                gold: 25, experience: 50, modelPath: "Characters/man-knight_Rig", weaponPath: "Weapons/hammer", modelOverride: RunState.ActiveBiome?.EliteModel);
             enemy.name = "Elite";
 
             var brain = enemy.AddComponent<EnemyBrain>();
@@ -71,7 +71,7 @@ namespace InvaderOfWorlds
             Transform parent)
         {
             var enemy = CreateBody(planet, surfacePosition, EliteRangedColor, 140f, parent, 2.4f, 0.5f,
-                gold: 35, experience: 70, modelPath: "Characters/man-cult", modelOverride: RunState.ActiveBiome?.EliteArcherModel);
+                gold: 35, experience: 70, modelPath: "Characters/man-cult_Rig", weaponPath: "Weapons/bow", modelOverride: RunState.ActiveBiome?.EliteArcherModel);
             enemy.name = "Elite Archer";
 
             var brain = enemy.AddComponent<RangedEnemyBrain>();
@@ -87,7 +87,7 @@ namespace InvaderOfWorlds
             Transform parent)
         {
             var enemy = CreateBody(planet, surfacePosition, BossColor, 520f, parent, 4.2f, 0.9f,
-                gold: 150, experience: 300, modelPath: "Characters/giant", modelOverride: RunState.ActiveBiome?.BossModel);
+                gold: 150, experience: 300, modelPath: "Characters/giant_Rig", weaponPath: "Weapons/club-zulu", modelOverride: RunState.ActiveBiome?.BossModel);
             enemy.name = "Boss";
 
             var brain = enemy.AddComponent<BossBrain>();
@@ -99,7 +99,7 @@ namespace InvaderOfWorlds
 
         private static GameObject CreateBody(Planet planet, Vector3 surfacePosition, Color color, float health,
             Transform parent, float height, float radius, int gold, int experience, string modelPath,
-            GameObject modelOverride = null)
+            string weaponPath = null, GameObject modelOverride = null)
         {
             var up = planet.UpAt(surfacePosition);
 
@@ -120,6 +120,14 @@ namespace InvaderOfWorlds
 
             if (model == null)
                 CreateFallbackVisual(enemy, color, height, radius);
+            else
+            {
+                // Процедурная анимация по костям и оружие в правой руке.
+                enemy.AddComponent<CharacterRig>();
+
+                if (!string.IsNullOrEmpty(weaponPath))
+                    WeaponMount.Attach(enemy, weaponPath, height * 0.55f);
+            }
 
             var healthComponent = enemy.AddComponent<Health>();
             healthComponent.Configure(health * Mathf.Max(1f, RunState.Difficulty) * Balance.EnemyHealthMultiplier);

@@ -88,7 +88,9 @@ namespace InvaderOfWorlds.EditorTools
 
             // Игрок — тот же маг, что стоит у башни в хабе: одна фигура на всю игру.
             // Цвет задаём компонентом: материал, созданный в редакторе, в сцене не сохраняется.
-            var model = CharacterModel.Attach(playerObject, "Characters/man-cult", 1.95f, 0f);
+            var model = CharacterModel.Attach(playerObject, "Characters/man-cult_Rig", 1.95f, 0f);
+
+            playerObject.AddComponent<CharacterRig>();
 
             var tint = playerObject.AddComponent<ModelTint>();
             tint.Configure(new Color(0.16f, 0.07f, 0.23f));

@@ -66,6 +66,8 @@ namespace InvaderOfWorlds
         private float _nextVolley;
         private float _nextSummon;
 
+        private CharacterRig _rig;
+
         public void Configure(Planet planet, Transform target)
         {
             _planet = planet;
@@ -84,6 +86,8 @@ namespace InvaderOfWorlds
 
         private void Awake()
         {
+            _rig = GetComponent<CharacterRig>();
+
             _health = GetComponent<Health>();
             _baseScale = transform.localScale;
 
@@ -101,6 +105,9 @@ namespace InvaderOfWorlds
 
         private void Update()
         {
+            if (_rig != null)
+                _rig.Speed = _speed * RunModifiers.EnemySpeedMultiplier * Balance.EnemySpeedMultiplier;
+
             if (_planet == null || _target == null)
                 return;
 
@@ -196,6 +203,7 @@ namespace InvaderOfWorlds
 
         private void Slam()
         {
+            _rig?.Attack();
             var up = _planet.UpAt(transform.position);
             var origin = transform.position + up * 0.9f;
             var count = Physics.OverlapSphereNonAlloc(origin, _slamRadius, _overlaps, ~0,
@@ -220,6 +228,7 @@ namespace InvaderOfWorlds
 
         private void Volley()
         {
+            _rig?.Attack();
             var up = _planet.UpAt(transform.position);
             var origin = transform.position + up * 1.4f;
             var direction = (_target.position + up * 1f - origin).normalized;

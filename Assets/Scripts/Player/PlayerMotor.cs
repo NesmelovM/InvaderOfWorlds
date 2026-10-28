@@ -59,6 +59,7 @@ namespace InvaderOfWorlds
         private float _verticalSpeed;    // вдоль нормали, м/с
         private Vector3 _up = Vector3.up;
         private float _stepDistance;
+        private CharacterRig _rig;
         [SerializeField, Min(0.5f)] private float _stepLength = 2.4f;
         private Vector3 _groundNormal = Vector3.up;
         private float _groundRadius;
@@ -104,6 +105,7 @@ namespace InvaderOfWorlds
                 _planet = FindAnyObjectByType<Planet>();
 
             // Скорости берём из конфига баланса: их правят в инструменте.
+            _rig = GetComponent<CharacterRig>();
             _walkSpeed = Balance.WalkSpeed;
             _sprintSpeed = Balance.SprintSpeed;
         }
@@ -138,6 +140,9 @@ namespace InvaderOfWorlds
             SnapToSurface();
 
             UpdateFootsteps(delta.magnitude);
+
+            if (_rig != null)
+                _rig.Speed = CurrentSpeed;
         }
 
         /// <summary>

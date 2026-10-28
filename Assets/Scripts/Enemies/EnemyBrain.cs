@@ -54,6 +54,7 @@ namespace InvaderOfWorlds
         private Health _health;
         private float _nextAttackTime;
         private Vector3 _baseScale;
+        private CharacterRig _rig;
         private bool _windingUp;
         private float _windupEndTime;
         private float _slotAngle;
@@ -91,6 +92,8 @@ namespace InvaderOfWorlds
 
         private void Awake()
         {
+            _rig = GetComponent<CharacterRig>();
+
             _health = GetComponent<Health>();
             _baseScale = transform.localScale;
 
@@ -111,6 +114,9 @@ namespace InvaderOfWorlds
 
         private void Update()
         {
+            if (_rig != null)
+                _rig.Speed = _speed * RunModifiers.EnemySpeedMultiplier * Balance.EnemySpeedMultiplier;
+
             if (_planet == null || _target == null)
                 return;
 
@@ -230,6 +236,7 @@ namespace InvaderOfWorlds
 
             _windingUp = true;
             _windupEndTime = Time.time + _windupTime;
+            _rig?.Attack();
         }
 
         private void UpdateWindup(Vector3 up, Vector3 toTarget, float distance)

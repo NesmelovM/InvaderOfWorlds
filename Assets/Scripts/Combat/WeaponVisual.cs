@@ -52,6 +52,18 @@ namespace InvaderOfWorlds
                 _socket = socket.transform;
             }
 
+            // Если модель ригованная, оружие крепим к кисти: тогда его двигает анимация руки.
+            foreach (var bone in GetComponentsInChildren<Transform>(true))
+            {
+                if (!string.Equals(bone.name, "RightHand", System.StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                _socket.SetParent(bone, false);
+                _socket.localPosition = Vector3.zero;
+                _socket.localRotation = Quaternion.Euler(0f, 0f, 90f);
+                break;
+            }
+
             _restPosition = _socket.localPosition;
             _restRotation = _socket.localRotation;
 
@@ -123,6 +135,11 @@ namespace InvaderOfWorlds
         private void OnWeaponFired(WeaponKind kind)
         {
             _swing = 1f;
+
+            var rig = GetComponent<CharacterRig>();
+
+            if (rig != null)
+                rig.Attack();
         }
 
         /// <summary>Замах: модель проворачивается вперёд и возвращается назад.</summary>
