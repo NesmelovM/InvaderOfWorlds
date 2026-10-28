@@ -300,16 +300,28 @@ namespace InvaderOfWorlds.EditorTools
             CreateMound(root.transform, planet, Quaternion.AngleAxis(-45f, Vector3.forward) * spawnUp);
         }
 
-        /// <summary>Сплющенная сфера даёт пологий холм: максимум ~44°, по нему можно подняться.</summary>
+        /// <summary>
+        /// Холм как настоящий купол на поверхности: меш повторяет сферу планеты,
+        /// коллайдер — выпуклый меш. Неравномерный масштаб сферы не используется:
+        /// Unity превращает такой коллайдер в огромный шар, на котором персонаж
+        /// оказывается в десяти метрах над планетой.
+        /// </summary>
         private static void CreateMound(Transform parent, Planet planet, Vector3 direction)
         {
-            var mound = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            mound.name = "Hill";
+            var mound = new GameObject("Hill");
             mound.transform.SetParent(parent, false);
-            mound.transform.position = planet.Center + direction * (planet.Radius - 2f);
+            mound.transform.position = planet.Center;
             mound.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
-            mound.transform.localScale = new Vector3(24f, 10f, 24f);
-            Paint(mound, GetOrCreateMaterial("TestHill", new Color(0.85f, 0.12f, 0.10f)));
+
+            var filter = mound.AddComponent<MeshFilter>();
+            filter.sharedMesh = SurfaceDomeMesh.Create(planet.Radius, 10f, 3f);
+
+            var renderer = mound.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = GetOrCreateMaterial("TestHill", new Color(0.85f, 0.12f, 0.10f));
+
+            var collider = mound.AddComponent<MeshCollider>();
+            collider.sharedMesh = filter.sharedMesh;
+            collider.convex = true;
         }
 
         /// <summary>Невысокая плита-ступень: проверяем подъём на 30 см.</summary>
