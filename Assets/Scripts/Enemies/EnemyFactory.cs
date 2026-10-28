@@ -4,8 +4,11 @@ using UnityEngine;
 namespace InvaderOfWorlds
 {
     /// <summary>
-    /// Создаёт врагов из примитивов. Пока нет моделей и префабов, это капсулы,
-    /// но компоненты те же, что будут у настоящих врагов.
+    /// Создаёт врагов: модель из пака (если загрузилась) плюс все боевые компоненты.
+    ///
+    /// Модели из Low Poly Ultimate Pack приходят с произвольным масштабом, поэтому
+    /// CharacterModel приводит их к нужному росту. Если модель не найдена,
+    /// остаётся цветная капсула — игра не зависит от ассетов.
     /// </summary>
     public static class EnemyFactory
     {
@@ -20,8 +23,8 @@ namespace InvaderOfWorlds
         public static GameObject Spawn(Planet planet, Transform target, Vector3 surfacePosition,
             Color color, float health, Transform parent)
         {
-            var enemy = CreateBody(planet, surfacePosition, color, health, parent, new Vector3(0.7f, 0.9f, 0.7f),
-                gold: 5, experience: 10);
+            var enemy = CreateBody(planet, surfacePosition, color, health, parent, 1.8f, 0.35f,
+                gold: 5, experience: 10, modelPath: "Characters/man-soldier");
             enemy.name = "Guard";
 
             var brain = enemy.AddComponent<EnemyBrain>();
@@ -34,8 +37,8 @@ namespace InvaderOfWorlds
         public static GameObject SpawnRanged(Planet planet, Transform target, Vector3 surfacePosition,
             float health, Transform parent)
         {
-            var enemy = CreateBody(planet, surfacePosition, RangedColor, health, parent, new Vector3(0.65f, 0.95f, 0.65f),
-                gold: 7, experience: 14);
+            var enemy = CreateBody(planet, surfacePosition, RangedColor, health, parent, 1.9f, 0.33f,
+                gold: 7, experience: 14, modelPath: "Characters/man-cult");
             enemy.name = "Archer";
 
             var brain = enemy.AddComponent<RangedEnemyBrain>();
@@ -48,9 +51,8 @@ namespace InvaderOfWorlds
         public static GameObject SpawnElite(Planet planet, Transform target, Vector3 surfacePosition,
             Transform parent)
         {
-            var scale = new Vector3(1.25f, 1.5f, 1.25f);
-            var enemy = CreateBody(planet, surfacePosition, EliteColor, 180f, parent, scale,
-                gold: 25, experience: 50);
+            var enemy = CreateBody(planet, surfacePosition, EliteColor, 180f, parent, 2.5f, 0.5f,
+                gold: 25, experience: 50, modelPath: "Characters/man-knight-soldier");
             enemy.name = "Elite";
 
             var brain = enemy.AddComponent<EnemyBrain>();
@@ -64,8 +66,8 @@ namespace InvaderOfWorlds
         public static GameObject SpawnBoss(Planet planet, Transform target, Vector3 surfacePosition,
             Transform parent)
         {
-            var enemy = CreateBody(planet, surfacePosition, BossColor, 520f, parent,
-                new Vector3(2.4f, 2.8f, 2.4f), gold: 150, experience: 300);
+            var enemy = CreateBody(planet, surfacePosition, BossColor, 520f, parent, 4.2f, 0.9f,
+                gold: 150, experience: 300, modelPath: "Characters/giant");
             enemy.name = "Boss";
 
             var brain = enemy.AddComponent<BossBrain>();
@@ -75,20 +77,24 @@ namespace InvaderOfWorlds
         }
 
         private static GameObject CreateBody(Planet planet, Vector3 surfacePosition, Color color, float health,
-            Transform parent, Vector3 scale, int gold, int experience)
+            Transform parent, float height, float radius, int gold, int experience, string modelPath)
         {
             var up = planet.UpAt(surfacePosition);
 
-            var enemy = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            var enemy = new GameObject("Enemy");
             enemy.transform.SetParent(parent, false);
             enemy.transform.position = surfacePosition;
             enemy.transform.rotation = Quaternion.FromToRotation(Vector3.up, up);
-            enemy.transform.localScale = scale;
 
-            var renderer = enemy.GetComponent<Renderer>();
+            var body = enemy.AddComponent<CapsuleCollider>();
+            body.height = height;
+            body.radius = radius;
+            body.center = new Vector3(0f, height * 0.5f, 0f);
 
-            if (renderer != null)
-                renderer.sharedMaterial = GetMaterial(color);
+            var model = CharacterModel.Attach(enemy, modelPath, height, 0f);
+
+            if (model == null)
+                CreateFallbackVisual(enemy, color, height, radius);
 
             var healthComponent = enemy.AddComponent<Health>();
             healthComponent.Configure(health);
@@ -97,12 +103,32 @@ namespace InvaderOfWorlds
             enemy.AddComponent<HitFlash>();
 
             var bar = enemy.AddComponent<EnemyHealthBar>();
-            bar.Configure(healthComponent, 2f * scale.y + 0.1f);
+            bar.Configure(healthComponent, height + 0.2f);
 
             var reward = enemy.AddComponent<EnemyReward>();
             reward.Configure(gold, experience);
 
             return enemy;
+        }
+
+        /// <summary>Запасной вариант, если модели нет: цветная капсула.</summary>
+        private static void CreateFallbackVisual(GameObject host, Color color, float height, float radius)
+        {
+            var visual = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            visual.name = "Fallback";
+            visual.transform.SetParent(host.transform, false);
+            visual.transform.localPosition = new Vector3(0f, height * 0.5f, 0f);
+            visual.transform.localScale = new Vector3(radius * 2f, height * 0.5f, radius * 2f);
+
+            var collider = visual.GetComponent<Collider>();
+
+            if (collider != null)
+                Object.Destroy(collider);
+
+            var renderer = visual.GetComponent<Renderer>();
+
+            if (renderer != null)
+                renderer.sharedMaterial = GetMaterial(color);
         }
 
         /// <summary>Один материал на цвет: не создаём по экземпляру на каждого врага.</summary>

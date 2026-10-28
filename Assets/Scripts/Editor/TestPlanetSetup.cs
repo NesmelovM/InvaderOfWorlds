@@ -96,14 +96,18 @@ namespace InvaderOfWorlds.EditorTools
             body.radius = 0.35f;
             body.center = new Vector3(0f, 0.9f, 0f);
 
-            // Визуал: капсула без коллайдера. Коллайдер персонажу не нужен —
-            // препятствия проверяются SphereCast'ом в самом моторе.
-            var visual = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            visual.name = "Visual";
-            Object.DestroyImmediate(visual.GetComponent<CapsuleCollider>());
-            visual.transform.SetParent(playerObject.transform, false);
-            visual.transform.localPosition = new Vector3(0f, 0.9f, 0f);
-            visual.transform.localScale = new Vector3(0.7f, 0.9f, 0.7f);
+            // Визуал: модель рыцаря из пака, а если её нет — капсула.
+            var model = CharacterModel.Attach(playerObject, "Characters/man-knight", 1.8f, 0f);
+
+            if (model == null)
+            {
+                var visual = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                visual.name = "Visual";
+                Object.DestroyImmediate(visual.GetComponent<CapsuleCollider>());
+                visual.transform.SetParent(playerObject.transform, false);
+                visual.transform.localPosition = new Vector3(0f, 0.9f, 0f);
+                visual.transform.localScale = new Vector3(0.7f, 0.9f, 0.7f);
+            }
 
             // Ставим на «северный полюс»: так сразу видно, что верх персонажа — от центра планеты.
             var up = Vector3.up;
