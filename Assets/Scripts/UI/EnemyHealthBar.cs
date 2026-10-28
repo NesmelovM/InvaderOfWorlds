@@ -18,6 +18,13 @@ namespace InvaderOfWorlds
 
         private Camera _camera;
 
+        /// <summary>Высота полоски зависит от размера врага — у элиты голова выше.</summary>
+        public void Configure(Health health, float headOffset)
+        {
+            _health = health;
+            _headOffset = headOffset;
+        }
+
         private void Awake()
         {
             if (_health == null)

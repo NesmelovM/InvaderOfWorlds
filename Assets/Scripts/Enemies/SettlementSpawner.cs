@@ -22,6 +22,8 @@ namespace InvaderOfWorlds
         [SerializeField, Min(0f)] private float _characterSpacing = 1.8f;
         [Tooltip("Доля стражей дальнего боя")]
         [SerializeField, Range(0f, 1f)] private float _rangedChance = 0.3f;
+        [Tooltip("Ставить в каждое поселение одного элитного врага")]
+        [SerializeField] private bool _elitePerSettlement = true;
         [SerializeField, Min(1f)] private float _health = 60f;
         [SerializeField] private Color _color = new Color(0.78f, 0.22f, 0.18f);
         [SerializeField] private bool _spawnOnStart = true;
@@ -54,6 +56,9 @@ namespace InvaderOfWorlds
 
                 for (var i = 0; i < count; i++)
                     SpawnGuard(settlement.Center);
+
+                if (_elitePerSettlement)
+                    SpawnElite(settlement.Center);
             }
 
             Debug.Log($"[SettlementSpawner] Заселено поселений: {_generator.Settlements.Count}");
@@ -81,6 +86,19 @@ namespace InvaderOfWorlds
             }
 
             Debug.LogWarning($"[SettlementSpawner] Нет свободного места у {around:F1}, страж пропущен.", this);
+            return null;
+        }
+
+        /// <summary>Элита крупнее обычной стражи, поэтому ей нужно больше свободного места.</summary>
+        public GameObject SpawnElite(Vector3 around)
+        {
+            if (SpawnPlacement.TryFindFreeGroundPosition(_planet, around, _spread, _placementAttempts,
+                    out var position, out _, _characterSpacing * 1.6f))
+            {
+                return EnemyFactory.SpawnElite(_planet, _player, position, transform);
+            }
+
+            Debug.LogWarning($"[SettlementSpawner] Нет места для элиты у {around:F1}, пропущена.", this);
             return null;
         }
 

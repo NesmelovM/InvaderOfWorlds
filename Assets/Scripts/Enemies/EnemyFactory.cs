@@ -13,6 +13,7 @@ namespace InvaderOfWorlds
 
         private static readonly Color MeleeColor = new Color(0.78f, 0.22f, 0.18f);
         private static readonly Color RangedColor = new Color(0.35f, 0.45f, 0.85f);
+        private static readonly Color EliteColor = new Color(0.55f, 0.10f, 0.35f);
 
         /// <summary>Ближний бой: подходит и бьёт рукой.</summary>
         public static GameObject Spawn(Planet planet, Transform target, Vector3 surfacePosition,
@@ -40,6 +41,21 @@ namespace InvaderOfWorlds
             return enemy;
         }
 
+        /// <summary>Элита: крупнее, толще и бьёт больнее, но медленнее.</summary>
+        public static GameObject SpawnElite(Planet planet, Transform target, Vector3 surfacePosition,
+            Transform parent)
+        {
+            var scale = new Vector3(1.25f, 1.5f, 1.25f);
+            var enemy = CreateBody(planet, surfacePosition, EliteColor, 180f, parent, scale);
+            enemy.name = "Elite";
+
+            var brain = enemy.AddComponent<EnemyBrain>();
+            brain.Configure(planet, target);
+            brain.ConfigureCombat(damage: 14f, attackCooldown: 1.8f, attackRange: 2.6f, speed: 2.6f, scale: 1f);
+
+            return enemy;
+        }
+
         private static GameObject CreateBody(Planet planet, Vector3 surfacePosition, Color color, float health,
             Transform parent, Vector3 scale)
         {
@@ -60,7 +76,9 @@ namespace InvaderOfWorlds
             healthComponent.Configure(health);
 
             enemy.AddComponent<HitFlash>();
-            enemy.AddComponent<EnemyHealthBar>();
+
+            var bar = enemy.AddComponent<EnemyHealthBar>();
+            bar.Configure(healthComponent, 2f * scale.y + 0.1f);
 
             return enemy;
         }

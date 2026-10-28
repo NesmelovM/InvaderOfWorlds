@@ -64,6 +64,21 @@ namespace InvaderOfWorlds
             _target = target;
         }
 
+        /// <summary>
+        /// Настройка боевых параметров из кода — используется элитой.
+        /// Масштаб меняет и модель, и «базовый» размер, от которого считается замах.
+        /// </summary>
+        public void ConfigureCombat(float damage, float attackCooldown, float attackRange, float speed, float scale)
+        {
+            _damage = damage;
+            _attackCooldown = attackCooldown;
+            _attackRange = attackRange;
+            _speed = speed;
+
+            transform.localScale = _baseScale * scale;
+            _baseScale = transform.localScale;
+        }
+
         private void Awake()
         {
             _health = GetComponent<Health>();
