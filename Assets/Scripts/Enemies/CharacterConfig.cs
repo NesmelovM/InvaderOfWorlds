@@ -104,17 +104,22 @@ namespace InvaderOfWorlds
             };
         }
 
-        /// <summary>Случайная модель оружия из списка биома, если он заполнен.</summary>
-        public static GameObject RandomWeapon()
+        /// <summary>Случайное оружие биома: для стрелков — из дальнего списка, иначе из ближнего.</summary>
+        public static GameObject RandomWeapon(bool ranged)
         {
             var biome = RunState.ActiveBiome;
 
-            if (biome == null || biome.Weapons == null || biome.Weapons.Count == 0)
+            if (biome == null)
+                return null;
+
+            var list = ranged ? biome.RangedWeapons : biome.MeleeWeapons;
+
+            if (list == null || list.Count == 0)
                 return null;
 
             var valid = 0;
 
-            foreach (var weapon in biome.Weapons)
+            foreach (var weapon in list)
             {
                 if (weapon != null)
                     valid++;
@@ -125,7 +130,7 @@ namespace InvaderOfWorlds
 
             var pick = UnityEngine.Random.Range(0, valid);
 
-            foreach (var weapon in biome.Weapons)
+            foreach (var weapon in list)
             {
                 if (weapon == null)
                     continue;

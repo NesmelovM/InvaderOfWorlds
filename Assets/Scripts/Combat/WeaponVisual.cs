@@ -39,18 +39,44 @@ namespace InvaderOfWorlds
         private int _shownId = -1;
         private GameObject _biomeWeapon;
         private bool _weaponChosen;
+        private bool _biomeWeaponRanged;
+
+        /// <summary>Первый активный слот стреляет — значит нужна модель дальнего боя.</summary>
+        private bool UsesRangedWeapon
+        {
+            get
+            {
+                if (_weapons == null)
+                    return false;
+
+                foreach (var slot in _weapons.Slots)
+                {
+                    if (slot != null && slot.Enabled)
+                        return slot.Kind != WeaponKind.Melee;
+                }
+
+                return false;
+            }
+        }
 
         /// <summary>Случайная модель оружия из списка биома, выбранная на этот забег.</summary>
         private GameObject BiomeWeapon
         {
             get
             {
+                var ranged = UsesRangedWeapon;
+
+                // Пересобираем при смене категории: меч и лук нельзя путать.
+                if (_weaponChosen && _biomeWeaponRanged != ranged)
+                    _weaponChosen = false;
+
                 if (!_weaponChosen)
                 {
                     // Биом может быть ещё не назначен в первом кадре, поэтому
                     // повторяем попытку, пока список оружия не станет доступен.
-                    _biomeWeapon = Characters.RandomWeapon();
+                    _biomeWeapon = Characters.RandomWeapon(ranged);
                     _weaponChosen = _biomeWeapon != null;
+                    _biomeWeaponRanged = ranged;
                 }
 
                 return _biomeWeapon;
@@ -114,7 +140,8 @@ namespace InvaderOfWorlds
                 : Characters.PlayerLook != null
                     ? Characters.PlayerLook.Weapon
                     : null;
-            var id = overrideWeapon != null ? -2 : (_weapons != null ? FindWeapon() : -1);
+            var ranged = UsesRangedWeapon;
+            var id = overrideWeapon != null ? (ranged ? -3 : -2) : (_weapons != null ? FindWeapon() : -1);
 
             // Модель могли уничтожить вместе со старой моделью персонажа —
             // тогда пересобираем, даже если оружие не менялось.

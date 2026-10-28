@@ -33,7 +33,9 @@ namespace InvaderOfWorlds.EditorTools
         private GameObject _enemy5;
         private GameObject _enemy6;
         private GameObject _proceduralModel;
-        private readonly System.Collections.Generic.List<GameObject> _weapons =
+        private readonly System.Collections.Generic.List<GameObject> _meleeWeapons =
+            new System.Collections.Generic.List<GameObject>();
+        private readonly System.Collections.Generic.List<GameObject> _rangedWeapons =
             new System.Collections.Generic.List<GameObject>();
         private Color _ground = new Color(0.45f, 0.47f, 0.50f);
         private Color _hill = new Color(0.42f, 0.38f, 0.34f);
@@ -95,30 +97,17 @@ namespace InvaderOfWorlds.EditorTools
                 MessageType.Info);
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Оружие (случайный подбор)", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Ближнее оружие (меч, топор, молот)", EditorStyles.boldLabel);
+            DrawWeaponList(_meleeWeapons);
 
-            for (var i = 0; i < _weapons.Count; i++)
-            {
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    _weapons[i] = (GameObject)EditorGUILayout.ObjectField($"Оружие {i + 1}", _weapons[i],
-                        typeof(GameObject), false);
-
-                    if (GUILayout.Button("−", GUILayout.Width(28f)))
-                    {
-                        _weapons.RemoveAt(i);
-                        break;
-                    }
-                }
-            }
-
-            if (GUILayout.Button("+ Добавить оружие"))
-                _weapons.Add(null);
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Дальнее оружие (лук, посох)", EditorStyles.boldLabel);
+            DrawWeaponList(_rangedWeapons);
 
             EditorGUILayout.HelpBox(
-                "Список общий для биома: каждый персонаж и враг берёт из него случайную модель.",
+                "Кто бьёт вплотную, берёт случайное из ближнего списка; стрелки — из дальнего. " +
+                "Пусто — используется стандартная модель по типу.",
                 MessageType.Info);
-
             EditorGUILayout.Space();
             _ground = EditorGUILayout.ColorField("Цвет поверхности", _ground);
             _hill = EditorGUILayout.ColorField("Цвет холмов", _hill);
@@ -146,6 +135,27 @@ namespace InvaderOfWorlds.EditorTools
             GUI.enabled = true;
         }
 
+        private static void DrawWeaponList(System.Collections.Generic.List<GameObject> list)
+        {
+            for (var i = 0; i < list.Count; i++)
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    list[i] = (GameObject)EditorGUILayout.ObjectField($"Оружие {i + 1}", list[i],
+                        typeof(GameObject), false);
+
+                    if (GUILayout.Button("−", GUILayout.Width(28f)))
+                    {
+                        list.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+
+            if (GUILayout.Button("+ Добавить"))
+                list.Add(null);
+        }
+
         private void CreateBiome()
         {
             EnsureFolder();
@@ -170,7 +180,8 @@ namespace InvaderOfWorlds.EditorTools
             biome.EnemyModel5 = _enemy5;
             biome.EnemyModel6 = _enemy6;
             biome.ProceduralModel = _proceduralModel;
-            biome.Weapons = new System.Collections.Generic.List<GameObject>(_weapons);
+            biome.MeleeWeapons = new System.Collections.Generic.List<GameObject>(_meleeWeapons);
+            biome.RangedWeapons = new System.Collections.Generic.List<GameObject>(_rangedWeapons);
 
             var path = $"{BiomesFolder}/{_name}.asset";
             AssetDatabase.CreateAsset(biome, path);

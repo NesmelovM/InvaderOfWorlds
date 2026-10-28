@@ -184,11 +184,12 @@ MonoBehaviour:
   EnemyModel4: {fileID: 919132149155446097, guid: d2a92702c0b6db0479db7bd5542d2d92, type: 3}
   EnemyModel5: {fileID: 919132149155446097, guid: 730bce8509788664da6fe5f8a30a2ba0, type: 3}
   EnemyModel6: {fileID: 919132149155446097, guid: ded1fa50f7eaef2439c5659849a39287, type: 3}
-  ProceduralModel: {fileID: 0}
-  Weapons:
+  ProceduralModel: {fileID: 919132149155446097, guid: d2a92702c0b6db0479db7bd5542d2d92, type: 3}
+  MeleeWeapons:
   - {fileID: 1000011153640270, guid: dffba8244aeb1844494d47159ea57cd8, type: 3}
-  - {fileID: 1141772967033842, guid: 8c1fca15743f4094bb0d8527430b9954, type: 3}
   - {fileID: 102628, guid: 98dd9025e252b0044870c8ec10c14c8b, type: 3}
   - {fileID: 113808, guid: 854b79b41b7e5cc42b6b7c93dc7a83d1, type: 3}
   - {fileID: 9017739727520688121, guid: b5f8d2ce6f6541240b4d1dd8d2e59b6f, type: 3}
   - {fileID: 7924051225644198868, guid: 5495ce38f6bc576458a1510ec49e947f, type: 3}
+  RangedWeapons:
+  - {fileID: 1141772967033842, guid: 8c1fca15743f4094bb0d8527430b9954, type: 3}

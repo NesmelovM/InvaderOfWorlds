@@ -62,7 +62,10 @@ namespace InvaderOfWorlds
         public GameObject ProceduralModel;
 
         [Header("Оружие")]
-        [Tooltip("Общий список: каждый персонаж и враг берёт случайную модель")]
-        public List<GameObject> Weapons = new List<GameObject>();
+        [Tooltip("Ближний бой: меч, топор, молот — для тех, кто бьёт вплотную")]
+        public List<GameObject> MeleeWeapons = new List<GameObject>();
+
+        [Tooltip("Дальний бой: лук, посох — для стрелков")]
+        public List<GameObject> RangedWeapons = new List<GameObject>();
     }
 }
