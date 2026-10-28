@@ -53,6 +53,7 @@ namespace InvaderOfWorlds
                 return;
 
             _current = Mathf.Max(0f, _current - amount);
+            SoundBank.Hit(transform.position);
 
             if (_logDamage)
                 Debug.Log($"[HP] {name}: -{amount:F0} → {_current:F0}/{_max:F0}");
@@ -63,6 +64,7 @@ namespace InvaderOfWorlds
                 return;
 
             Died?.Invoke(this);
+            SoundBank.Death(transform.position);
 
             if (_destroyOnDeath)
                 Destroy(gameObject);

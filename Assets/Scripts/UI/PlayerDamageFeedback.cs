@@ -57,6 +57,7 @@ namespace InvaderOfWorlds
 
             _previousHealth = current;
             _alpha = _flashAlpha;
+            SoundBank.Hurt(transform.position);
 
             if (_cameraRig != null)
                 _cameraRig.Shake(_shakeStrength, _shakeDuration);

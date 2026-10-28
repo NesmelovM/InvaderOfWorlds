@@ -58,6 +58,7 @@ namespace InvaderOfWorlds
         {
             _open = true;
             ApplyColor(_openColor);
+            SoundBank.Portal(transform.position);
             Debug.Log("[PORTAL] Босс повержен, портал открыт.");
         }
 
