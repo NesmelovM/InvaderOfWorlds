@@ -243,7 +243,13 @@ namespace InvaderOfWorlds
                 return _planet.Radius;
 
             normal = hit.normal;
-            return (hit.point - _planet.Center).magnitude;
+
+            // Планета — твёрдый шар, и она не имеет коллайдера: грунт задан радиусом.
+            // Холм или другой объект может «нырять» под этот уровень (у сплющенной сферы
+            // края уходят ниже поверхности). Без этого ограничения персонаж проваливался
+            // сквозь планету у подножия холмов.
+            var radius = (hit.point - _planet.Center).magnitude;
+            return Mathf.Max(radius, _planet.Radius);
         }
 
         /// <summary>
