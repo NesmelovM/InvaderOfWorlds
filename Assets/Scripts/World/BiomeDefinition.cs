@@ -42,5 +42,17 @@ namespace InvaderOfWorlds
 
         [Tooltip("Высота сегмента стены в метрах")]
         [Min(1f)] public float WallHeight = 3f;
+
+        [Header("Внешний вид врагов")]
+        [Tooltip("Модель обычного бойца ближнего боя")]
+        public GameObject MeleeModel;
+        [Tooltip("Модель лучника")]
+        public GameObject RangedModel;
+        [Tooltip("Модель элитного бойца")]
+        public GameObject EliteModel;
+        [Tooltip("Модель элитного лучника")]
+        public GameObject EliteArcherModel;
+        [Tooltip("Модель босса")]
+        public GameObject BossModel;
     }
 }

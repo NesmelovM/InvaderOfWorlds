@@ -23,6 +23,9 @@ namespace InvaderOfWorlds
         /// <summary>Идентификаторы оружия из оружейной, которые несёт игрок.</summary>
         public static readonly List<int> Loadout = new List<int>();
 
+        /// <summary>Биом текущей планеты: внешний вид врагов и окружения.</summary>
+        public static BiomeDefinition ActiveBiome;
+
         public static void Reset()
         {
             PlanetIndex = 0;
@@ -32,6 +35,7 @@ namespace InvaderOfWorlds
             HealPerKill = 0f;
             WeaponDamageMultiplier = 1f;
             Loadout.Clear();
+            ActiveBiome = null;
             Seed = Random.Range(1, int.MaxValue);
         }
 

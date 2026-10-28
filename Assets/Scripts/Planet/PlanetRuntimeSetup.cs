@@ -69,6 +69,7 @@ namespace InvaderOfWorlds
             var random = new System.Random(seed);
 
             _biome = _catalog != null ? _catalog.ForPlanet(RunState.PlanetIndex) : null;
+            RunState.ActiveBiome = _biome;
 
             _generator.SetSeed(seed);
             _generator.Generate();

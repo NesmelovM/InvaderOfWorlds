@@ -17,7 +17,13 @@ namespace InvaderOfWorlds
             Color? tint = null, float verticalOffset = 0f)
         {
             var prefab = Resources.Load<GameObject>(resourcePath);
+            return prefab == null ? null : Attach(host, prefab, height, yawOffset, tint, verticalOffset);
+        }
 
+        /// <summary>Модель задаётся ассетом напрямую — так биом подставляет своих врагов.</summary>
+        public static GameObject Attach(GameObject host, GameObject prefab, float height, float yawOffset,
+            Color? tint = null, float verticalOffset = 0f)
+        {
             if (prefab == null)
                 return null;
 
