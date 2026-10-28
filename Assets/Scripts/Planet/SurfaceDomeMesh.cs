@@ -52,8 +52,8 @@ namespace InvaderOfWorlds
             {
                 var next = (segment + 1) % segments;
                 triangles[index++] = 0;
-                triangles[index++] = 1 + segment;
                 triangles[index++] = 1 + next;
+                triangles[index++] = 1 + segment;
             }
 
             for (var ring = 1; ring < rings; ring++)
@@ -66,12 +66,12 @@ namespace InvaderOfWorlds
                     var next = (segment + 1) % segments;
 
                     triangles[index++] = currentStart + segment;
-                    triangles[index++] = nextStart + segment;
                     triangles[index++] = nextStart + next;
+                    triangles[index++] = nextStart + segment;
 
                     triangles[index++] = currentStart + segment;
-                    triangles[index++] = nextStart + next;
                     triangles[index++] = currentStart + next;
+                    triangles[index++] = nextStart + next;
                 }
             }
 
