@@ -65,7 +65,7 @@ namespace InvaderOfWorlds
             if (motor != null)
                 motor.enabled = false;
 
-            var attack = health.GetComponent<PlayerAttack>();
+            var attack = health.GetComponent<WeaponSystem>();
 
             if (attack != null)
                 attack.enabled = false;

@@ -148,8 +148,19 @@ namespace InvaderOfWorlds.EditorTools
             player.AddComponent<PlayerDamageFeedback>();
             player.AddComponent<PlayerHud>();
 
-            var attack = player.AddComponent<PlayerAttack>();
+            var attack = player.AddComponent<WeaponSystem>();
             attack.Configure(cameraObject.transform);
+
+            // Два стартовых оружия: удар вблизи и снаряд по дальней цели.
+            attack.TryEquip(new WeaponSlot
+            {
+                Kind = WeaponKind.Melee, Damage = 34f, Cooldown = 0.5f, Range = 3.2f
+            });
+
+            attack.TryEquip(new WeaponSlot
+            {
+                Kind = WeaponKind.Bolt, Damage = 18f, Cooldown = 1.1f, Range = 11f, ProjectileSpeed = 26f
+            });
 
             var spawnerObject = new GameObject("Settlement Spawner");
             var spawner = spawnerObject.AddComponent<SettlementSpawner>();

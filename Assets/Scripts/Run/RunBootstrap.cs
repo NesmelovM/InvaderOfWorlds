@@ -26,7 +26,7 @@ namespace InvaderOfWorlds
             if (health != null)
                 health.Configure(_baseHealth + MetaProgress.HealthBonus);
 
-            var attack = player.GetComponent<PlayerAttack>();
+            var attack = player.GetComponent<WeaponSystem>();
 
             if (attack != null)
                 attack.ApplyDamageMultiplier(MetaProgress.DamageMultiplier);
