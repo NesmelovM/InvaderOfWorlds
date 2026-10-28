@@ -172,13 +172,13 @@ namespace InvaderOfWorlds.EditorTools
             // Дальний враг в 14 метрах: держит дистанцию и стреляет.
             SpawnTestRanged(planet, player.transform, root.transform, 9f);
 
-            // Элита в 14 метрах с другой стороны.
-            SpawnTestElite(planet, player.transform, root.transform, -9f);
+            // Элита в 19 метрах впереди: там нет стены, её видно от точки появления.
+            SpawnTestElite(planet, player.transform, root.transform, 12f);
         }
 
         private static void SpawnTestElite(Planet planet, Transform player, Transform parent, float angle)
         {
-            var around = planet.SurfacePoint(Quaternion.AngleAxis(angle, Vector3.forward) * Vector3.up);
+            var around = planet.SurfacePoint(Quaternion.AngleAxis(angle, Vector3.right) * Vector3.up);
 
             if (!SpawnPlacement.TryFindFreeGroundPosition(planet, around, 4f, 20, out var position, out _, 2.4f))
             {
