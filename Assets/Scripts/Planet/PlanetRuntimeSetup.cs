@@ -195,11 +195,8 @@ namespace InvaderOfWorlds
         private void PlaceProp(GameObject prefab, System.Random random, Transform root, bool keepColliders)
         {
             var direction = RandomDirection(random);
-
-            // Крупные объекты слегка утапливаем в грунт: так они стоят устойчиво
-            // и не висят на склоне одним краем.
-            var inset = keepColliders ? 1f : 0f;
-            var position = _planet.Center + direction * (_planet.Radius - inset);
+            var up = direction.normalized;
+            var position = _planet.Center + up * _planet.Radius;
 
             var prop = Instantiate(prefab, position, Quaternion.identity, root);
 
@@ -209,13 +206,75 @@ namespace InvaderOfWorlds
                     Destroy(collider);
             }
 
-            var scale = keepColliders
-                ? 0.7f + (float)random.NextDouble() * 0.8f
-                : 0.5f + (float)random.NextDouble() * 0.7f;
-
+            var scale = keepColliders ? 1f : 0.5f + (float)random.NextDouble() * 0.7f;
             prop.transform.localScale *= scale;
-            prop.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction) *
+
+            if (keepColliders)
+                FitBigPropHeight(prop, random);
+
+            prop.transform.rotation = Quaternion.FromToRotation(Vector3.up, up) *
                                      Quaternion.Euler(0f, (float)random.NextDouble() * 360f, 0f);
+
+            // Крупные объекты утапливаем на метр: стоят устойчиво и не висят краем на склоне.
+            var sink = keepColliders ? 1f : 0f;
+            var lowest = LowestPointAlong(prop, up);
+            prop.transform.position += up * (-lowest - sink);
+        }
+
+        /// <summary>
+        /// Крупные объекты не должны быть выше 15 метров: если префаб больше,
+        /// масштаб подбирается так, чтобы высота попала в 10–15 м.
+        /// Мелкие префабы не растягиваем — бочка не должна стать десятиметровой.
+        /// </summary>
+        private static void FitBigPropHeight(GameObject prop, System.Random random)
+        {
+            var height = MeasureHeight(prop);
+
+            if (height <= 15f || height < 0.01f)
+                return;
+
+            var target = 10f + (float)random.NextDouble() * 5f;
+            prop.transform.localScale *= target / height;
+        }
+
+        private static float MeasureHeight(GameObject prop)
+        {
+            var renderers = prop.GetComponentsInChildren<Renderer>(true);
+
+            if (renderers.Length == 0)
+                return 0f;
+
+            var bounds = renderers[0].bounds;
+
+            for (var i = 1; i < renderers.Length; i++)
+                bounds.Encapsulate(renderers[i].bounds);
+
+            return bounds.size.y;
+        }
+
+        /// <summary>Самая низкая точка объекта относительно плоскости, перпендикулярной up.</summary>
+        private static float LowestPointAlong(GameObject prop, Vector3 up)
+        {
+            var renderers = prop.GetComponentsInChildren<Renderer>(true);
+            var lowest = float.MaxValue;
+
+            foreach (var renderer in renderers)
+            {
+                var bounds = renderer.bounds;
+
+                for (var i = 0; i < 8; i++)
+                {
+                    var corner = new Vector3(
+                        (i & 1) == 0 ? bounds.min.x : bounds.max.x,
+                        (i & 2) == 0 ? bounds.min.y : bounds.max.y,
+                        (i & 4) == 0 ? bounds.min.z : bounds.max.z);
+
+                    var projection = Vector3.Dot(corner - prop.transform.position, up);
+                    lowest = Mathf.Min(lowest, projection);
+                }
+            }
+
+            return lowest < float.MaxValue ? lowest : 0f;
         }
 
         /// <summary>Кольцо стен вокруг каждого поселения — прорыв остаётся задачей.</summary>
