@@ -37,7 +37,8 @@ namespace InvaderOfWorlds.EditorTools
 
             Selection.activeGameObject = player;
             Debug.Log($"[Invader of Worlds] Тестовая сцена собрана. Радиус планеты {PlanetRadius} м, " +
-                      $"игрок стоит на «северном полюсе». Ходите WASD, смотрите мышью, прыжок — Space, бег — Shift.");
+                      $"игрок на «северном полюсе». WASD, мышь, Space — прыжок, Shift — бег. " +
+                      $"Впереди в 18 м холм, слева в 12 м ступень 30 см, справа в 8 м стена.");
         }
 
         private static void CreateLight()
@@ -121,44 +122,60 @@ namespace InvaderOfWorlds.EditorTools
         }
 
         /// <summary>
-        /// Проверочный рельеф: холмы и стена. Нужен, чтобы увидеть, что движение
-        /// учитывает высоту грунта, уклон и ступени, а не только гладкую сферу.
+        /// Проверочный рельеф рядом с точкой появления: холм, ступень и стена.
+        /// Нужен, чтобы увидеть, что движение учитывает высоту грунта, уклон и ступени,
+        /// а не только гладкую сферу.
         /// </summary>
         private static void CreateTerrainTest(Planet planet)
         {
             var root = new GameObject("Terrain Test");
+            var spawnUp = Vector3.up;
 
-            // Три холма в разных точках, чтобы не все сразу на пути к экватору.
-            var hillDirections = new[]
-            {
-                new Vector3(0.6f, 0.55f, 0.58f),
-                new Vector3(-0.8f, 0.3f, 0.5f),
-                new Vector3(0.1f, -0.2f, 0.97f)
-            };
+            // Холм в 18 метрах впереди (≈11.5° дуги): пологий, по нему можно идти.
+            CreateMound(root.transform, planet, Quaternion.AngleAxis(11.5f, Vector3.right) * spawnUp);
 
-            for (var i = 0; i < hillDirections.Length; i++)
-            {
-                var direction = hillDirections[i].normalized;
-                var position = planet.Center + direction * (planet.Radius - 3f);
+            // Ступень в 12 метрах слева: 30 см, должна проходиться без прыжка.
+            CreateStep(root.transform, planet, Quaternion.AngleAxis(7.6f, Vector3.forward) * spawnUp);
 
-                var hill = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                hill.name = $"Hill {i + 1}";
-                hill.transform.SetParent(root.transform, false);
-                hill.transform.position = position;
-                hill.transform.localScale = Vector3.one * 14f;
-            }
+            // Стена в 8 метрах справа: 3 метра высотой, должна не пускать и скользить.
+            CreateWall(root.transform, planet, Quaternion.AngleAxis(-5f, Vector3.forward) * spawnUp);
 
-            // Стена: проверяем скольжение вдоль препятствия.
-            var wallDirection = new Vector3(0.9f, 0.1f, 0.42f).normalized;
-            var wallPosition = planet.Center + wallDirection * planet.Radius;
+            // Ещё два холма дальше, чтобы рельеф был в разных местах планеты.
+            CreateMound(root.transform, planet, Quaternion.AngleAxis(40f, Vector3.right) * spawnUp);
+            CreateMound(root.transform, planet, Quaternion.AngleAxis(-45f, Vector3.forward) * spawnUp);
+        }
 
+        /// <summary>Сплющенная сфера даёт пологий холм: максимум ~44°, по нему можно подняться.</summary>
+        private static void CreateMound(Transform parent, Planet planet, Vector3 direction)
+        {
+            var mound = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            mound.name = "Hill";
+            mound.transform.SetParent(parent, false);
+            mound.transform.position = planet.Center + direction * (planet.Radius - 2f);
+            mound.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
+            mound.transform.localScale = new Vector3(24f, 10f, 24f);
+        }
+
+        /// <summary>Невысокая плита-ступень: проверяем подъём на 30 см.</summary>
+        private static void CreateStep(Transform parent, Planet planet, Vector3 direction)
+        {
+            var step = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            step.name = "Step";
+            step.transform.SetParent(parent, false);
+            step.transform.position = planet.Center + direction * (planet.Radius + 0.15f);
+            step.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
+            step.transform.localScale = new Vector3(6f, 0.3f, 3f);
+        }
+
+        /// <summary>Стена: проверяем, что персонаж скользит вдоль неё, а не проходит насквозь.</summary>
+        private static void CreateWall(Transform parent, Planet planet, Vector3 direction)
+        {
             var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
             wall.name = "Wall";
-            wall.transform.SetParent(root.transform, false);
-            wall.transform.position = wallPosition + wallDirection * 1.6f;
-            wall.transform.rotation = Quaternion.LookRotation(wallDirection, Vector3.up) *
-                                     Quaternion.Euler(0f, 90f, 0f);
-            wall.transform.localScale = new Vector3(6f, 3.2f, 0.6f);
+            wall.transform.SetParent(parent, false);
+            wall.transform.position = planet.Center + direction * (planet.Radius + 1.5f);
+            wall.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
+            wall.transform.localScale = new Vector3(6f, 3f, 0.5f);
         }
 
         private static void SaveScene(UnityEngine.SceneManagement.Scene scene)
