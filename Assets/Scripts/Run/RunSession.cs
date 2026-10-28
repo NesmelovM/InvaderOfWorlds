@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace InvaderOfWorlds
 {
     /// <summary>
@@ -36,6 +38,14 @@ namespace InvaderOfWorlds
 
             Gold -= gold;
             return true;
+        }
+
+        /// <summary>Восстановление из сохранения.</summary>
+        public static void Load(int gold, int experience)
+        {
+            Gold = Mathf.Max(0, gold);
+            Experience = Mathf.Max(0, experience);
+            Kills = 0;
         }
 
         /// <summary>Счётчик убийств обнуляется на каждый забег, накопления — нет.</summary>

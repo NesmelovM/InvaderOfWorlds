@@ -61,5 +61,13 @@ namespace InvaderOfWorlds
             HealthLevel = 0;
             SpeedLevel = 0;
         }
+
+        /// <summary>Восстановление уровней из сохранения с ограничением диапазона.</summary>
+        public static void Load(int damageLevel, int healthLevel, int speedLevel)
+        {
+            DamageLevel = Mathf.Clamp(damageLevel, 0, MaxLevel);
+            HealthLevel = Mathf.Clamp(healthLevel, 0, MaxLevel);
+            SpeedLevel = Mathf.Clamp(speedLevel, 0, MaxLevel);
+        }
     }
 }

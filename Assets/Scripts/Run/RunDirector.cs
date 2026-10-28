@@ -71,6 +71,9 @@ namespace InvaderOfWorlds
                 attack.enabled = false;
 
             Debug.Log($"[RUN] Игрок погиб. Убито: {RunSession.Kills}, золото: {RunSession.Gold}, опыт: {RunSession.Experience}");
+
+            // Добыча за забег должна пережить даже закрытие игры.
+            SaveSystem.Save();
         }
 
         private void Update()

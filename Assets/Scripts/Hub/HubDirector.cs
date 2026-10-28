@@ -14,8 +14,6 @@ namespace InvaderOfWorlds
     {
         [SerializeField] private string _planetSceneName = "TestPlanet";
 
-        private static bool _starterGranted;
-
         private GUIStyle _titleStyle;
         private GUIStyle _textStyle;
         private GUIStyle _hintStyle;
@@ -27,12 +25,10 @@ namespace InvaderOfWorlds
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
 
-            // Прототип: при первом заходе в хаб даём стартовый капитал,
-            // чтобы магазин можно было проверить, не убивая врагов.
-            if (_starterGranted)
+            // Загружаем прошлый прогресс; если сохранения нет — даём стартовый капитал,
+            // чтобы магазин можно было проверить сразу.
+            if (SaveSystem.Load())
                 return;
-
-            _starterGranted = true;
 
             if (RunSession.Gold == 0)
                 RunSession.Grant(80);
@@ -49,6 +45,7 @@ namespace InvaderOfWorlds
         public void EnterPortal()
         {
             Time.timeScale = 1f;
+            SaveSystem.Save();
             SceneManager.LoadScene(_planetSceneName);
         }
 
@@ -114,7 +111,10 @@ namespace InvaderOfWorlds
             GUI.enabled = affordable;
 
             if (GUI.Button(new Rect(rect.x + 250f, rect.y + 4f, 134f, 34f), caption, _buttonStyle))
-                buy();
+            {
+                if (buy())
+                    SaveSystem.Save();
+            }
 
             GUI.enabled = previous;
         }
