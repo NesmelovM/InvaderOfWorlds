@@ -41,6 +41,7 @@ namespace InvaderOfWorlds
         private int _level;
         private int _experienceForNext;
         private int _shownExperience;
+        private int _levelStartExperience;
         private bool _choosing;
         private GUIStyle _titleStyle;
         private GUIStyle _textStyle;
@@ -58,6 +59,16 @@ namespace InvaderOfWorlds
 
         /// <summary>Сколько опыта уже набрано в забеге.</summary>
         public int Experience => RunSession.RunExperience;
+
+        /// <summary>Сколько опыта набрано на текущем уровне.</summary>
+        public int ExperienceIntoLevel => Mathf.Max(0, RunSession.RunExperience - _levelStartExperience);
+
+        /// <summary>Сколько нужно набрать на этом уровне.</summary>
+        public int ExperienceForLevel => Mathf.Max(1, _experienceForNext - _levelStartExperience);
+
+        /// <summary>Заполнение полоски опыта от 0 до 1.</summary>
+        public float LevelProgress =>
+            Mathf.Clamp01((float)ExperienceIntoLevel / ExperienceForLevel);
 
         public void Configure(Health playerHealth, WeaponSystem weapons, Transform player)
         {
@@ -79,6 +90,7 @@ namespace InvaderOfWorlds
                 _experienceForNext = Mathf.RoundToInt(_experienceForNext * _experienceGrowth);
 
             _shownExperience = RunSession.RunExperience;
+            _levelStartExperience = _experienceForNext - _baseExperience;
         }
 
         private void Update()
@@ -95,6 +107,7 @@ namespace InvaderOfWorlds
                 return;
 
             _shownExperience = experience;
+            _levelStartExperience = _experienceForNext;
             _experienceForNext = Mathf.RoundToInt(_experienceForNext * _experienceGrowth);
             BeginChoice();
         }

@@ -3,17 +3,18 @@ using UnityEngine;
 namespace InvaderOfWorlds
 {
     /// <summary>
-    /// Счётчик забега в правом верхнем углу: уровень, опыт, золото и убийства.
-    /// Рисуется на общем виртуальном холсте, поэтому не наезжает на другие панели
-    /// и не спорит с экраном выбора карточки.
+    /// Ненавязчивый счётчик забега: только собранные за забег монеты, значком.
+    ///
+    /// Опыт переехал в полоску под здоровьем — там его видно, не отвлекаясь
+    /// от боя, а крупная панель в углу больше не нужна.
     /// </summary>
     [DisallowMultipleComponent]
     public class RunHud : MonoBehaviour
     {
         [SerializeField] private RunLevel _level;
 
-        private GUIStyle _style;
-        private GUIStyle _hintStyle;
+        private GUIStyle _countStyle;
+        private Texture2D _coinTexture;
 
         public void Configure(RunLevel level)
         {
@@ -32,41 +33,59 @@ namespace InvaderOfWorlds
             if (_level != null && _level.IsChoosing)
                 return;
 
-            if (_style == null)
+            _countStyle ??= new GUIStyle(GUI.skin.label)
             {
-                _style = new GUIStyle(GUI.skin.label)
-                {
-                    fontSize = 18,
-                    fontStyle = FontStyle.Bold,
-                    alignment = TextAnchor.UpperRight,
-                    normal = { textColor = Color.white }
-                };
+                fontSize = 18,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleLeft,
+                normal = { textColor = new Color(0.98f, 0.90f, 0.62f) }
+            };
 
-                _hintStyle = new GUIStyle(GUI.skin.label)
-                {
-                    fontSize = 15,
-                    alignment = TextAnchor.UpperRight,
-                    normal = { textColor = new Color(0.82f, 0.86f, 0.95f) }
-                };
-            }
+            _coinTexture ??= CreateCoinTexture();
 
             UiCanvas.Begin();
 
-            var panel = new Rect(UiCanvas.Width - 470f, 16f, 440f, 66f);
-            HealthBarDrawer.DrawRect(panel, new Color(0f, 0f, 0f, 0.5f));
+            // Небольшая плашка: значок монеты и сколько собрано в этом забеге.
+            var chip = new Rect(UiCanvas.Width - 132f, 18f, 112f, 38f);
+            HealthBarDrawer.DrawRect(chip, new Color(0f, 0f, 0f, 0.32f));
 
-            GUI.Label(new Rect(panel.x + 14f, panel.y + 8f, panel.width - 28f, 26f),
-                $"Кошелёк {RunSession.Gold}   Опыт {RunSession.Experience}   " +
-                $"Забег +{RunSession.RunGold} / +{RunSession.RunExperience}   Убито {RunSession.Kills}", _style);
-
-            var levelText = _level != null
-                ? $"Уровень {_level.Level}   до следующего: " +
-                  $"{Mathf.Max(0, _level.ExperienceForNext - _level.Experience)} опыта"
-                : "Уровень —";
-
-            GUI.Label(new Rect(panel.x + 14f, panel.y + 36f, panel.width - 28f, 24f), levelText, _hintStyle);
+            GUI.DrawTexture(new Rect(chip.x + 12f, chip.y + 9f, 20f, 20f), _coinTexture);
+            GUI.Label(new Rect(chip.x + 40f, chip.y + 5f, 64f, 28f),
+                RunSession.RunGold.ToString(), _countStyle);
 
             UiCanvas.End();
+        }
+
+        /// <summary>Мягкий жёлтый кружок вместо слова «монета».</summary>
+        private static Texture2D CreateCoinTexture()
+        {
+            const int size = 32;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear
+            };
+
+            var pixels = new Color[size * size];
+            var center = (size - 1) * 0.5f;
+            var radius = size * 0.42f;
+
+            for (var y = 0; y < size; y++)
+            {
+                for (var x = 0; x < size; x++)
+                {
+                    var distance = Vector2.Distance(new Vector2(x, y), new Vector2(center, center));
+                    var alpha = Mathf.Clamp01((radius - distance) / 2.5f);
+                    var edge = Mathf.Clamp01((distance - radius * 0.55f) / (radius * 0.45f));
+                    var color = Color.Lerp(new Color(1f, 0.82f, 0.30f), new Color(0.92f, 0.66f, 0.16f), edge);
+                    color.a = alpha;
+                    pixels[y * size + x] = color;
+                }
+            }
+
+            texture.SetPixels(pixels);
+            texture.Apply();
+            return texture;
         }
     }
 }
