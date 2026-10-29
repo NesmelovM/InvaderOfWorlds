@@ -91,6 +91,12 @@ namespace InvaderOfWorlds
                 AudioSource.PlayClipAtPoint(clip, position, volume);
         }
 
+        /// <summary>Зацикленный ветер для фона планеты.</summary>
+        public static AudioClip Wind()
+        {
+            return GetClip("wind");
+        }
+
         private static AudioClip GetClip(string key)
         {
             if (Clips.TryGetValue(key, out var cached) && cached != null)
@@ -109,6 +115,7 @@ namespace InvaderOfWorlds
                 "step" => CreateNoise("step", 0.07f, 0.3f),
                 "click" => CreateTone("click", 0.05f, 1200f, 700f, 0.3f),
                 "coin" => CreateTone("coin", 0.16f, 1400f, 1900f, 0.3f),
+                "wind" => CreateWind(),
                 _ => null
             };
 
@@ -138,6 +145,32 @@ namespace InvaderOfWorlds
         }
 
         /// <summary>Тон с плавным сдвигом частоты — смерть, выстрел, портал.</summary>
+        /// <summary>
+        /// Ветер: мягкий шум с плавным появлением и затуханием, чтобы петля
+        /// не щёлкала на стыке.
+        /// </summary>
+        private static AudioClip CreateWind()
+        {
+            const int rate = 22050;
+            const float seconds = 4f;
+            var samples = new float[Mathf.RoundToInt(rate * seconds)];
+            var random = new System.Random(1234);
+            var smooth = 0f;
+
+            for (var i = 0; i < samples.Length; i++)
+            {
+                // Сглаженный шум: низкие частоты звучат как ветер, а не как шипение.
+                smooth = Mathf.Lerp(smooth, (float)random.NextDouble() * 2f - 1f, 0.02f);
+
+                var envelope = Mathf.Sin(Mathf.PI * i / samples.Length);
+                samples[i] = smooth * envelope * 0.5f;
+            }
+
+            var clip = AudioClip.Create("wind", samples.Length, 1, rate, false);
+            clip.SetData(samples, 0);
+            return clip;
+        }
+
         private static AudioClip CreateTone(string name, float duration, float fromHz, float toHz, float volume)
         {
             var samples = Mathf.CeilToInt(SampleRate * duration);

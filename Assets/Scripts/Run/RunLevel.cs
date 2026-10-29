@@ -174,26 +174,34 @@ namespace InvaderOfWorlds
             }
 
             // --- обычные ---
-            Add(common, CardRarity.Common, "Заточка", "+15% урона всем оружиям",
-                () => BoostDamage(1.15f));
-            Add(common, CardRarity.Common, "Стойкость", "+20 к здоровью и полное лечение",
-                () => BoostHealth(20f));
-            Add(common, CardRarity.Common, "Лёгкость", "+8% скорости передвижения",
-                () => BoostSpeed(1.08f));
-            Add(common, CardRarity.Common, "Тяжёлый воздух", "враги двигаются на 10% медленнее",
-                () => RunModifiers.SlowEnemies(0.1f));
-            Add(common, CardRarity.Common, "Вампиризм", "+2 здоровья за каждое убийство",
-                () => RunModifiers.AddHealPerKill(2f));
+            Add(common, CardRarity.Common, "Заточка", "+10% урона всем оружиям",
+                () => BoostDamage(1.10f));
+            Add(common, CardRarity.Common, "Стойкость", "+15 к здоровью и полное лечение",
+                () => BoostHealth(15f));
+            Add(common, CardRarity.Common, "Лёгкость", "+5% скорости передвижения",
+                () => BoostSpeed(1.05f));
+            Add(common, CardRarity.Common, "Тяжёлый воздух", "враги двигаются на 8% медленнее",
+                () => RunModifiers.SlowEnemies(0.08f));
+            Add(common, CardRarity.Common, "Вампиризм", "+1 здоровье за каждое убийство",
+                () => RunModifiers.AddHealPerKill(1f));
+            Add(common, CardRarity.Common, "Быстрый взмах", "+10% скорости атаки",
+                () => BoostAttackSpeed(1.10f));
+            Add(common, CardRarity.Common, "Ученик", "+10% получаемого опыта",
+                () => BoostExperience(1.10f));
 
             // --- редкие ---
-            Add(rare, CardRarity.Rare, "Острая сталь", "+30% урона всем оружиям",
-                () => BoostDamage(1.30f));
-            Add(rare, CardRarity.Rare, "Крепкая шкура", "+40 к здоровью и полное лечение",
-                () => BoostHealth(40f));
-            Add(rare, CardRarity.Rare, "Проворство", "+15% скорости передвижения",
-                () => BoostSpeed(1.15f));
-            Add(rare, CardRarity.Rare, "Голод", "+5 здоровья за каждое убийство",
-                () => RunModifiers.AddHealPerKill(5f));
+            Add(rare, CardRarity.Rare, "Острая сталь", "+20% урона всем оружиям",
+                () => BoostDamage(1.20f));
+            Add(rare, CardRarity.Rare, "Крепкая шкура", "+30 к здоровью и полное лечение",
+                () => BoostHealth(30f));
+            Add(rare, CardRarity.Rare, "Проворство", "+10% скорости передвижения",
+                () => BoostSpeed(1.10f));
+            Add(rare, CardRarity.Rare, "Голод", "+3 здоровья за каждое убийство",
+                () => RunModifiers.AddHealPerKill(3f));
+            Add(rare, CardRarity.Rare, "Тренировка", "+20% скорости атаки",
+                () => BoostAttackSpeed(1.20f));
+            Add(rare, CardRarity.Rare, "Наставник", "+20% получаемого опыта",
+                () => BoostExperience(1.20f));
 
             var weaponId = FindWeaponOffer();
 
@@ -205,17 +213,20 @@ namespace InvaderOfWorlds
             }
 
             // --- эпические ---
-            Add(epic, CardRarity.Epic, "Кровавый клинок", "+55% урона всем оружиям",
-                () => BoostDamage(1.55f));
-            Add(epic, CardRarity.Epic, "Каменная плоть", "+70 к здоровью и полное лечение",
-                () => BoostHealth(70f));
-            Add(epic, CardRarity.Epic, "Порыв ветра", "+25% скорости передвижения",
-                () => BoostSpeed(1.25f));
-            Add(epic, CardRarity.Epic, "Пиршество", "+10 здоровья за каждое убийство",
-                () => RunModifiers.AddHealPerKill(10f));
-            Add(epic, CardRarity.Epic, "Мёртвый воздух", "враги двигаются на 25% медленнее",
-                () => RunModifiers.SlowEnemies(0.25f));
-
+            Add(epic, CardRarity.Epic, "Кровавый клинок", "+35% урона всем оружиям",
+                () => BoostDamage(1.35f));
+            Add(epic, CardRarity.Epic, "Каменная плоть", "+50 к здоровью и полное лечение",
+                () => BoostHealth(50f));
+            Add(epic, CardRarity.Epic, "Порыв ветра", "+18% скорости передвижения",
+                () => BoostSpeed(1.18f));
+            Add(epic, CardRarity.Epic, "Пиршество", "+6 здоровья за каждое убийство",
+                () => RunModifiers.AddHealPerKill(6f));
+            Add(epic, CardRarity.Epic, "Стальная хватка", "+35% скорости атаки",
+                () => BoostAttackSpeed(1.35f));
+            Add(epic, CardRarity.Epic, "Мудрец", "+35% получаемого опыта",
+                () => BoostExperience(1.35f));
+            Add(epic, CardRarity.Epic, "Мёртвый воздух", "враги двигаются на 20% медленнее",
+                () => RunModifiers.SlowEnemies(0.20f));
         }
 
         /// <summary>Бросает редкость и забирает случайную карточку из её набора.</summary>
@@ -250,6 +261,16 @@ namespace InvaderOfWorlds
             _playerHealth.IncreaseMax(amount);
             RunState.HealthBonus += amount;
             _playerHealth.Heal(_playerHealth.Max);
+        }
+
+        private void BoostAttackSpeed(float multiplier)
+        {
+            RunState.AttackSpeedMultiplier *= multiplier;
+        }
+
+        private void BoostExperience(float multiplier)
+        {
+            RunState.ExperienceMultiplier *= multiplier;
         }
 
         private void BoostSpeed(float multiplier)

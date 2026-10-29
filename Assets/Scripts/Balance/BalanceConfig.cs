@@ -31,8 +31,8 @@ namespace InvaderOfWorlds
 
         [Header("Опыт и уровни")]
         [Min(0.1f)] public float ExperienceMultiplier = 1f;
-        [Min(1)] public int LevelBaseExperience = 60;
-        [Min(1f)] public float LevelGrowth = 1.45f;
+        [Min(1)] public int LevelBaseExperience = 45;
+        [Min(1f)] public float LevelGrowth = 1.27f;
 
         [Header("Экономика")]
         [Min(0f)] public float GoldMultiplier = 1f;
@@ -49,7 +49,7 @@ namespace InvaderOfWorlds
         [Min(1f)] public float SprintSpeed = 20f;
 
         [Header("Сложность")]
-        [Min(1f)] public float DifficultyStep = 1.5f;
+        [Min(1f)] public float DifficultyStep = 1.32f;
     }
 
     /// <summary>Доступ к конфигу баланса с безопасными значениями по умолчанию.</summary>

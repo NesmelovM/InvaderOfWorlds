@@ -191,7 +191,8 @@ namespace InvaderOfWorlds
                 if (Time.time < slot.NextFireTime)
                     continue;
 
-                slot.NextFireTime = Time.time + Mathf.Max(0.05f, slot.Cooldown);
+                // Скорость атаки из карточек сокращает перезарядку.
+            slot.NextFireTime = Time.time + Mathf.Max(0.05f, slot.Cooldown / Mathf.Max(0.1f, RunState.AttackSpeedMultiplier));
                 Fire(slot, target);
             }
         }

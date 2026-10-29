@@ -52,9 +52,13 @@ namespace InvaderOfWorlds
                 return;
             }
 
+            // Сложность растёт не только цифрами: на поздних планетах врагов больше.
+            var density = Mathf.Clamp(RunState.Difficulty, 1f, 1.9f);
+
             foreach (var settlement in _generator.Settlements)
             {
-                var count = Mathf.Min(settlement.Guards, _maxPerSettlement);
+                var count = Mathf.Min(
+                    Mathf.RoundToInt(settlement.Guards * density), _maxPerSettlement);
 
                 for (var i = 0; i < count; i++)
                     SpawnGuard(settlement.Center);
@@ -62,7 +66,8 @@ namespace InvaderOfWorlds
                 if (_elitePerSettlement)
                     SpawnElite(settlement.Center);
 
-                if (_eliteArcherPerSettlement)
+                // На второй планете и дальше элита встречается чаще.
+                if (_eliteArcherPerSettlement || density > 1.15f)
                     SpawnEliteArcher(settlement.Center);
             }
 

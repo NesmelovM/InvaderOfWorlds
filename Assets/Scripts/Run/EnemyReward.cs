@@ -46,7 +46,7 @@ namespace InvaderOfWorlds
             Coin.Burst(transform.position, player, UnityEngine.Random.Range(2, 5));
             RunSession.RegisterKill(
                 Mathf.RoundToInt(_gold * Balance.GoldMultiplier),
-                Mathf.RoundToInt(_experience * Balance.ExperienceMultiplier));
+                Mathf.RoundToInt(_experience * Balance.ExperienceMultiplier * RunState.ExperienceMultiplier));
 
             // «Вампиризм»: за убийство возвращается немного здоровья.
             if (RunModifiers.HealPerKill <= 0f || RunModifiers.PlayerHealth == null)

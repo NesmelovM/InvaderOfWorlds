@@ -92,8 +92,8 @@ MonoBehaviour:
     ProjectileSpeed: 14
     Cost: 320
   ExperienceMultiplier: 1
-  LevelBaseExperience: 60
-  LevelGrowth: 1.45
+  LevelBaseExperience: 45
+  LevelGrowth: 1.27
   GoldMultiplier: 1
   DeathPenaltyShare: 0.3
   EnemyHealthMultiplier: 1
@@ -102,4 +102,4 @@ MonoBehaviour:
   PlayerHealth: 100
   WalkSpeed: 10
   SprintSpeed: 20
-  DifficultyStep: 1.5
+  DifficultyStep: 1.32
