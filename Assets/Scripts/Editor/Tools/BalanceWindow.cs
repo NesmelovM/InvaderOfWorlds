@@ -55,6 +55,8 @@ namespace InvaderOfWorlds.EditorTools
             EditorGUILayout.Space(8f);
             DrawEnemies();
             EditorGUILayout.Space(8f);
+            DrawBiomeEnemies();
+            EditorGUILayout.Space(8f);
             DrawPlayer();
 
             EditorGUILayout.EndScrollView();
@@ -248,6 +250,98 @@ namespace InvaderOfWorlds.EditorTools
             }
         }
 
+        private readonly Dictionary<int, bool> _biomeFolds = new Dictionary<int, bool>();
+
+        private void DrawBiomeEnemies()
+        {
+            EditorGUILayout.LabelField("ВРАГИ ПО БИОМАМ", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "Урон, здоровье, скорость, темп атаки и радиус — для каждого типа врага в каждом биоме.",
+                MessageType.None);
+
+            var catalog = Resources.Load<BiomeCatalog>("Biomes/Catalog");
+
+            if (catalog == null)
+            {
+                EditorGUILayout.HelpBox("Каталог биомов не найден.", MessageType.Warning);
+                return;
+            }
+
+            if (_config.BiomeEnemies.Count != catalog.Biomes.Count)
+            {
+                EditorGUILayout.HelpBox(
+                    $"В конфиге {_config.BiomeEnemies.Count} биомов, в каталоге {catalog.Biomes.Count}.",
+                    MessageType.Warning);
+
+                if (GUILayout.Button("Выровнять по каталогу", GUILayout.Height(24f)))
+                {
+                    SyncBiomeEnemies(catalog);
+                    EditorUtility.SetDirty(_config);
+                    AssetDatabase.SaveAssets();
+                }
+            }
+
+            for (var i = 0; i < _config.BiomeEnemies.Count; i++)
+            {
+                var block = _config.BiomeEnemies[i];
+
+                if (block == null)
+                    continue;
+
+                if (i < catalog.Biomes.Count && !string.IsNullOrEmpty(catalog.Biomes[i].Title))
+                    block.Biome = catalog.Biomes[i].Title;
+
+                var title = string.IsNullOrEmpty(block.Biome) ? $"Биом {i + 1}" : $"{i + 1}. {block.Biome}";
+
+                _biomeFolds.TryGetValue(i, out var open);
+
+                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+                {
+                    _biomeFolds[i] = EditorGUILayout.Foldout(open, title, true);
+
+                    if (!_biomeFolds[i])
+                        continue;
+
+                    DrawEnemyStats("Мечник", block.Melee);
+                    DrawEnemyStats("Лучник", block.Ranged);
+                    DrawEnemyStats("Элита", block.Elite);
+                    DrawEnemyStats("Элитный лучник", block.EliteRanged);
+                    DrawEnemyStats("Босс", block.Boss);
+                }
+            }
+        }
+
+        private static void DrawEnemyStats(string title, EnemyStats stats)
+        {
+            if (stats == null)
+                return;
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
+                stats.Health = EditorGUILayout.FloatField("Здоровье", stats.Health);
+                stats.Damage = EditorGUILayout.FloatField("Урон", stats.Damage);
+                stats.Speed = EditorGUILayout.FloatField("Скорость", stats.Speed);
+                stats.AttackCooldown = EditorGUILayout.FloatField("Темп атаки, с", stats.AttackCooldown);
+                stats.AttackRange = EditorGUILayout.FloatField("Радиус атаки", stats.AttackRange);
+            }
+        }
+
+        /// <summary>Приводит список биомов в конфиге к каталогу, сохраняя уже введённые числа.</summary>
+        private void SyncBiomeEnemies(BiomeCatalog catalog)
+        {
+            while (_config.BiomeEnemies.Count < catalog.Biomes.Count)
+            {
+                _config.BiomeEnemies.Add(new BiomeEnemyBalance
+                {
+                    Biome = catalog.Biomes[_config.BiomeEnemies.Count].Title
+                });
+            }
+
+            while (_config.BiomeEnemies.Count > catalog.Biomes.Count)
+                _config.BiomeEnemies.RemoveAt(_config.BiomeEnemies.Count - 1);
+        }
+
         private void DrawEnemies()
         {
             EditorGUILayout.LabelField("ВРАГИ", EditorStyles.boldLabel);
@@ -360,6 +454,15 @@ namespace InvaderOfWorlds.EditorTools
                 AttackSpeedMult = 1.35f, ExperienceMult = 1.35f, SlowPercent = 0.20f,
                 ExplosionDamage = 35f, ExplosionRadius = 5f, RegenPerSecond = 2f, ExtraShots = 1
             };
+
+            var catalog = Resources.Load<BiomeCatalog>("Biomes/Catalog");
+            config.BiomeEnemies.Clear();
+
+            if (catalog != null)
+            {
+                foreach (var biome in catalog.Biomes)
+                    config.BiomeEnemies.Add(new BiomeEnemyBalance { Biome = biome.Title });
+            }
 
             config.OnDeath = new CarryOverRules { Level = false, Loadout = false };
             config.OnNextPlanet = new CarryOverRules

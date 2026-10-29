@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 91ee58de07c247d68f27dc218f3b47b5, type: 3}
-  m_Name: BiomeCatalog
+  m_Name: Catalog
   m_EditorClassIdentifier: Assembly-CSharp::InvaderOfWorlds.BiomeCatalog
   Biomes:
   - {fileID: 11400000, guid: c858eb9ff8b21d2408e5da0b4ee14032, type: 2}

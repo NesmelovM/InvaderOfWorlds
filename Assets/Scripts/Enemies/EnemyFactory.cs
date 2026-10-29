@@ -20,6 +20,20 @@ namespace InvaderOfWorlds
         private static readonly Color EliteRangedColor = new Color(0.90f, 0.52f, 0.14f);
         private static readonly Color BossColor = new Color(0.42f, 0.04f, 0.12f);
 
+        /// <summary>Параметры врага из баланса или переданные значения по умолчанию.</summary>
+        private static void Stats(EnemyType type, float health, float damage, float speed,
+            float cooldown, float range, out float outHealth, out float outDamage, out float outSpeed,
+            out float outCooldown, out float outRange)
+        {
+            var stats = Balance.EnemyStatsForCurrentBiome(type);
+
+            outHealth = stats != null ? stats.Health : health;
+            outDamage = stats != null ? stats.Damage : damage;
+            outSpeed = stats != null ? stats.Speed : speed;
+            outCooldown = stats != null ? stats.AttackCooldown : cooldown;
+            outRange = stats != null ? stats.AttackRange : range;
+        }
+
         /// <summary>Ближний бой: подходит и бьёт рукой.</summary>
         public static GameObject Spawn(Planet planet, Transform target, Vector3 surfacePosition,
             Color color, float health, Transform parent)
@@ -27,7 +41,10 @@ namespace InvaderOfWorlds
             var look = Characters.Get(EnemyType.Melee);
             var height = look != null ? look.Height : 1.8f;
 
-            var enemy = CreateBody(planet, surfacePosition, color, health, parent, height, 0.35f,
+            Stats(EnemyType.Melee, health, 10f, 2.5f, 1.5f, 2.2f,
+                out var maxHealth, out var damage, out var speed, out var cooldown, out var range);
+
+            var enemy = CreateBody(planet, surfacePosition, color, maxHealth, parent, height, 0.35f,
                 gold: 5, experience: 10, modelPath: "Characters/man-soldier_Rig", weaponPath: "Weapons/sword",
                 modelOverride: look?.Model,
                 weaponOverride: Characters.RandomWeapon(false) ?? look?.Weapon);
@@ -35,6 +52,7 @@ namespace InvaderOfWorlds
 
             var brain = enemy.AddComponent<EnemyBrain>();
             brain.Configure(planet, target);
+            brain.ConfigureCombat(damage, cooldown, range, speed);
             brain.ScaleDamage(RunState.Difficulty * Balance.EnemyDamageMultiplier);
 
             return enemy;
@@ -47,7 +65,10 @@ namespace InvaderOfWorlds
             var look = Characters.Get(EnemyType.Ranged);
             var height = look != null ? look.Height : 1.9f;
 
-            var enemy = CreateBody(planet, surfacePosition, RangedColor, health, parent, height, 0.33f,
+            Stats(EnemyType.Ranged, health, 10f, 2.2f, 1.6f, 16f,
+                out var maxHealth, out var damage, out var speed, out var cooldown, out var range);
+
+            var enemy = CreateBody(planet, surfacePosition, RangedColor, maxHealth, parent, height, 0.33f,
                 gold: 7, experience: 14, modelPath: "Characters/man-cult_Rig", weaponPath: "Weapons/bow",
                 modelOverride: look?.Model,
                 weaponOverride: Characters.RandomWeapon(true) ?? look?.Weapon);
@@ -55,6 +76,7 @@ namespace InvaderOfWorlds
 
             var brain = enemy.AddComponent<RangedEnemyBrain>();
             brain.Configure(planet, target);
+            brain.ConfigureCombat(damage, cooldown, 0.5f, range, speed);
             brain.ScaleDamage(RunState.Difficulty * Balance.EnemyDamageMultiplier);
 
             return enemy;
@@ -67,7 +89,10 @@ namespace InvaderOfWorlds
             var look = Characters.Get(EnemyType.Elite);
             var height = look != null ? look.Height : 2.5f;
 
-            var enemy = CreateBody(planet, surfacePosition, EliteColor, 180f, parent, height, 0.5f,
+            Stats(EnemyType.Elite, 180f, 14f, 2.6f, 1.8f, 2.6f,
+                out var maxHealth, out var damage, out var speed, out var cooldown, out var range);
+
+            var enemy = CreateBody(planet, surfacePosition, EliteColor, maxHealth, parent, height, 0.5f,
                 gold: 25, experience: 50, modelPath: "Characters/man-knight_Rig", weaponPath: "Weapons/hammer",
                 modelOverride: look?.Model,
                 weaponOverride: Characters.RandomWeapon(false) ?? look?.Weapon);
@@ -75,7 +100,7 @@ namespace InvaderOfWorlds
 
             var brain = enemy.AddComponent<EnemyBrain>();
             brain.Configure(planet, target);
-            brain.ConfigureCombat(damage: 14f, attackCooldown: 1.8f, attackRange: 2.6f, speed: 2.6f);
+            brain.ConfigureCombat(damage: damage, attackCooldown: cooldown, attackRange: range, speed: speed);
             brain.EnableCharge(minDistance: 4f, maxDistance: 11f, cooldown: 6f, duration: 0.45f,
                 speedMultiplier: 3.4f);
             brain.ScaleDamage(RunState.Difficulty * Balance.EnemyDamageMultiplier);
@@ -90,7 +115,10 @@ namespace InvaderOfWorlds
             var look = Characters.Get(EnemyType.EliteRanged);
             var height = look != null ? look.Height : 2.4f;
 
-            var enemy = CreateBody(planet, surfacePosition, EliteRangedColor, 140f, parent, height, 0.5f,
+            Stats(EnemyType.EliteRanged, 140f, 12f, 2.4f, 1.6f, 20f,
+                out var maxHealth, out var damage, out var speed, out var cooldown, out var range);
+
+            var enemy = CreateBody(planet, surfacePosition, EliteRangedColor, maxHealth, parent, height, 0.5f,
                 gold: 35, experience: 70, modelPath: "Characters/man-cult_Rig", weaponPath: "Weapons/bow",
                 modelOverride: look?.Model,
                 weaponOverride: Characters.RandomWeapon(true) ?? look?.Weapon);
@@ -98,7 +126,7 @@ namespace InvaderOfWorlds
 
             var brain = enemy.AddComponent<RangedEnemyBrain>();
             brain.Configure(planet, target);
-            brain.ConfigureCombat(damage: 12f, cooldown: 1.6f, windupTime: 0.5f, shootRange: 20f, speed: 2.4f);
+            brain.ConfigureCombat(damage: damage, cooldown: cooldown, windupTime: 0.5f, shootRange: range, speed: speed);
             brain.ConfigureRetreat(distance: 6f, cooldown: 4.5f, duration: 0.5f, speedMultiplier: 2.8f);
             brain.ScaleDamage(RunState.Difficulty * Balance.EnemyDamageMultiplier);
 
@@ -112,7 +140,10 @@ namespace InvaderOfWorlds
             var look = Characters.Get(EnemyType.Boss);
             var height = look != null ? look.Height : 4.2f;
 
-            var enemy = CreateBody(planet, surfacePosition, BossColor, 520f, parent, height, 0.9f,
+            Stats(EnemyType.Boss, 520f, 18f, 2.4f, 6f, 5f,
+                out var maxHealth, out var damage, out var speed, out var cooldown, out var range);
+
+            var enemy = CreateBody(planet, surfacePosition, BossColor, maxHealth, parent, height, 0.9f,
                 gold: 150, experience: 300, modelPath: "Characters/giant_Rig", weaponPath: "Weapons/club-zulu",
                 modelOverride: look?.Model,
                 weaponOverride: Characters.RandomWeapon(false) ?? look?.Weapon);
@@ -120,6 +151,7 @@ namespace InvaderOfWorlds
 
             var brain = enemy.AddComponent<BossBrain>();
             brain.Configure(planet, target);
+            brain.ConfigureCombat(damage, cooldown, range, speed);
             brain.ScaleDamage(RunState.Difficulty * Balance.EnemyDamageMultiplier);
 
             return enemy;

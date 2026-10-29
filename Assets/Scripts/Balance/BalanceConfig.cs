@@ -4,6 +4,30 @@ using UnityEngine;
 
 namespace InvaderOfWorlds
 {
+    /// <summary>Боевые параметры одного типа врага: правятся по биомам.</summary>
+    [Serializable]
+    public class EnemyStats
+    {
+        [Min(1f)] public float Health = 60f;
+        [Min(0f)] public float Damage = 10f;
+        [Min(0.1f)] public float Speed = 2.5f;
+        [Min(0.05f)] public float AttackCooldown = 1.5f;
+        [Min(0.5f)] public float AttackRange = 2.2f;
+    }
+
+    /// <summary>Параметры всех типов врагов одного биома.</summary>
+    [Serializable]
+    public class BiomeEnemyBalance
+    {
+        public string Biome = "";
+
+        public EnemyStats Melee = new EnemyStats { Health = 60f, Damage = 10f, Speed = 2.5f, AttackCooldown = 1.5f, AttackRange = 2.2f };
+        public EnemyStats Ranged = new EnemyStats { Health = 48f, Damage = 10f, Speed = 2.2f, AttackCooldown = 1.6f, AttackRange = 16f };
+        public EnemyStats Elite = new EnemyStats { Health = 180f, Damage = 14f, Speed = 2.6f, AttackCooldown = 1.8f, AttackRange = 2.6f };
+        public EnemyStats EliteRanged = new EnemyStats { Health = 140f, Damage = 12f, Speed = 2.4f, AttackCooldown = 1.6f, AttackRange = 20f };
+        public EnemyStats Boss = new EnemyStats { Health = 520f, Damage = 18f, Speed = 2.4f, AttackCooldown = 6f, AttackRange = 5f };
+    }
+
     /// <summary>
     /// Что переживает смерть игрока или переход на следующую планету.
     /// Правится в окне баланса.
@@ -119,6 +143,10 @@ namespace InvaderOfWorlds
             SpeedBonus = true, DamageBonus = true, CardEffects = true
         };
 
+        [Header("Враги по биомам")]
+        [Tooltip("Индекс записи = индекс биома в каталоге")]
+        public List<BiomeEnemyBalance> BiomeEnemies = new List<BiomeEnemyBalance>();
+
         [Header("Биомы")]
         [Tooltip("Сколько планет одного биома игрок проходит, прежде чем ему предложат следующий биом")]
         [Min(1)] public int PlanetsPerBiome = 3;
@@ -163,6 +191,34 @@ namespace InvaderOfWorlds
         public static float DifficultyStep => Config != null ? Config.DifficultyStep : 1.5f;
         public static float ExperiencePerPlanet => Config != null ? Config.ExperiencePerPlanet : 1.25f;
         public static int PlanetsPerBiome => Config != null ? Config.PlanetsPerBiome : 3;
+
+        /// <summary>Параметры врага для текущего биома; null — использовать значения из кода.</summary>
+        public static EnemyStats EnemyStatsFor(int biomeIndex, EnemyType type)
+        {
+            if (Config == null || biomeIndex < 0 || biomeIndex >= Config.BiomeEnemies.Count)
+                return null;
+
+            var block = Config.BiomeEnemies[biomeIndex];
+
+            if (block == null)
+                return null;
+
+            return type switch
+            {
+                EnemyType.Melee => block.Melee,
+                EnemyType.Ranged => block.Ranged,
+                EnemyType.Elite => block.Elite,
+                EnemyType.EliteRanged => block.EliteRanged,
+                EnemyType.Boss => block.Boss,
+                _ => null
+            };
+        }
+
+        /// <summary>Параметры врага для биома, в котором проходит забег.</summary>
+        public static EnemyStats EnemyStatsForCurrentBiome(EnemyType type)
+        {
+            return EnemyStatsFor(Progress.SelectedBiome, type);
+        }
         public static CarryOverRules DeathRules => Config != null ? Config.OnDeath : new CarryOverRules();
         public static CarryOverRules PlanetRules => Config != null ? Config.OnNextPlanet : new CarryOverRules { Level = true, Loadout = true, HealthBonus = true, SpeedBonus = true, DamageBonus = true, CardEffects = true };
 

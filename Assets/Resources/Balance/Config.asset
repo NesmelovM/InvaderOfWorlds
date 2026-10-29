@@ -157,5 +157,130 @@ MonoBehaviour:
     SpeedBonus: 1
     DamageBonus: 1
     CardEffects: 1
+  BiomeEnemies:
+  - Biome: "\u041F\u0443\u0441\u0442\u044B\u043D\u044F"
+    Melee:
+      Health: 60
+      Damage: 10
+      Speed: 2.5
+      AttackCooldown: 1.5
+      AttackRange: 2.2
+    Ranged:
+      Health: 48
+      Damage: 10
+      Speed: 2.2
+      AttackCooldown: 1.6
+      AttackRange: 16
+    Elite:
+      Health: 180
+      Damage: 14
+      Speed: 2.6
+      AttackCooldown: 1.8
+      AttackRange: 2.6
+    EliteRanged:
+      Health: 140
+      Damage: 12
+      Speed: 2.4
+      AttackCooldown: 1.6
+      AttackRange: 20
+    Boss:
+      Health: 520
+      Damage: 18
+      Speed: 2.4
+      AttackCooldown: 6
+      AttackRange: 5
+  - Biome: "\u0418\u043D\u0434\u0438\u044F"
+    Melee:
+      Health: 60
+      Damage: 10
+      Speed: 2.5
+      AttackCooldown: 1.5
+      AttackRange: 2.2
+    Ranged:
+      Health: 48
+      Damage: 10
+      Speed: 2.2
+      AttackCooldown: 1.6
+      AttackRange: 16
+    Elite:
+      Health: 180
+      Damage: 14
+      Speed: 2.6
+      AttackCooldown: 1.8
+      AttackRange: 2.6
+    EliteRanged:
+      Health: 140
+      Damage: 12
+      Speed: 2.4
+      AttackCooldown: 1.6
+      AttackRange: 20
+    Boss:
+      Health: 520
+      Damage: 18
+      Speed: 2.4
+      AttackCooldown: 6
+      AttackRange: 5
+  - Biome: "\u042F\u043F\u043E\u043D\u0438\u044F"
+    Melee:
+      Health: 60
+      Damage: 10
+      Speed: 2.5
+      AttackCooldown: 1.5
+      AttackRange: 2.2
+    Ranged:
+      Health: 48
+      Damage: 10
+      Speed: 2.2
+      AttackCooldown: 1.6
+      AttackRange: 16
+    Elite:
+      Health: 180
+      Damage: 14
+      Speed: 2.6
+      AttackCooldown: 1.8
+      AttackRange: 2.6
+    EliteRanged:
+      Health: 140
+      Damage: 12
+      Speed: 2.4
+      AttackCooldown: 1.6
+      AttackRange: 20
+    Boss:
+      Health: 520
+      Damage: 18
+      Speed: 2.4
+      AttackCooldown: 6
+      AttackRange: 5
+  - Biome: "\u041B\u0443\u043D\u0430"
+    Melee:
+      Health: 60
+      Damage: 10
+      Speed: 2.5
+      AttackCooldown: 1.5
+      AttackRange: 2.2
+    Ranged:
+      Health: 48
+      Damage: 10
+      Speed: 2.2
+      AttackCooldown: 1.6
+      AttackRange: 16
+    Elite:
+      Health: 180
+      Damage: 14
+      Speed: 2.6
+      AttackCooldown: 1.8
+      AttackRange: 2.6
+    EliteRanged:
+      Health: 140
+      Damage: 12
+      Speed: 2.4
+      AttackCooldown: 1.6
+      AttackRange: 20
+    Boss:
+      Health: 520
+      Damage: 18
+      Speed: 2.4
+      AttackCooldown: 6
+      AttackRange: 5
   PlanetsPerBiome: 3
   DifficultyStep: 1.32

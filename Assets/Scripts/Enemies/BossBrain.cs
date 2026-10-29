@@ -75,6 +75,16 @@ namespace InvaderOfWorlds
         }
 
         /// <summary>Сложность следующей планеты: урон растёт вместе с забегом.</summary>
+        /// <summary>Параметры из инструмента баланса: урон, темп ударов и дальность.</summary>
+        public void ConfigureCombat(float damage, float attackCooldown, float slamRange, float speed)
+        {
+            _slamDamage = damage;
+            _slamCooldown = Mathf.Max(0.5f, attackCooldown);
+            _slamRange = slamRange;
+            _speed = speed;
+            _baseScale = transform.localScale;
+        }
+
         public void ScaleDamage(float multiplier)
         {
             if (multiplier <= 0f)
