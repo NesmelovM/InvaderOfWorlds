@@ -86,7 +86,11 @@ namespace InvaderOfWorlds
             _keptGold = Mathf.RoundToInt(_runGold * _deathShare);
             _keptExperience = Mathf.RoundToInt(_runExperience * _deathShare);
 
-            RunSession.CommitRun(_deathShare);
+            // Запоминаем состояние: часть прогресса может пережить смерть.
+            CarryOver.RememberDeath();
+
+            var deathRules = Balance.DeathRules;
+            RunSession.CommitRun(_deathShare, deathRules.Gold, deathRules.Experience);
 
             // Добыча за забег должна пережить даже закрытие игры.
             SaveSystem.Save();
@@ -106,6 +110,10 @@ namespace InvaderOfWorlds
         private void Restart()
         {
             Time.timeScale = 1f;
+            var rules = Balance.DeathRules;
+            var snapshot = CarryOver.DeathSnapshot;
+            RunState.Reset();
+            CarryOver.Restore(snapshot, rules);
             SceneManager.LoadScene(_hubSceneName);
         }
 

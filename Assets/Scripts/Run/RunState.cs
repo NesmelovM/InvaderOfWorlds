@@ -16,6 +16,8 @@ namespace InvaderOfWorlds
         public static float Difficulty { get; private set; } = 1f;
 
         public static int Level = 1;
+        /// <summary>Сколько планет текущего биома уже пройдено в забеге.</summary>
+        public static int PlanetsInBiome;
         public static float EnemySpeedMultiplier = 1f;
         public static float HealPerKill;
         public static float WeaponDamageMultiplier = 1f;
@@ -39,6 +41,7 @@ namespace InvaderOfWorlds
             PlanetIndex = 0;
             Difficulty = 1f;
             Level = 1;
+            PlanetsInBiome = 0;
             EnemySpeedMultiplier = 1f;
             HealPerKill = 0f;
             WeaponDamageMultiplier = 1f;

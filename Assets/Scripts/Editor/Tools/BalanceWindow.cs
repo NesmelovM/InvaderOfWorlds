@@ -51,6 +51,8 @@ namespace InvaderOfWorlds.EditorTools
             EditorGUILayout.Space(8f);
             DrawCards();
             EditorGUILayout.Space(8f);
+            DrawCarryOver();
+            EditorGUILayout.Space(8f);
             DrawEnemies();
             EditorGUILayout.Space(8f);
             DrawPlayer();
@@ -178,6 +180,41 @@ namespace InvaderOfWorlds.EditorTools
             }
         }
 
+        private void DrawCarryOver()
+        {
+            EditorGUILayout.LabelField("ЧТО ПЕРЕНОСИТСЯ", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "Галочки задают, что остаётся после смерти и что переживает переход на следующую планету.",
+                MessageType.None);
+
+            DrawRules("После смерти", _config.OnDeath);
+
+            _config.PlanetsPerBiome = EditorGUILayout.IntSlider(
+                new GUIContent("Планет на биом", "Сколько планет одного биома пройти до предложения следующего"),
+                _config.PlanetsPerBiome, 1, 10);
+
+            DrawRules("На следующую планету", _config.OnNextPlanet);
+        }
+
+        private static void DrawRules(string title, CarryOverRules rules)
+        {
+            if (rules == null)
+                return;
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
+                rules.Gold = EditorGUILayout.Toggle("Золото", rules.Gold);
+                rules.Experience = EditorGUILayout.Toggle("Опыт", rules.Experience);
+                rules.Level = EditorGUILayout.Toggle("Уровень", rules.Level);
+                rules.Loadout = EditorGUILayout.Toggle("Набор оружия", rules.Loadout);
+                rules.HealthBonus = EditorGUILayout.Toggle("Бонус здоровья", rules.HealthBonus);
+                rules.SpeedBonus = EditorGUILayout.Toggle("Бонус скорости", rules.SpeedBonus);
+                rules.DamageBonus = EditorGUILayout.Toggle("Бонусы урона и атаки", rules.DamageBonus);
+                rules.CardEffects = EditorGUILayout.Toggle("Эффекты карточек", rules.CardEffects);
+            }
+        }
+
         private void DrawEnemies()
         {
             EditorGUILayout.LabelField("ВРАГИ", EditorStyles.boldLabel);
@@ -266,9 +303,38 @@ namespace InvaderOfWorlds.EditorTools
             }
 
             config.ExperienceMultiplier = 1f;
+            config.ExperiencePerPlanet = 1.25f;
+            config.PlanetsPerBiome = 3;
             config.GoldMultiplier = 1f;
-            config.LevelBaseExperience = 60;
-            config.LevelGrowth = 1.45f;
+            config.LevelBaseExperience = 45;
+            config.LevelGrowth = 1.27f;
+
+            config.CommonCards = new CardTierBalance
+            {
+                DamageMult = 1.10f, HealthAdd = 15f, SpeedMult = 1.05f, HealPerKill = 1f,
+                AttackSpeedMult = 1.10f, ExperienceMult = 1.10f, SlowPercent = 0.08f,
+                ExplosionDamage = 10f, ExplosionRadius = 3.5f, RegenPerSecond = 0.5f, ExtraShots = 0
+            };
+            config.RareCards = new CardTierBalance
+            {
+                DamageMult = 1.20f, HealthAdd = 30f, SpeedMult = 1.10f, HealPerKill = 3f,
+                AttackSpeedMult = 1.20f, ExperienceMult = 1.20f, SlowPercent = 0.12f,
+                ExplosionDamage = 20f, ExplosionRadius = 4f, RegenPerSecond = 1f, ExtraShots = 1
+            };
+            config.EpicCards = new CardTierBalance
+            {
+                DamageMult = 1.35f, HealthAdd = 50f, SpeedMult = 1.18f, HealPerKill = 6f,
+                AttackSpeedMult = 1.35f, ExperienceMult = 1.35f, SlowPercent = 0.20f,
+                ExplosionDamage = 35f, ExplosionRadius = 5f, RegenPerSecond = 2f, ExtraShots = 1
+            };
+
+            config.OnDeath = new CarryOverRules { Level = false, Loadout = false };
+            config.OnNextPlanet = new CarryOverRules
+            {
+                Level = true, Loadout = true, HealthBonus = true,
+                SpeedBonus = true, DamageBonus = true, CardEffects = true
+            };
+
             config.DeathPenaltyShare = 0.3f;
             config.DifficultyStep = 1.5f;
             config.EnemyHealthMultiplier = 1f;

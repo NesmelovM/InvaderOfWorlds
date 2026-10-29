@@ -4,6 +4,23 @@ using UnityEngine;
 
 namespace InvaderOfWorlds
 {
+    /// <summary>
+    /// Что переживает смерть игрока или переход на следующую планету.
+    /// Правится в окне баланса.
+    /// </summary>
+    [Serializable]
+    public class CarryOverRules
+    {
+        [Tooltip("Золото забега")] public bool Gold = true;
+        [Tooltip("Опыт забега")] public bool Experience = true;
+        [Tooltip("Уровень и порог следующего")] public bool Level;
+        [Tooltip("Набор оружия, взятого в забеге")] public bool Loadout;
+        [Tooltip("Бонус здоровья из карточек")] public bool HealthBonus;
+        [Tooltip("Бонус скорости из карточек")] public bool SpeedBonus;
+        [Tooltip("Бонус урона из карточек")] public bool DamageBonus;
+        [Tooltip("Взрыв, регенерация, залп, вампиризм и замедление")] public bool CardEffects;
+    }
+
     /// <summary>Значения карточек одной редкости: их правит инструмент баланса.</summary>
     [Serializable]
     public class CardTierBalance
@@ -91,6 +108,21 @@ namespace InvaderOfWorlds
         [Tooltip("Во сколько раз больше опыта за врага на каждой следующей планете забега")]
         [Min(1f)] public float ExperiencePerPlanet = 1.25f;
 
+        [Header("Что переносится")]
+        [Tooltip("Правила после смерти: остальное сбрасывается")]
+        public CarryOverRules OnDeath = new CarryOverRules { Level = false, Loadout = false };
+
+        [Tooltip("Правила при переходе на следующую планету")]
+        public CarryOverRules OnNextPlanet = new CarryOverRules
+        {
+            Level = true, Loadout = true, HealthBonus = true,
+            SpeedBonus = true, DamageBonus = true, CardEffects = true
+        };
+
+        [Header("Биомы")]
+        [Tooltip("Сколько планет одного биома игрок проходит, прежде чем ему предложат следующий биом")]
+        [Min(1)] public int PlanetsPerBiome = 3;
+
         [Header("Сложность")]
         [Min(1f)] public float DifficultyStep = 1.32f;
     }
@@ -130,6 +162,9 @@ namespace InvaderOfWorlds
         public static float SprintSpeed => Config != null ? Config.SprintSpeed : 20f;
         public static float DifficultyStep => Config != null ? Config.DifficultyStep : 1.5f;
         public static float ExperiencePerPlanet => Config != null ? Config.ExperiencePerPlanet : 1.25f;
+        public static int PlanetsPerBiome => Config != null ? Config.PlanetsPerBiome : 3;
+        public static CarryOverRules DeathRules => Config != null ? Config.OnDeath : new CarryOverRules();
+        public static CarryOverRules PlanetRules => Config != null ? Config.OnNextPlanet : new CarryOverRules { Level = true, Loadout = true, HealthBonus = true, SpeedBonus = true, DamageBonus = true, CardEffects = true };
 
         /// <summary>Значения карточек для редкости: 0 — обычная, 1 — редкая, 2 — эпическая.</summary>
         public static CardTierBalance Cards(int rarity)

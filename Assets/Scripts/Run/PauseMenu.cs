@@ -95,7 +95,8 @@ namespace InvaderOfWorlds
         /// <summary>Выход посреди забега: добыча идёт по правилу смерти.</summary>
         private void LeaveToHub()
         {
-            RunSession.CommitRun(Balance.DeathPenaltyShare);
+            var rules = Balance.DeathRules;
+            RunSession.CommitRun(Balance.DeathPenaltyShare, rules.Gold, rules.Experience);
             SaveSystem.Save();
             UiState.SetPause(false);
 

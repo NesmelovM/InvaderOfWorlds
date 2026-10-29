@@ -99,12 +99,44 @@ namespace InvaderOfWorlds
         private void NextPlanet()
         {
             Progress.AddPortal();
+
+            // Что-то может сбрасываться при переходе: правила из баланса.
+            CarryOver.ApplyPlanetRules();
+
             RunState.AdvancePlanet();
+            RunState.PlanetsInBiome++;
+
+            TrySwitchBiome();
             SaveSystem.Save();
             Time.timeScale = 1f;
 
             var scene = SceneManager.GetActiveScene();
             SceneManager.LoadScene(scene.buildIndex >= 0 ? scene.buildIndex : 0);
+        }
+
+        /// <summary>
+        /// После заданного числа планет одного биома предлагаем следующий:
+        /// выбор биома уходит вперёд, если он уже открыт.
+        /// </summary>
+        private void TrySwitchBiome()
+        {
+            var limit = Balance.PlanetsPerBiome;
+
+            if (limit <= 0 || RunState.PlanetsInBiome < limit)
+                return;
+
+            var catalog = Resources.Load<BiomeCatalog>("Biomes/Catalog");
+
+            if (catalog == null || catalog.Biomes.Count == 0)
+                return;
+
+            var unlocked = catalog.UnlockedCount(Progress.TotalPortals);
+
+            if (Progress.SelectedBiome + 1 >= unlocked)
+                return;
+
+            Progress.SelectBiome(Progress.SelectedBiome + 1, unlocked);
+            RunState.PlanetsInBiome = 0;
         }
 
         /// <summary>В хаб: вся добыча с бонусом, состояние забега сбрасывается.</summary>
@@ -149,13 +181,22 @@ namespace InvaderOfWorlds
                 };
             }
 
-            var panel = new Rect(Screen.width * 0.5f - 330f, 70f, 660f, 64f);
+            var panel = new Rect(Screen.width * 0.5f - 330f, 60f, 660f, 96f);
             HealthBarDrawer.DrawRect(panel, new Color(0f, 0f, 0f, 0.55f));
 
-            GUI.Label(new Rect(panel.x, panel.y + 6f, panel.width, 26f), "ПОРТАЛ ОТКРЫТ", _style);
+            GUI.Label(new Rect(panel.x, panel.y + 4f, panel.width, 26f), "ПОРТАЛ ОТКРЫТ", _style);
 
-            GUI.Label(new Rect(panel.x, panel.y + 32f, panel.width, 24f),
-                $"E — дальше (сложность ×{RunState.Difficulty * 1.5f:F1})     F — в хаб с добычей", _style);
+            // Показываем, где мы по биому и сколько планет осталось.
+            var catalog = Resources.Load<BiomeCatalog>("Biomes/Catalog");
+            var biome = catalog != null && Progress.SelectedBiome < catalog.Biomes.Count
+                ? catalog.Biomes[Progress.SelectedBiome].Title
+                : "планета";
+
+            GUI.Label(new Rect(panel.x, panel.y + 30f, panel.width, 22f),
+                $"{biome} · планета {RunState.PlanetsInBiome + 1} из {Balance.PlanetsPerBiome}", _style);
+
+            GUI.Label(new Rect(panel.x, panel.y + 56f, panel.width, 22f),
+                $"E — дальше     F — в хаб с добычей", _style);
         }
     }
 }

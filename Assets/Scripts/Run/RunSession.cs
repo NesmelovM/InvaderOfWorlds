@@ -37,13 +37,16 @@ namespace InvaderOfWorlds
         /// Перевести добычу забега в кошелёк. <paramref name="share"/> — какая доля
         /// доходит: 1 при успешном уходе, 0.7 при смерти.
         /// </summary>
-        public static void CommitRun(float share)
+        public static void CommitRun(float share, bool keepGold = true, bool keepExperience = true)
         {
             // Доля может быть больше единицы: успешный уход даёт бонус.
             share = Mathf.Max(0f, share);
 
-            Gold += Mathf.RoundToInt(RunGold * share);
-            Experience += Mathf.RoundToInt(RunExperience * share);
+            if (keepGold)
+                Gold += Mathf.RoundToInt(RunGold * share);
+
+            if (keepExperience)
+                Experience += Mathf.RoundToInt(RunExperience * share);
 
             RunGold = 0;
             RunExperience = 0;
