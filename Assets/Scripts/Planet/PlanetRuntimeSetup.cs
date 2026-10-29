@@ -510,10 +510,20 @@ namespace InvaderOfWorlds
             var direction = _planet.UpAt(_generator.BossPortalPoint);
             var root = new GameObject("Boss Arena").transform;
 
+            // Портал не должен оказаться внутри постройки: ищем свободное место рядом.
+            var portalPosition = _planet.Center + direction * (_planet.Radius + 0.12f);
+
+            if (SpawnPlacement.TryFindFreeGroundPosition(_planet, portalPosition, 12f, 40,
+                    out var freePortal, out var freeUp, 3.5f))
+            {
+                direction = freeUp;
+                portalPosition = freePortal + freeUp * 0.12f;
+            }
+
             var portal = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             portal.name = "Exit Portal";
             portal.transform.SetParent(root, false);
-            portal.transform.position = _planet.Center + direction * (_planet.Radius + 0.12f);
+            portal.transform.position = portalPosition;
             portal.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
             portal.transform.localScale = new Vector3(8f, 0.08f, 8f);
             Destroy(portal.GetComponent<Collider>());
