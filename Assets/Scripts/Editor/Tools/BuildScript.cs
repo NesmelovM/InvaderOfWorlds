@@ -11,7 +11,7 @@ namespace InvaderOfWorlds.EditorTools
     /// </summary>
     public static class BuildScript
     {
-        private const string BuildPath = "Builds/Windows/InvaderOfWorlds.exe";
+        private const string BuildPath = "Builds/Windows/InvadersOfWorld.exe";
 
         [MenuItem("Инструменты разработчика/Собрать Windows-билд", false, 70)]
         public static void BuildWindows()
