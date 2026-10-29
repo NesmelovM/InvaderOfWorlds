@@ -81,11 +81,24 @@ namespace InvaderOfWorlds
                 }
             }
 
-            // Скиннинг: вершины в покое не отражают позу, берём его границы.
+            // Скиннинг: у SkinnedMeshRenderer.bounds в момент создания объекта ещё
+            // не пересчитаны (как и у обычных рендереров), поэтому берём вершины меша.
             foreach (var skinned in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
-                SampleBounds(skinned.bounds, host, ref minY, ref maxY);
-                found = true;
+                var mesh = skinned.sharedMesh;
+
+                if (mesh == null)
+                    continue;
+
+                var matrix = skinned.transform.localToWorldMatrix;
+
+                foreach (var vertex in mesh.vertices)
+                {
+                    var local = host.InverseTransformPoint(matrix.MultiplyPoint3x4(vertex));
+                    minY = Mathf.Min(minY, local.y);
+                    maxY = Mathf.Max(maxY, local.y);
+                    found = true;
+                }
             }
 
             if (found && minY <= maxY)
