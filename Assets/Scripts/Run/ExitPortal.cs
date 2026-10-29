@@ -105,6 +105,7 @@ namespace InvaderOfWorlds
 
             RunState.AdvancePlanet();
             RunState.PlanetsInBiome++;
+            Toast.Clear();
 
             TrySwitchBiome();
             SaveSystem.Save();

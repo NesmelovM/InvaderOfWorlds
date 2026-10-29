@@ -4,15 +4,15 @@ using UnityEngine;
 namespace InvaderOfWorlds
 {
     /// <summary>
-    /// Короткие всплывающие подписи: что подобрал игрок.
+    /// Всплывающие подписи о том, что подобрал игрок.
     ///
-    /// Рисуются поверх игры на виртуальном холсте, чтобы читались при любом
-    /// разрешении. Живут пару секунд и гаснут.
+    /// Сообщения показываются стопкой и живут достаточно долго, чтобы их
+    /// прочитать, даже если предметы подобраны подряд один за другим.
     /// </summary>
     public static class Toast
     {
-        private const float Lifetime = 2.2f;
-        private const int MaxLines = 4;
+        private const float Lifetime = 4.5f;
+        private const int MaxLines = 6;
 
         private struct Line
         {
@@ -45,11 +45,16 @@ namespace InvaderOfWorlds
                 new GameObject("Toast Drawer").AddComponent<ToastDrawer>();
         }
 
-        public static bool TryDraw(out string message, out Color color, out float alpha)
+        /// <summary>Очищает подписи, например при переходе на другую планету.</summary>
+        public static void Clear()
         {
-            message = null;
-            color = Color.white;
-            alpha = 0f;
+            Lines.Clear();
+        }
+
+        /// <summary>Сколько сообщений сейчас видно: они рисуются стопкой.</summary>
+        public static int Collect(List<VisibleLine> target)
+        {
+            target.Clear();
 
             for (var i = Lines.Count - 1; i >= 0; i--)
             {
@@ -61,15 +66,26 @@ namespace InvaderOfWorlds
                     continue;
                 }
 
-                if (message == null)
+                var alpha = 1f - Mathf.Clamp01((age - Lifetime * 0.7f) / (Lifetime * 0.3f));
+
+                // Новые сверху, поэтому собираем в обратном порядке.
+                target.Add(new VisibleLine
                 {
-                    message = Lines[i].Text;
-                    color = Lines[i].Color;
-                    alpha = 1f - Mathf.Clamp01((age - Lifetime * 0.6f) / (Lifetime * 0.4f));
-                }
+                    Text = Lines[i].Text,
+                    Color = Lines[i].Color,
+                    Alpha = alpha
+                });
             }
 
-            return message != null;
+            target.Reverse();
+            return target.Count;
+        }
+
+        public struct VisibleLine
+        {
+            public string Text;
+            public Color Color;
+            public float Alpha;
         }
 
         public static GUIStyle Style
@@ -88,22 +104,38 @@ namespace InvaderOfWorlds
         }
     }
 
-    /// <summary>Рисует последнее сообщение из <see cref="Toast"/>.</summary>
+    /// <summary>Рисует стопку сообщений из <see cref="Toast"/>.</summary>
     public class ToastDrawer : MonoBehaviour
     {
+        private readonly List<Toast.VisibleLine> _lines = new List<Toast.VisibleLine>(6);
+
         private void OnGUI()
         {
-            if (!Toast.TryDraw(out var message, out var color, out var alpha))
+            var count = Toast.Collect(_lines);
+
+            if (count == 0)
                 return;
 
             UiCanvas.Begin();
 
-            Toast.Style.normal.textColor = new Color(color.r, color.g, color.b, alpha);
+            const float lineHeight = 34f;
+            var top = UiCanvas.Height * 0.52f;
+            var style = Toast.Style;
 
-            var rect = new Rect(0f, UiCanvas.Height * 0.62f, UiCanvas.Width, 34f);
-            HealthBarDrawer.DrawRect(new Rect(rect.x + UiCanvas.Width * 0.5f - 210f, rect.y - 4f, 420f, 42f),
-                new Color(0.04f, 0.05f, 0.08f, 0.72f * alpha));
-            GUI.Label(rect, message, Toast.Style);
+            for (var i = 0; i < count; i++)
+            {
+                var line = _lines[i];
+                var y = top + i * lineHeight;
+                var alpha = line.Alpha;
+
+                style.normal.textColor = new Color(line.Color.r, line.Color.g, line.Color.b, alpha);
+
+                HealthBarDrawer.DrawRect(
+                    new Rect(UiCanvas.Width * 0.5f - 220f, y - 3f, 440f, 32f),
+                    new Color(0.04f, 0.05f, 0.08f, 0.7f * alpha));
+
+                GUI.Label(new Rect(0f, y, UiCanvas.Width, lineHeight), line.Text, style);
+            }
 
             UiCanvas.End();
         }

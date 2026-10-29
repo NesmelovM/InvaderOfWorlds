@@ -22,6 +22,10 @@ namespace InvaderOfWorlds
         [Tooltip("Порядок биомов: какой из них ставится, зависит от числа пройденных порталов")]
         [SerializeField] private BiomeCatalog _catalog;
 
+        [Header("Добыча на планете")]
+        [Tooltip("Сколько предметов (золото, лечение, сферы карточек) разбросать по поверхности")]
+        [SerializeField, Min(0)] private int _lootPieces = 10;
+
         private BiomeDefinition _biome;
 
         [Header("Рельеф")]
@@ -84,6 +88,7 @@ namespace InvaderOfWorlds
             SpawnSmallProps(random);
             SpawnSettlementWalls(random);
             SpawnChests(random);
+            SpawnLootPieces(random);
             SpawnBossArena();
         }
 
@@ -501,6 +506,53 @@ namespace InvaderOfWorlds
                     continue;
 
                 Chest.Spawn(_planet, direction, _player, root);
+                placed++;
+            }
+        }
+
+        /// <summary>
+        /// Разбрасывает по планете предметы того же вида, что выпадают из сундуков:
+        /// золото, лечение и сферы карточек. Подбираются ногами, как и остальная добыча.
+        /// </summary>
+        private void SpawnLootPieces(System.Random random)
+        {
+            if (_player == null || _planet == null || _lootPieces <= 0)
+                return;
+
+            var root = new GameObject("Loot").transform;
+            var placed = 0;
+            var attempts = 0;
+
+            while (placed < _lootPieces && attempts < _lootPieces * 12)
+            {
+                attempts++;
+                var point = _planet.RandomSurfacePoint(random);
+                var up = _planet.UpAt(point);
+
+                var position = _planet.Center + up * (_planet.Radius + 0.4f);
+
+                var roll = random.NextDouble();
+
+                var kind = roll < 0.62 ? LootKind.Gold
+                    : roll < 0.85 ? LootKind.Heal
+                    : LootKind.Card;
+
+                var value = kind switch
+                {
+                    LootKind.Gold => 5 + random.Next(0, 6),
+                    LootKind.Heal => 20 + random.Next(0, 21),
+                    _ => 1
+                };
+
+                var rarity = kind == LootKind.Card
+                    ? (random.NextDouble() < 0.15 ? 2 : random.NextDouble() < 0.45 ? 1 : 0)
+                    : 0;
+
+                var piece = Loot.Spawn(position, up, _player, kind, value, null, rarity);
+
+                if (piece != null)
+                    piece.transform.SetParent(root, true);
+
                 placed++;
             }
         }

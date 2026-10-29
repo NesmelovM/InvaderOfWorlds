@@ -153,7 +153,30 @@ namespace InvaderOfWorlds
         }
 
         /// <summary>
-        /// Даёт случайное улучшение без экрана выбора — так работает награда из сундука.
+        /// Показывает выбор из трёх карточек — так работает сфера из сундука.
+        /// Возвращает false, если выбор уже открыт или карточек нет.
+        /// </summary>
+        public bool OfferCards()
+        {
+            if (_choosing)
+                return false;
+
+            BuildCards();
+
+            if (_cards.Count == 0)
+                return false;
+
+            _choosing = true;
+            UiState.SetCards(true);
+            Time.timeScale = 0f;
+            SoundBank.LevelUp();
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            return true;
+        }
+
+        /// <summary>
+        /// Даёт случайное улучшение без экрана выбора.
         /// </summary>
         public string GrantRandomUpgrade()
         {

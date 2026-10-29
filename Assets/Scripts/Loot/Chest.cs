@@ -135,23 +135,36 @@ namespace InvaderOfWorlds
             _opened = true;
             SoundBank.Coin(transform.position);
 
-            var lootRoot = new GameObject("Chest Loot").transform;
-            lootRoot.position = transform.position;
             var up = transform.up;
+            var coins = Random.Range(4, 6);
+            var givesCard = Random.value < 0.4f;
+            var givesHeal = Random.value < 0.75f;
 
-            var coins = Random.Range(4, 7);
+            var total = coins + (givesCard ? 1 : 0) + (givesHeal ? 1 : 0);
+            var origin = transform.position + up * 0.75f;
 
-            for (var i = 0; i < coins; i++)
+            // Предметы раскладываются ровным кругом: каждому свой угол.
+            for (var i = 0; i < total; i++)
             {
-                Loot.Spawn(transform.position + up * 0.6f + Random.insideUnitSphere * 0.25f,
-                    up, _player, LootKind.Gold, Random.Range(4, 9));
+                var angle = 360f / Mathf.Max(1, total) * i;
+                var direction = Quaternion.AngleAxis(angle, up) * Vector3.forward;
+
+                if (i < coins)
+                {
+                    Loot.Spawn(origin, up, _player, LootKind.Gold, Random.Range(4, 9), direction);
+                    continue;
+                }
+
+                if (givesHeal && i == coins)
+                {
+                    Loot.Spawn(origin, up, _player, LootKind.Heal, 30, direction);
+                    continue;
+                }
+
+                // Сфера цвета редкости: обычная, редкая или эпическая карточка.
+                var rarity = Random.value < 0.15f ? 2 : Random.value < 0.45f ? 1 : 0;
+                Loot.Spawn(origin, up, _player, LootKind.Card, 1, direction, rarity);
             }
-
-            Loot.Spawn(transform.position + up * 0.7f, up, _player, LootKind.Heal, 30);
-
-            // Примерно каждый третий сундук даёт улучшение.
-            if (Random.value < 0.35f)
-                Loot.Spawn(transform.position + up * 0.8f, up, _player, LootKind.Upgrade, 1);
         }
 
         private void OnGUI()
