@@ -14,15 +14,15 @@ namespace InvaderOfWorlds
     public static class CharacterModel
     {
         public static GameObject Attach(GameObject host, string resourcePath, float height, float yawOffset,
-            Color? tint = null, float verticalOffset = 0f)
+            Color? tint = null, float verticalOffset = 0f, CapsuleCollider body = null)
         {
             var prefab = Resources.Load<GameObject>(resourcePath);
-            return prefab == null ? null : Attach(host, prefab, height, yawOffset, tint, verticalOffset);
+            return prefab == null ? null : Attach(host, prefab, height, yawOffset, tint, verticalOffset, body);
         }
 
         /// <summary>Модель задаётся ассетом напрямую — так биом подставляет своих врагов.</summary>
         public static GameObject Attach(GameObject host, GameObject prefab, float height, float yawOffset,
-            Color? tint = null, float verticalOffset = 0f)
+            Color? tint = null, float verticalOffset = 0f, CapsuleCollider body = null)
         {
             if (prefab == null)
                 return null;
@@ -37,16 +37,103 @@ namespace InvaderOfWorlds
             model.transform.localRotation = Quaternion.Euler(0f, yawOffset, 0f);
             model.transform.localScale = Vector3.one;
 
-            // Рост и посадку на грунт подгоняем по факту, после первого кадра:
-            // у скелетных моделей границы сразу после создания ещё не готовы.
-            var fitter = model.AddComponent<ModelFitter>();
-            fitter.Configure(host.transform, height);
+            // Размер берём по локальным границам рендереров: они совпадают
+            // с реальным силуэтом, в отличие от мирового Renderer.bounds.
+            ApplySize(model, host.transform, body, height);
 
             // Перекраска только по запросу: по умолчанию остаются родные материалы модели.
             if (tint.HasValue)
                 ApplyTint(model, tint.Value);
 
             return model;
+        }
+
+        /// <summary>
+        /// Ставит модель ступнями на ноль хозяина и подгоняет капсулу под силуэт.
+        /// Считается по mesh.bounds — стабильно и сразу, без ожидания кадров.
+        /// </summary>
+        private static void ApplySize(GameObject model, Transform host, CapsuleCollider body, float targetHeight)
+        {
+            if (!TryGetMeshExtents(model, host, out var bottom, out var top, out var halfWidth))
+                return;
+
+            var height = Mathf.Max(0.1f, top - bottom);
+
+            // Подгонка роста — только если включена в конфиге персонажей.
+            if (Characters.FitHeight && targetHeight > 0.1f)
+            {
+                var k = targetHeight / height;
+                model.transform.localScale *= k;
+                bottom *= k;
+                top *= k;
+                halfWidth *= k;
+                height = targetHeight;
+            }
+
+            model.transform.localPosition += host.up * (-bottom - 0.02f);
+
+            if (body == null)
+                return;
+
+            body.height = Mathf.Max(0.6f, height);
+            body.center = new Vector3(0f, body.height * 0.5f, 0f);
+            body.radius = Mathf.Clamp(halfWidth * 0.75f, 0.2f, 0.45f);
+        }
+
+        /// <summary>Габариты по границам сеток в системе координат хозяина.</summary>
+        private static bool TryGetMeshExtents(GameObject model, Transform host, out float bottom,
+            out float top, out float halfWidth)
+        {
+            bottom = float.MaxValue;
+            top = float.MinValue;
+            halfWidth = 0.3f;
+            var found = false;
+            var maxSide = 0f;
+            var toHost = host.worldToLocalMatrix;
+            var up = host.up;
+
+            foreach (var filter in model.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (filter.sharedMesh == null)
+                    continue;
+
+                found |= Accumulate(filter.sharedMesh.bounds, filter.transform, toHost, up,
+                    ref bottom, ref top, ref maxSide);
+            }
+
+            foreach (var skinned in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if (skinned.sharedMesh == null)
+                    continue;
+
+                found |= Accumulate(skinned.localBounds, skinned.transform, toHost, up,
+                    ref bottom, ref top, ref maxSide);
+            }
+
+            halfWidth = maxSide * 0.5f;
+            return found && bottom <= top;
+        }
+
+        private static bool Accumulate(Bounds bounds, Transform owner, Matrix4x4 toHost, Vector3 up,
+            ref float bottom, ref float top, ref float maxSide)
+        {
+            var matrix = toHost * owner.localToWorldMatrix;
+
+            for (var i = 0; i < 8; i++)
+            {
+                var corner = new Vector3(
+                    (i & 1) == 0 ? bounds.min.x : bounds.max.x,
+                    (i & 2) == 0 ? bounds.min.y : bounds.max.y,
+                    (i & 4) == 0 ? bounds.min.z : bounds.max.z);
+
+                var local = matrix.MultiplyPoint3x4(corner);
+                var along = Vector3.Dot(local, up);
+                bottom = Mathf.Min(bottom, along);
+                top = Mathf.Max(top, along);
+                maxSide = Mathf.Max(maxSide, Mathf.Max(Mathf.Abs(local.x), Mathf.Abs(local.z)) * 2f);
+            }
+
+            return true;
         }
 
         /// <summary>

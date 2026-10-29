@@ -147,8 +147,8 @@ namespace InvaderOfWorlds
             Color? tint = Characters.Colorize ? color : (Color?)null;
 
             var model = modelOverride != null
-                ? CharacterModel.Attach(enemy, modelOverride, height, 0f, tint)
-                : CharacterModel.Attach(enemy, modelPath, height, 0f, tint);
+                ? CharacterModel.Attach(enemy, modelOverride, height, 0f, tint, 0f, body)
+                : CharacterModel.Attach(enemy, modelPath, height, 0f, tint, 0f, body);
 
             if (model == null)
                 CreateFallbackVisual(enemy, color, height, radius);

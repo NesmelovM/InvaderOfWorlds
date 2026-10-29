@@ -38,6 +38,8 @@ namespace InvaderOfWorlds
 
         [Header("Курсор")]
         [SerializeField] private bool _lockCursor = true;
+        private bool _adapted;
+        private float _startBodyHeight = -1f;
 
         private Quaternion _rotation;
         private Vector3 _lastUp = Vector3.up;
@@ -62,6 +64,31 @@ namespace InvaderOfWorlds
                 var up = _planet != null ? _planet.UpAt(transform.position) : Vector3.up;
                 return Vector3.ProjectOnPlane(_rotation * Vector3.forward, up).normalized;
             }
+        }
+
+        /// <summary>
+        /// Камера подстраивается под рост персонажа: у крупных моделей иначе
+        /// обзор упирается в спину. За базовый рост принято 1.8 м.
+        /// </summary>
+        private void AdaptToCharacterHeight()
+        {
+            if (_target == null)
+                return;
+
+            var body = _target.GetComponent<CapsuleCollider>();
+
+            if (body == null || body.height < 0.5f)
+                return;
+
+            if (body.height < 0.9f)
+                return;
+
+            _adapted = true;
+
+            var scale = Mathf.Clamp(body.height / 1.8f, 1f, 2.2f);
+            _pivotHeight *= scale;
+            _distance *= scale;
+            _shoulderOffset *= Mathf.Clamp(scale, 1f, 1.6f);
         }
 
         /// <summary>Привязка камеры к цели и планете.</summary>
@@ -121,6 +148,9 @@ namespace InvaderOfWorlds
 
         private void LateUpdate()
         {
+            if (!_adapted)
+                AdaptToCharacterHeight();
+
             SyncCursor();
 
             if (_target == null)

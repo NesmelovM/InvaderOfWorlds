@@ -44,6 +44,13 @@ namespace InvaderOfWorlds.EditorTools
 
             _scroll = EditorGUILayout.BeginScrollView(_scroll);
 
+            _config.FitHeightToType = EditorGUILayout.Toggle("Подгонять рост под тип", _config.FitHeightToType);
+            EditorGUILayout.HelpBox(
+                _config.FitHeightToType
+                    ? "Модели масштабируются под рост типа: мечник 1.8, элита 2.5 и так далее."
+                    : "Модель остаётся своего размера, капсула подгоняется под неё.",
+                MessageType.None);
+
             _config.Colorize = EditorGUILayout.Toggle("Красить модели", _config.Colorize);
             EditorGUILayout.HelpBox(
                 _config.Colorize
