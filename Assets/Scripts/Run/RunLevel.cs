@@ -197,6 +197,61 @@ namespace InvaderOfWorlds
             }
 
             BuildTier(epic, CardRarity.Epic, Balance.Cards(2));
+
+            // Усиление уже взятого оружия: выпадает всегда, чтобы набор рос.
+            AddWeaponUpgrade(rare, CardRarity.Rare, 1f);
+            AddWeaponUpgrade(rare, CardRarity.Rare, 1f);
+            AddWeaponUpgrade(epic, CardRarity.Epic, 1.5f);
+        }
+
+        /// <summary>
+        /// Карточка усиления одного из взятых оружий: снаряды, скорость атаки,
+        /// урон или дальность. Сила зависит от редкости.
+        /// </summary>
+        private void AddWeaponUpgrade(List<Card> list, CardRarity rarity, float tier)
+        {
+            if (_weapons == null || _weapons.Slots.Count == 0)
+                return;
+
+            var index = UnityEngine.Random.Range(0, _weapons.Slots.Count);
+            var slot = _weapons.Slots[index];
+
+            if (slot == null)
+                return;
+
+            var name = WeaponSystem.WeaponName(slot);
+            var kind = (WeaponSystem.SlotUpgrade)UnityEngine.Random.Range(0, 4);
+            var amount = kind switch
+            {
+                WeaponSystem.SlotUpgrade.Shots => tier > 1.2f ? 2f : 1f,
+                WeaponSystem.SlotUpgrade.AttackSpeed => tier > 1.2f ? 1.25f : 1.12f,
+                WeaponSystem.SlotUpgrade.Range => tier > 1.2f ? 1.2f : 1.1f,
+                _ => tier > 1.2f ? 1.3f : 1.15f
+            };
+
+            var description = kind switch
+            {
+                WeaponSystem.SlotUpgrade.Shots => $"{name}: +{amount:F0} атак за тик",
+                WeaponSystem.SlotUpgrade.AttackSpeed => $"{name}: +{Mathf.RoundToInt((amount - 1f) * 100f)}% скорости атаки",
+                WeaponSystem.SlotUpgrade.Range => $"{name}: +{Mathf.RoundToInt((amount - 1f) * 100f)}% дальности",
+                _ => $"{name}: +{Mathf.RoundToInt((amount - 1f) * 100f)}% урона"
+            };
+
+            var title = kind switch
+            {
+                WeaponSystem.SlotUpgrade.Shots => $"Залп: {name}",
+                WeaponSystem.SlotUpgrade.AttackSpeed => $"Сноровка: {name}",
+                WeaponSystem.SlotUpgrade.Range => $"Дальнобойность: {name}",
+                _ => $"Отточка: {name}"
+            };
+
+            list.Add(new Card
+            {
+                Title = title,
+                Description = description,
+                Rarity = rarity,
+                Apply = () => _weapons.UpgradeSlot(index, kind, amount)
+            });
         }
 
         /// <summary>Собирает карточки одной редкости по её числам из баланса.</summary>
@@ -241,7 +296,7 @@ namespace InvaderOfWorlds
                     () => RunModifiers.AddHealPerKill(tier.HealPerKill));
 
             if (tier.SlowPercent > 0f)
-                Add("Тяжёлый воздух", $"враги двигаются на {Percent(tier.SlowPercent)}% медленнее",
+                Add("Тяжёлый воздух", $"враги двигаются на {Mathf.RoundToInt(tier.SlowPercent * 100f)}% медленнее",
                     () => RunModifiers.SlowEnemies(tier.SlowPercent));
 
             if (tier.ExplosionDamage > 0f && tier.ExplosionRadius > 0f)
@@ -327,7 +382,9 @@ namespace InvaderOfWorlds
         {
             for (var i = 0; i < Armory.Catalog.Length; i++)
             {
-                if (Armory.IsOwned(i) && !Armory.IsEquipped(i))
+                // Уже взятое в забег оружие повторно не предлагаем:
+                // вместо него выпадет карточка усиления.
+                if (Armory.IsOwned(i) && !Armory.IsEquipped(i) && !RunState.Loadout.Contains(i))
                     return i;
             }
 

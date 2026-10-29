@@ -93,6 +93,63 @@ namespace InvaderOfWorlds
 
         public IReadOnlyList<WeaponSlot> Slots => _slots;
 
+        /// <summary>Что именно усиливает карточка уже имеющегося оружия.</summary>
+        public enum SlotUpgrade
+        {
+            Shots,
+            AttackSpeed,
+            Damage,
+            Range
+        }
+
+        /// <summary>
+        /// Усиливает уже взятое оружие. Возвращает описание для карточки
+        /// или null, если слотов нет.
+        /// </summary>
+        public string UpgradeSlot(int slotIndex, SlotUpgrade upgrade, float amount)
+        {
+            if (slotIndex < 0 || slotIndex >= _slots.Count)
+                return null;
+
+            var slot = _slots[slotIndex];
+
+            if (slot == null)
+                return null;
+
+            var name = WeaponName(slot);
+
+            switch (upgrade)
+            {
+                case SlotUpgrade.Shots:
+                    slot.Shots += Mathf.Max(1, Mathf.RoundToInt(amount));
+                    return $"{name}: +{Mathf.Max(1, Mathf.RoundToInt(amount))} атак за тик";
+
+                case SlotUpgrade.AttackSpeed:
+                    slot.Cooldown = Mathf.Max(0.05f, slot.Cooldown / Mathf.Max(0.1f, amount));
+                    return $"{name}: +{Mathf.RoundToInt((amount - 1f) * 100f)}% скорости атаки";
+
+                case SlotUpgrade.Damage:
+                    slot.Damage *= amount;
+                    return $"{name}: +{Mathf.RoundToInt((amount - 1f) * 100f)}% урона";
+
+                default:
+                    slot.Range *= amount;
+                    return $"{name}: +{Mathf.RoundToInt((amount - 1f) * 100f)}% дальности";
+            }
+        }
+
+        /// <summary>Название оружия в слоте: из каталога, если известен индекс.</summary>
+        public static string WeaponName(WeaponSlot slot)
+        {
+            if (slot == null)
+                return "Оружие";
+
+            if (slot.Icon >= 0 && slot.Icon < Armory.Catalog.Length)
+                return Armory.Catalog[slot.Icon].Name;
+
+            return slot.Kind.ToString();
+        }
+
         /// <summary>Слот выстрелил: на это подписан визуал оружия в руке.</summary>
         public event System.Action<WeaponKind> Fired;
 
