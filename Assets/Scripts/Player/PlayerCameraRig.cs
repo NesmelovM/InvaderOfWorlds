@@ -148,9 +148,6 @@ namespace InvaderOfWorlds
 
         private void LateUpdate()
         {
-            if (!_adapted)
-                AdaptToCharacterHeight();
-
             SyncCursor();
 
             if (_target == null)

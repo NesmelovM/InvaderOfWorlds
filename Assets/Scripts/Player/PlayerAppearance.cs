@@ -32,9 +32,7 @@ namespace InvaderOfWorlds
                 break;
             }
 
-            // Капсула подгоняется под модель, а не наоборот.
-            _model = CharacterModel.Attach(gameObject, look.Model, look.Height, 0f, null, 0f,
-                GetComponent<CapsuleCollider>());
+            _model = CharacterModel.Attach(gameObject, look.Model, look.Height, 0f);
 
             if (_model == null)
                 return;

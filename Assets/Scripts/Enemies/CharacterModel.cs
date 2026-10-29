@@ -37,9 +37,8 @@ namespace InvaderOfWorlds
             model.transform.localRotation = Quaternion.Euler(0f, yawOffset, 0f);
             model.transform.localScale = Vector3.one;
 
-            // Размер берём по локальным границам рендереров: они совпадают
-            // с реальным силуэтом, в отличие от мирового Renderer.bounds.
-            ApplySize(model, host.transform, body, height);
+            // Ничего не подгоняем: модель остаётся такой, какой её сделали
+            // в префабе. Позиция и поворот — строго ноль, как в сцене.
 
             // Перекраска только по запросу: по умолчанию остаются родные материалы модели.
             if (tint.HasValue)
@@ -58,17 +57,6 @@ namespace InvaderOfWorlds
                 return;
 
             var height = Mathf.Max(0.1f, top - bottom);
-
-            // Подгонка роста — только если включена в конфиге персонажей.
-            if (Characters.FitHeight && targetHeight > 0.1f)
-            {
-                var k = targetHeight / height;
-                model.transform.localScale *= k;
-                bottom *= k;
-                top *= k;
-                halfWidth *= k;
-                height = targetHeight;
-            }
 
             model.transform.localPosition += host.up * (-bottom - 0.02f);
 

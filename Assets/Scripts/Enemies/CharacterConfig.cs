@@ -22,10 +22,6 @@ namespace InvaderOfWorlds
     [CreateAssetMenu(fileName = "Config", menuName = "Invader of Worlds/Персонажи")]
     public class CharacterConfig : ScriptableObject
     {
-        [Header("Размеры")]
-        [Tooltip("Выключено: модель остаётся своего размера, капсула подгоняется под неё")]
-        public bool FitHeightToType;
-
         [Header("Перекраска")]
         [Tooltip("Выключено: у моделей остаются их собственные материалы")]
         public bool Colorize;
@@ -178,8 +174,6 @@ namespace InvaderOfWorlds
         }
 
         public static bool Colorize => Config != null && Config.Colorize;
-
-        public static bool FitHeight => Config != null && Config.FitHeightToType;
 
         public static EnemyLook PlayerLook => Config != null ? Config.Player : null;
         public static Color PlayerTint => Config != null ? Config.PlayerTint : new Color(0.16f, 0.07f, 0.23f);
