@@ -270,7 +270,7 @@ namespace InvaderOfWorlds
             var panel = new Rect(40f, 28f, 1200f, 84f);
             HealthBarDrawer.DrawRect(panel, new Color(0.05f, 0.06f, 0.09f, 0.9f));
 
-            GUI.Label(new Rect(panel.x + 22f, panel.y + 12f, 600f, 34f), "БАШНЯ МАГОВ", _titleStyle);
+            GUI.Label(new Rect(panel.x + 22f, panel.y + 12f, 600f, 34f), "ПОГЛОТИТЕЛЬ МИРОВ", _titleStyle);
             GUI.Label(new Rect(panel.x + 22f, panel.y + 48f, 600f, 24f),
                 $"Порталов пройдено: {Progress.TotalPortals}", _hintStyle);
 

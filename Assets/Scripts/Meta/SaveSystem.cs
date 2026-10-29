@@ -30,6 +30,47 @@ namespace InvaderOfWorlds
 
         public static string Path => System.IO.Path.Combine(Application.persistentDataPath, FileName);
 
+        /// <summary>
+        /// Переносит сохранение из старых папок игры: имя продукта менялось,
+        /// а прогресс у игрока терять нельзя. Работает один раз.
+        /// </summary>
+        public static void MigrateLegacy()
+        {
+            try
+            {
+                if (File.Exists(Path))
+                    return;
+
+                // Старые пути: другая компания и/или другое имя продукта.
+                var root = Directory.GetParent(Application.persistentDataPath)?.Parent?.FullName;
+
+                if (string.IsNullOrEmpty(root))
+                    return;
+
+                var candidates = new[]
+                {
+                    System.IO.Path.Combine(root, "DefaultCompany", "InvaderOfWorlds6", FileName),
+                    System.IO.Path.Combine(root, "DefaultCompany", "InvaderOfWorlds", FileName),
+                    System.IO.Path.Combine(root, "Dazed Games", "InvaderOfWorlds6", FileName)
+                };
+
+                foreach (var candidate in candidates)
+                {
+                    if (!File.Exists(candidate))
+                        continue;
+
+                    Directory.CreateDirectory(Application.persistentDataPath);
+                    File.Copy(candidate, Path, true);
+                    Debug.Log($"[SAVE] Прогресс перенесён из {candidate}");
+                    return;
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"[SAVE] Перенос прогресса не удался: {exception.Message}");
+            }
+        }
+
         public static void Save()
         {
             var data = new SaveData
@@ -91,6 +132,8 @@ namespace InvaderOfWorlds
         {
             try
             {
+                MigrateLegacy();
+
                 if (!File.Exists(Path))
                     return false;
 
