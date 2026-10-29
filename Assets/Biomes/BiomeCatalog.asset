@@ -15,4 +15,6 @@ MonoBehaviour:
   Biomes:
   - {fileID: 11400000, guid: c858eb9ff8b21d2408e5da0b4ee14032, type: 2}
   - {fileID: 11400000, guid: eab6b5b02f3b53b43a25a4b14dae1834, type: 2}
-  PlanetsPerBiome: 5
+  - {fileID: 11400000, guid: 87bb811c8d6fb4249a79237f0ca9b229, type: 2}
+  - {fileID: 11400000, guid: 74d9faeb9732d344d9cbc1dc24e375cc, type: 2}
+  PlanetsPerBiome: 2

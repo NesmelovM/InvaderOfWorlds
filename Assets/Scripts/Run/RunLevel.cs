@@ -142,7 +142,7 @@ namespace InvaderOfWorlds
         /// <summary>
         /// Даёт случайное улучшение без экрана выбора — так работает награда из сундука.
         /// </summary>
-        public void GrantRandomUpgrade()
+        public string GrantRandomUpgrade()
         {
             var common = new List<Card>();
             var rare = new List<Card>();
@@ -152,8 +152,11 @@ namespace InvaderOfWorlds
 
             var card = PickCard(common, rare, epic);
 
-            if (card.HasValue)
-                card.Value.Apply?.Invoke();
+            if (!card.HasValue)
+                return null;
+
+            card.Value.Apply?.Invoke();
+            return card.Value.Title;
         }
 
         /// <summary>Наполняет наборы карточек для текущего уровня.</summary>

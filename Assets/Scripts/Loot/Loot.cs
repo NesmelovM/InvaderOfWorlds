@@ -46,8 +46,8 @@ namespace InvaderOfWorlds
 
             item.transform.position = origin + up * 0.5f;
             item.transform.localScale = kind == LootKind.Gold
-                ? new Vector3(0.22f, 0.03f, 0.22f)
-                : Vector3.one * 0.34f;
+                ? new Vector3(0.32f, 0.05f, 0.32f)
+                : Vector3.one * 0.5f;
 
             var collider = item.GetComponent<Collider>();
 
@@ -151,20 +151,21 @@ namespace InvaderOfWorlds
                 case LootKind.Gold:
                     RunSession.Grant(_value);
                     SoundBank.Coin(transform.position);
+                    Toast.Show($"+{_value} золота", new Color(1f, 0.84f, 0.35f));
                     break;
 
                 case LootKind.Heal:
                     RunModifiers.PlayerHealth?.Heal(_value);
                     SoundBank.LevelUp();
+                    Toast.Show($"+{_value} здоровья", new Color(0.45f, 0.95f, 0.5f));
                     break;
 
                 case LootKind.Upgrade:
                     var level = Object.FindAnyObjectByType<RunLevel>();
-
-                    if (level != null)
-                        level.GrantRandomUpgrade();
+                    var title = level != null ? level.GrantRandomUpgrade() : null;
 
                     SoundBank.LevelUp();
+                    Toast.Show(title != null ? $"Улучшение: {title}" : "Улучшение", new Color(0.75f, 0.5f, 1f));
                     break;
             }
 

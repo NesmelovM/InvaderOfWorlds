@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "\u0418\u043D\u0434\u0438\u044F"
   m_EditorClassIdentifier: Assembly-CSharp::InvaderOfWorlds.BiomeDefinition
   Title: "\u0418\u043D\u0434\u0438\u044F"
-  RequiredPortals: 5
+  RequiredPortals: 2
   GroundColor: {r: 0.42, g: 0.52, b: 0.36, a: 1}
   HillColor: {r: 0.34, g: 0.42, b: 0.3, a: 1}
   SkyColor: {r: 0.2, g: 0.3, b: 0.28, a: 1}
