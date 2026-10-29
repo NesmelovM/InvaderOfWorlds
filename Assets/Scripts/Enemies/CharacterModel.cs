@@ -34,17 +34,13 @@ namespace InvaderOfWorlds
                 Object.Destroy(collider);
 
             model.transform.localPosition = Vector3.zero;
-            model.transform.localRotation = Quaternion.identity;
+            model.transform.localRotation = Quaternion.Euler(0f, yawOffset, 0f);
             model.transform.localScale = Vector3.one;
 
-            ComputeVerticalExtents(model, host.transform, out var minY, out var maxY);
-            var currentHeight = Mathf.Max(0.01f, maxY - minY);
-            model.transform.localScale = Vector3.one * (height / currentHeight);
-
-            // После масштабирования пересчитываем и ставим ступни на ноль.
-            ComputeVerticalExtents(model, host.transform, out minY, out _);
-            model.transform.localPosition = new Vector3(0f, -minY + verticalOffset, 0f);
-            model.transform.localRotation = Quaternion.Euler(0f, yawOffset, 0f);
+            // Рост и посадку на грунт подгоняем по факту, после первого кадра:
+            // у скелетных моделей границы сразу после создания ещё не готовы.
+            var fitter = model.AddComponent<ModelFitter>();
+            fitter.Configure(host.transform, height);
 
             if (tint.HasValue)
                 ApplyTint(model, tint.Value);
@@ -72,13 +68,10 @@ namespace InvaderOfWorlds
 
                 var matrix = filter.transform.localToWorldMatrix;
 
-                foreach (var vertex in mesh.vertices)
-                {
-                    var local = host.InverseTransformPoint(matrix.MultiplyPoint3x4(vertex));
-                    minY = Mathf.Min(minY, local.y);
-                    maxY = Mathf.Max(maxY, local.y);
-                    found = true;
-                }
+                if (!TrySampleVertices(mesh, matrix, host, ref minY, ref maxY))
+                    SampleBounds(filter.GetComponent<Renderer>().bounds, host, ref minY, ref maxY);
+
+                found = true;
             }
 
             // Скиннинг: у SkinnedMeshRenderer.bounds в момент создания объекта ещё
@@ -90,15 +83,12 @@ namespace InvaderOfWorlds
                 if (mesh == null)
                     continue;
 
-                var matrix = skinned.transform.localToWorldMatrix;
-
-                foreach (var vertex in mesh.vertices)
-                {
-                    var local = host.InverseTransformPoint(matrix.MultiplyPoint3x4(vertex));
-                    minY = Mathf.Min(minY, local.y);
-                    maxY = Mathf.Max(maxY, local.y);
-                    found = true;
-                }
+                // Для скелетной модели вершины меша лежат в позе привязки и не
+                // учитывают трансформ рендерера, поэтому берём его локальные границы:
+                // они всегда доступны и уже включают скелет.
+                SampleBounds(skinned.localBounds, host, ref minY, ref maxY,
+                    skinned.transform.localToWorldMatrix);
+                found = true;
             }
 
             if (found && minY <= maxY)
@@ -117,7 +107,29 @@ namespace InvaderOfWorlds
             }
         }
 
-        private static void SampleBounds(Bounds bounds, Transform host, ref float minY, ref float maxY)
+        /// <summary>Читает вершины меша; при запрете чтения возвращает false.</summary>
+        private static bool TrySampleVertices(Mesh mesh, Matrix4x4 matrix, Transform host, ref float minY,
+            ref float maxY)
+        {
+            try
+            {
+                foreach (var vertex in mesh.vertices)
+                {
+                    var local = host.InverseTransformPoint(matrix.MultiplyPoint3x4(vertex));
+                    minY = Mathf.Min(minY, local.y);
+                    maxY = Mathf.Max(maxY, local.y);
+                }
+
+                return true;
+            }
+            catch (UnityException)
+            {
+                return false;
+            }
+        }
+
+        private static void SampleBounds(Bounds bounds, Transform host, ref float minY, ref float maxY,
+            Matrix4x4? localToWorld = null)
         {
             for (var i = 0; i < 8; i++)
             {
@@ -126,7 +138,11 @@ namespace InvaderOfWorlds
                     (i & 2) == 0 ? bounds.min.y : bounds.max.y,
                     (i & 4) == 0 ? bounds.min.z : bounds.max.z);
 
-                var local = host.InverseTransformPoint(corner);
+                var world = localToWorld.HasValue
+                    ? localToWorld.Value.MultiplyPoint3x4(corner)
+                    : corner;
+
+                var local = host.InverseTransformPoint(world);
                 minY = Mathf.Min(minY, local.y);
                 maxY = Mathf.Max(maxY, local.y);
             }

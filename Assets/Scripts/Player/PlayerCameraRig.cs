@@ -74,7 +74,39 @@ namespace InvaderOfWorlds
 
         private void Start()
         {
-            if (_lockCursor)
+            if (!_lockCursor)
+                return;
+
+            // На старте забега уже может быть открыт выбор оружия —
+            // тогда курсор должен остаться свободным.
+            if (UiState.BlocksInput)
+                return;
+
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+
+        /// <summary>
+        /// Держит курсор в согласии с окнами: пока открыт выбор оружия, карточки
+        /// или пауза — курсор свободен, иначе захвачен для обзора.
+        /// </summary>
+        private void SyncCursor()
+        {
+            if (!_lockCursor)
+                return;
+
+            if (UiState.BlocksInput)
+            {
+                if (Cursor.lockState != CursorLockMode.None)
+                {
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                }
+
+                return;
+            }
+
+            if (Cursor.lockState != CursorLockMode.Locked)
             {
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
@@ -89,6 +121,8 @@ namespace InvaderOfWorlds
 
         private void LateUpdate()
         {
+            SyncCursor();
+
             if (_target == null)
                 return;
 
