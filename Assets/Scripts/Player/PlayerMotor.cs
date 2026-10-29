@@ -180,7 +180,7 @@ namespace InvaderOfWorlds
                 return;
 
             // Сначала пробуем аккуратно вытолкнуть: работает для простых коллайдеров.
-            var push = CharacterObstacles.ResolvePenetration(_bodyCollider, _up, 0.45f, _obstacleMask);
+            var push = CharacterObstacles.ResolvePenetration(_bodyCollider, _up, 0.25f, _obstacleMask);
 
             if (push.sqrMagnitude > 0.000001f)
             {
@@ -200,7 +200,7 @@ namespace InvaderOfWorlds
 
             if (Time.time >= _nextExitTime && TryExitGeometry(out var exit))
             {
-                _nextExitTime = Time.time + 0.35f;
+                _nextExitTime = Time.time + 0.6f;
                 transform.position = exit;
                 _velocity = Vector3.zero;
                 SnapToSurface();
@@ -281,7 +281,9 @@ namespace InvaderOfWorlds
         {
             var center = transform.position + _up * _bodyCenter;
 
-            foreach (var other in Physics.OverlapSphere(center, _bodyRadius, _obstacleMask,
+            // Радиус меньше корпуса: касание стены — это не «внутри».
+            // Иначе выход по лучам вытаскивал бы игрока сквозь стены при обычной ходьбе.
+            foreach (var other in Physics.OverlapSphere(center, _bodyRadius * 0.55f, _obstacleMask,
                          QueryTriggerInteraction.Ignore))
             {
                 if (other == null || other == _bodyCollider || other.transform.IsChildOf(transform))
@@ -350,7 +352,7 @@ namespace InvaderOfWorlds
             _lastPosition = transform.position;
 
             // Сидим внутри объекта дольше секунды — вытаскиваем принудительно.
-            if (_insideTimer > 1.2f)
+            if (_insideTimer > 2f)
             {
                 _insideTimer = 0f;
 

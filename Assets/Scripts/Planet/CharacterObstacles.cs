@@ -87,6 +87,11 @@ namespace InvaderOfWorlds
                         out var distance))
                     continue;
 
+                // Только заметное проникновение: микросдвиги при обычной ходьбе
+                // вдоль стены давали дрожание и «липкость».
+                if (distance < 0.03f)
+                    continue;
+
                 // Только горизонтальная составляющая: вверх-вниз персонажа держит грунт.
                 var flat = Vector3.ProjectOnPlane(direction, up);
 
