@@ -64,6 +64,13 @@ namespace InvaderOfWorlds
 
         private CharacterRig _rig;
 
+        private float _retreatDistance = 4.5f;
+        private float _dashCooldown = 5f;
+        private float _dashDuration = 0.45f;
+        private float _dashSpeedMultiplier = 2.6f;
+        private float _nextDashTime;
+        private float _dashEndTime;
+
         public void Configure(Planet planet, Transform target)
         {
             _planet = planet;
@@ -81,6 +88,15 @@ namespace InvaderOfWorlds
         }
 
         /// <summary>Сложность следующей планеты: урон растёт вместе с забегом.</summary>
+        /// <summary>Настраивает рывок от игрока: дистанция срабатывания и перезарядка.</summary>
+        public void ConfigureRetreat(float distance, float cooldown, float duration, float speedMultiplier)
+        {
+            _retreatDistance = Mathf.Max(1.5f, distance);
+            _dashCooldown = Mathf.Max(0.5f, cooldown);
+            _dashDuration = Mathf.Max(0.1f, duration);
+            _dashSpeedMultiplier = Mathf.Max(1f, speedMultiplier);
+        }
+
         public void ScaleDamage(float multiplier)
         {
             if (multiplier > 0f)
@@ -121,6 +137,21 @@ namespace InvaderOfWorlds
             var up = _planet.UpAt(position);
             var toTarget = _target.position - position;
             var distance = toTarget.magnitude;
+
+            // Рывок от игрока: лучник не даёт себя дожать в упор.
+            if (Time.time < _dashEndTime)
+            {
+                Strafe(-Vector3.ProjectOnPlane(toTarget, up).normalized, up, _dashSpeedMultiplier);
+                return;
+            }
+
+            if (!_aiming && distance < _retreatDistance && Time.time >= _nextDashTime)
+            {
+                _nextDashTime = Time.time + _dashCooldown;
+                _dashEndTime = Time.time + _dashDuration;
+                SoundBank.Step(transform.position);
+                return;
+            }
 
             if (_aiming)
             {
@@ -254,11 +285,12 @@ namespace InvaderOfWorlds
             projectile.Launch(direction, _projectileSpeed, _damage, transform, 0, _planet);
         }
 
-        private void Strafe(Vector3 direction, Vector3 up)
+        private void Strafe(Vector3 direction, Vector3 up, float speedMultiplier = 1f)
         {
             var avoidance = ComputeAvoidance(up);
             var moveDirection = (direction + avoidance * _avoidStrength).normalized;
-            var step = moveDirection * (_speed * RunModifiers.EnemySpeedMultiplier * Balance.EnemySpeedMultiplier * Time.deltaTime);
+            var step = moveDirection * (_speed * speedMultiplier * RunModifiers.EnemySpeedMultiplier *
+                                        Balance.EnemySpeedMultiplier * Time.deltaTime);
 
             step = CharacterObstacles.Slide(transform, up, 0.9f, 0.35f, step, ~0);
 

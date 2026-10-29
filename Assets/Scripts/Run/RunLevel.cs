@@ -83,7 +83,7 @@ namespace InvaderOfWorlds
 
         private void Update()
         {
-            if (_choosing || UiState.PauseOpen)
+            if (_choosing || UiState.PauseOpen || UiState.StartOpen)
                 return;
 
             var experience = RunSession.RunExperience;

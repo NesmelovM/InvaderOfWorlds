@@ -76,6 +76,8 @@ namespace InvaderOfWorlds
             var brain = enemy.AddComponent<EnemyBrain>();
             brain.Configure(planet, target);
             brain.ConfigureCombat(damage: 14f, attackCooldown: 1.8f, attackRange: 2.6f, speed: 2.6f);
+            brain.EnableCharge(minDistance: 4f, maxDistance: 11f, cooldown: 6f, duration: 0.45f,
+                speedMultiplier: 3.4f);
             brain.ScaleDamage(RunState.Difficulty * Balance.EnemyDamageMultiplier);
 
             return enemy;
@@ -97,6 +99,7 @@ namespace InvaderOfWorlds
             var brain = enemy.AddComponent<RangedEnemyBrain>();
             brain.Configure(planet, target);
             brain.ConfigureCombat(damage: 12f, cooldown: 1.6f, windupTime: 0.5f, shootRange: 20f, speed: 2.4f);
+            brain.ConfigureRetreat(distance: 6f, cooldown: 4.5f, duration: 0.5f, speedMultiplier: 2.8f);
             brain.ScaleDamage(RunState.Difficulty * Balance.EnemyDamageMultiplier);
 
             return enemy;

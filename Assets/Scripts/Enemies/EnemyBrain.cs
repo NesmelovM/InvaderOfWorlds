@@ -55,6 +55,15 @@ namespace InvaderOfWorlds
         private float _nextAttackTime;
         private Vector3 _baseScale;
         private CharacterRig _rig;
+
+        private bool _chargeEnabled;
+        private float _chargeMinDistance = 4f;
+        private float _chargeMaxDistance = 10f;
+        private float _chargeCooldown = 6f;
+        private float _chargeDuration = 0.4f;
+        private float _chargeSpeedMultiplier = 3.2f;
+        private float _nextChargeTime;
+        private float _chargeEndTime;
         private bool _windingUp;
         private float _windupEndTime;
         private float _slotAngle;
@@ -66,6 +75,18 @@ namespace InvaderOfWorlds
         }
 
         /// <summary>Сложность следующей планеты: урон растёт вместе с забегом.</summary>
+        /// <summary>Включает рывок к игроку — умение элитного мечника.</summary>
+        public void EnableCharge(float minDistance, float maxDistance, float cooldown, float duration,
+            float speedMultiplier)
+        {
+            _chargeEnabled = true;
+            _chargeMinDistance = minDistance;
+            _chargeMaxDistance = maxDistance;
+            _chargeCooldown = Mathf.Max(0.5f, cooldown);
+            _chargeDuration = Mathf.Max(0.1f, duration);
+            _chargeSpeedMultiplier = Mathf.Max(1f, speedMultiplier);
+        }
+
         public void ScaleDamage(float multiplier)
         {
             if (multiplier > 0f)
@@ -142,6 +163,21 @@ namespace InvaderOfWorlds
                 return;
             }
 
+            // Элита бьёт в спину рывком: подбегает быстрее обычного шага.
+            if (Time.time < _chargeEndTime)
+            {
+                MoveTowardsSlot(position, up, toTarget, _chargeSpeedMultiplier);
+                return;
+            }
+
+            if (_chargeEnabled && distance > _chargeMinDistance && distance < _chargeMaxDistance &&
+                Time.time >= _nextChargeTime)
+            {
+                _nextChargeTime = Time.time + _chargeCooldown;
+                _chargeEndTime = Time.time + _chargeDuration;
+                SoundBank.Step(transform.position);
+            }
+
             if (distance > _aggroRadius)
             {
                 HoldPosition(up);
@@ -152,7 +188,8 @@ namespace InvaderOfWorlds
         }
 
         /// <summary>Идёт не в центр игрока, а в свою точку на окружности вокруг него.</summary>
-        private void MoveTowardsSlot(Vector3 position, Vector3 up, Vector3 toTarget)
+        private void MoveTowardsSlot(Vector3 position, Vector3 up, Vector3 toTarget,
+            float speedMultiplier = 1f)
         {
             var directionToPlayer = Vector3.ProjectOnPlane(toTarget, up).normalized;
 
@@ -168,7 +205,8 @@ namespace InvaderOfWorlds
                 return;
 
             var moveDirection = (toSlot.normalized + ComputeAvoidance(up) * _avoidStrength).normalized;
-            var step = moveDirection * (_speed * RunModifiers.EnemySpeedMultiplier * Balance.EnemySpeedMultiplier * Time.deltaTime);
+            var step = moveDirection * (_speed * speedMultiplier * RunModifiers.EnemySpeedMultiplier *
+                                        Balance.EnemySpeedMultiplier * Time.deltaTime);
 
             // Стены и постройки обходим так же, как игрок: физика движение не разрешает.
             step = CharacterObstacles.Slide(transform, up, 0.9f, 0.35f, step, ~0);

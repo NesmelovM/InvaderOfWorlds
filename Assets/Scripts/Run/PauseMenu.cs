@@ -52,7 +52,7 @@ namespace InvaderOfWorlds
         {
             // Пока открыт выбор карточки или игрок мёртв, пауза не нужна:
             // своими экранами они уже останавливают игру.
-            if (_level != null && _level.IsChoosing)
+            if (UiState.StartOpen || (_level != null && _level.IsChoosing))
                 return;
 
             if (_playerHealth != null && !_playerHealth.IsAlive)

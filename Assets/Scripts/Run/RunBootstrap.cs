@@ -66,6 +66,10 @@ namespace InvaderOfWorlds
                     attack.MultiplyDamage(RunState.WeaponDamageMultiplier);
             }
 
+            // Перед первым заходом даём выбрать оружие из купленного.
+            if (firstPlanet)
+                RunStartWeaponChoice.Show(player);
+
             var motor = player.GetComponent<PlayerMotor>();
 
             if (motor != null)
