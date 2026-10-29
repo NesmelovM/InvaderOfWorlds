@@ -67,6 +67,7 @@ namespace InvaderOfWorlds.EditorTools
                 {
                     EditorUtility.SetDirty(_config);
                     AssetDatabase.SaveAssets();
+                    Balance.ResetCache();
                 }
 
                 if (GUILayout.Button("Сбросить к коду", GUILayout.Height(28f)))
@@ -77,6 +78,7 @@ namespace InvaderOfWorlds.EditorTools
                         FillDefaults(_config);
                         EditorUtility.SetDirty(_config);
                         AssetDatabase.SaveAssets();
+                        Balance.ResetCache();
                     }
                 }
 

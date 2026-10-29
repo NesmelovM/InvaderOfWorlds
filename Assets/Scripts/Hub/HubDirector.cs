@@ -379,19 +379,22 @@ namespace InvaderOfWorlds
             var owned = Armory.IsOwned(id);
             var equipped = Armory.IsEquipped(id);
 
+            // Цена берётся из инструмента баланса, а не из каталога.
+            var price = Armory.CostOf(id);
+
             HealthBarDrawer.DrawRect(rect, equipped
                 ? new Color(0.20f, 0.32f, 0.22f, 0.85f)
                 : new Color(1f, 1f, 1f, 0.05f));
 
             GUI.Label(new Rect(rect.x + 12f, rect.y + 4f, rect.width - 150f, 22f), weapon.Name, _textStyle);
             GUI.Label(new Rect(rect.x + 12f, rect.y + 24f, rect.width - 150f, 18f),
-                owned ? weapon.Description : $"{weapon.Description} · {weapon.Cost} золота", _hintStyle);
+                owned ? weapon.Description : $"{weapon.Description} · {price} золота", _hintStyle);
 
-            var caption = equipped ? "снять" : owned ? "взять" : $"{weapon.Cost}";
+            var caption = equipped ? "снять" : owned ? "взять" : $"{price}";
             var hasRoom = Armory.Equipped.Count < WeaponSystem.MaxSlots;
 
             var previous = GUI.enabled;
-            GUI.enabled = equipped || (owned ? hasRoom : RunSession.Gold >= weapon.Cost);
+            GUI.enabled = equipped || (owned ? hasRoom : RunSession.Gold >= price);
 
             if (GUI.Button(new Rect(rect.x + rect.width - 122f, rect.y + 5f, 110f, 34f), caption,
                     _buttonStyle))
