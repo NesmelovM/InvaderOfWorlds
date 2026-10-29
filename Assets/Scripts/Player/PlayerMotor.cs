@@ -61,6 +61,8 @@ namespace InvaderOfWorlds
         private Collider _bodyCollider;
         private Vector3 _lastPosition;
         private float _stuckTimer;
+        private float _insideTimer;
+        private float _nextExitTime;
         private float _stepDistance;
         private CharacterRig _rig;
         [SerializeField, Min(0.5f)] private float _stepLength = 2.4f;
@@ -187,16 +189,91 @@ namespace InvaderOfWorlds
             }
 
             if (!IsOverlapping())
+            {
+                _insideTimer = 0f;
                 return;
+            }
 
-            // Мешевые коллайдеры не умеют ComputePenetration, поэтому ищем
-            // свободное место вокруг и выбираем ближайшее.
+            // Внутри крупного объекта ищем выход по лучам: ближайшая стена
+            // показывает, куда двигаться, чтобы выбраться наружу.
+            _insideTimer += Time.deltaTime;
+
+            if (Time.time >= _nextExitTime && TryExitGeometry(out var exit))
+            {
+                _nextExitTime = Time.time + 0.35f;
+                transform.position = exit;
+                _velocity = Vector3.zero;
+                SnapToSurface();
+
+                if (!IsOverlapping())
+                    _insideTimer = 0f;
+
+                return;
+            }
+
+            // Запасной вариант: свободная точка рядом.
             if (TryFindFreeStep(out var free))
             {
                 transform.position = free;
                 _velocity = Vector3.zero;
                 SnapToSurface();
             }
+        }
+
+        /// <summary>
+        /// Ищет выход изнутри объекта: пускает лучи во все стороны, берёт самый
+        /// короткий — это ближайшая стенка — и ставит игрока чуть за ней.
+        /// </summary>
+        private bool TryExitGeometry(out Vector3 exit)
+        {
+            exit = transform.position;
+
+            var center = transform.position + _up * _bodyCenter;
+            var forward = Vector3.ProjectOnPlane(transform.forward, _up).normalized;
+
+            if (forward.sqrMagnitude < 0.001f)
+                forward = Vector3.ProjectOnPlane(Vector3.right, _up).normalized;
+
+            var bestDistance = float.MaxValue;
+            var bestDirection = Vector3.zero;
+
+            // Веер по горизонту плюс вверх и вниз.
+            for (var i = 0; i < 16; i++)
+            {
+                var direction = Quaternion.AngleAxis(i * 22.5f, _up) * forward;
+                ConsiderRay(center, direction, ref bestDistance, ref bestDirection);
+            }
+
+            ConsiderRay(center, _up, ref bestDistance, ref bestDirection);
+            ConsiderRay(center, -_up, ref bestDistance, ref bestDirection);
+
+            if (bestDistance >= float.MaxValue)
+                return false;
+
+            // Выходим за ближайшую стенку и ещё на полкорпуса, чтобы не зацепиться.
+            exit = transform.position + bestDirection * (bestDistance + 1.2f);
+            return true;
+        }
+
+        private void ConsiderRay(Vector3 origin, Vector3 direction, ref float bestDistance,
+            ref Vector3 bestDirection)
+        {
+            if (!Physics.Raycast(origin, direction, out var hit, 12f, _obstacleMask,
+                    QueryTriggerInteraction.Ignore))
+                return;
+
+            if (hit.collider == null || hit.collider == _bodyCollider ||
+                hit.collider.transform.IsChildOf(transform))
+                return;
+
+            if (hit.collider.GetComponentInParent<EnemyMarker>() != null)
+                return;
+
+            if (hit.distance >= bestDistance)
+                return;
+
+            bestDistance = hit.distance;
+            bestDirection = direction;
         }
 
         /// <summary>Стоит ли игрок внутри стены или постройки.</summary>
@@ -271,6 +348,21 @@ namespace InvaderOfWorlds
         {
             var moved = Vector3.Distance(transform.position, _lastPosition);
             _lastPosition = transform.position;
+
+            // Сидим внутри объекта дольше секунды — вытаскиваем принудительно.
+            if (_insideTimer > 1.2f)
+            {
+                _insideTimer = 0f;
+
+                if (SpawnPlacement.TryFindFreeGroundPosition(_planet, transform.position, 10f, 60,
+                        out var spot, out _, 1.2f))
+                {
+                    transform.position = spot;
+                    _velocity = Vector3.zero;
+                    SnapToSurface();
+                    return;
+                }
+            }
 
             if (input.sqrMagnitude < 0.01f || moved > 0.02f)
             {
