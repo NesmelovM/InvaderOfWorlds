@@ -76,8 +76,10 @@ namespace InvaderOfWorlds
             _generator.Generate();
 
             ApplyBiomeColors();
-            PlacePlayer();
+
+            // Холмы создаём до игрока: стартовую точку выбираем в обход них.
             SpawnHills(random);
+            PlacePlayer();
             SpawnBigProps(random);
             SpawnSmallProps(random);
             SpawnSettlementWalls(random);
@@ -111,8 +113,7 @@ namespace InvaderOfWorlds
             if (_player == null)
                 return;
 
-            var point = _generator.PlayerSpawnPoint;
-            var up = _planet.UpAt(point);
+            var up = FindClearStartDirection(_planet.UpAt(_generator.PlayerSpawnPoint));
 
             _player.position = _planet.Center + up * (_planet.Radius + 0.02f);
 
@@ -126,12 +127,58 @@ namespace InvaderOfWorlds
             _player.rotation = Quaternion.LookRotation(forward.normalized, up);
         }
 
+        /// <summary>
+        /// Ищет стартовое направление подальше от холмов: на склоне персонаж
+        /// «висит» над видимым грунтом и высота считается неверно.
+        /// </summary>
+        private Vector3 FindClearStartDirection(Vector3 preferred)
+        {
+            if (_hillDirections.Count == 0)
+                return preferred;
+
+            // Радиус холма в градусах дуги планеты плюс запас.
+            var hillAngle = Mathf.Atan2(_hillRadius, _planet.Radius) * Mathf.Rad2Deg + 8f;
+            var axis = Vector3.Cross(preferred, Vector3.up);
+
+            if (axis.sqrMagnitude < 0.001f)
+                axis = Vector3.right;
+
+            axis.Normalize();
+
+            var best = preferred;
+            var bestClearance = float.MinValue;
+
+            for (var step = 0; step < 36; step++)
+            {
+                var candidate = Quaternion.AngleAxis(step * 10f, axis) * preferred;
+                var clearance = float.MaxValue;
+
+                foreach (var hill in _hillDirections)
+                    clearance = Mathf.Min(clearance, Vector3.Angle(hill, candidate));
+
+                if (clearance > bestClearance)
+                {
+                    bestClearance = clearance;
+                    best = candidate;
+                }
+
+                if (bestClearance > hillAngle)
+                    break;
+            }
+
+            return best.normalized;
+        }
+
         /// <summary>Холмы-куполы: меш повторяет кривизну планеты.</summary>
+        private readonly System.Collections.Generic.List<Vector3> _hillDirections =
+            new System.Collections.Generic.List<Vector3>();
+
         private void SpawnHills(System.Random random)
         {
             for (var i = 0; i < _hills; i++)
             {
                 var direction = RandomDirection(random);
+                _hillDirections.Add(direction);
 
                 var hill = new GameObject($"Hill {i + 1}");
                 var filter = hill.AddComponent<MeshFilter>();
