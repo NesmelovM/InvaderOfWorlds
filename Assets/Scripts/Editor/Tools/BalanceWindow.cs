@@ -100,14 +100,39 @@ namespace InvaderOfWorlds.EditorTools
                 return;
             }
 
+            // Строка сверху: видно, совпадает ли список с каталогом оружейной.
+            if (_config.Weapons.Count != Armory.Catalog.Length)
+            {
+                EditorGUILayout.HelpBox(
+                    $"В конфиге {_config.Weapons.Count} записей, а в каталоге оружейной " +
+                    $"{Armory.Catalog.Length}. Нажмите «Заполнить оружие из каталога», чтобы выровнять.",
+                    MessageType.Warning);
+            }
+            else
+            {
+                EditorGUILayout.HelpBox(
+                    "Записи идут в порядке каталога оружейной: №1 — первое оружие магазина и так далее.",
+                    MessageType.None);
+            }
+
             for (var i = 0; i < _config.Weapons.Count; i++)
             {
                 var weapon = _config.Weapons[i];
-                var name = i < Armory.Catalog.Length ? Armory.Catalog[i].Name : $"Оружие {i}";
+                var inCatalog = i < Armory.Catalog.Length;
+                var entry = inCatalog ? Armory.Catalog[i] : default;
+                var name = inCatalog ? entry.Name : "Оружие без каталога";
 
                 using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                 {
-                    EditorGUILayout.LabelField(name, EditorStyles.boldLabel);
+                    // Номер и имя: по ним понятно, какое это оружие.
+                    EditorGUILayout.LabelField($"№{i + 1} — {name}", EditorStyles.boldLabel);
+
+                    if (inCatalog)
+                        EditorGUILayout.LabelField($"{entry.Description}   ·   {KindName(entry.Kind)}",
+                            EditorStyles.miniLabel);
+                    else
+                        EditorGUILayout.HelpBox("Такого оружия нет в каталоге — запись лишняя.",
+                            MessageType.Warning);
                     weapon.Damage = EditorGUILayout.FloatField("Урон", weapon.Damage);
                     weapon.Range = EditorGUILayout.FloatField("Дальность / радиус", weapon.Range);
                     weapon.Cooldown = EditorGUILayout.FloatField("Перезарядка, с", weapon.Cooldown);
@@ -116,6 +141,12 @@ namespace InvaderOfWorlds.EditorTools
                     weapon.Cost = EditorGUILayout.IntField("Цена в оружейной", weapon.Cost);
                 }
             }
+        }
+
+        /// <summary>Тип атаки оружия по-русски.</summary>
+        private static string KindName(WeaponKind kind)
+        {
+            return kind == WeaponKind.Melee ? "ближний бой" : "дальний бой";
         }
 
         private void DrawProgress()
