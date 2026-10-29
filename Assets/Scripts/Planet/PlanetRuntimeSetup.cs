@@ -247,6 +247,11 @@ namespace InvaderOfWorlds
             // Подмешиваем цвет биома: иначе чужие палитры спорят между собой.
             if (_biome != null)
                 BiomeTint.Apply(prop, _biome.GroundColor, keepColliders ? 0.45f : 0.3f, random);
+
+            // Крупным постройкам ставим коллайдеры по мешам: боксы не повторяют
+            // ступени и склоны, и враги «висели» над видимой геометрией.
+            if (keepColliders)
+                RebuildMeshColliders(prop);
         }
 
         /// <summary>
@@ -280,6 +285,28 @@ namespace InvaderOfWorlds
             }
 
             return max - min;
+        }
+
+        /// <summary>
+        /// Заменяет коллайдеры постройки на мешевые по каждому видимому мешу.
+        /// Боксы остаются только там, где меша нет.
+        /// </summary>
+        private static void RebuildMeshColliders(GameObject prop)
+        {
+            foreach (var collider in prop.GetComponentsInChildren<Collider>(true))
+                Destroy(collider);
+
+            foreach (var filter in prop.GetComponentsInChildren<MeshFilter>(true))
+            {
+                var mesh = filter.sharedMesh;
+
+                if (mesh == null)
+                    continue;
+
+                var collider = filter.gameObject.AddComponent<MeshCollider>();
+                collider.sharedMesh = mesh;
+                collider.convex = false;
+            }
         }
 
         /// <summary>Самая низкая точка объекта относительно плоскости, перпендикулярной up.</summary>
