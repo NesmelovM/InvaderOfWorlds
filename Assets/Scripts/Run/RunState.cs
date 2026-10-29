@@ -30,6 +30,25 @@ namespace InvaderOfWorlds
         public static float RegenPerSecond;
         public static int ExtraShots;
 
+        /// <summary>Усиления конкретного оружия: они должны переживать смену планеты.</summary>
+        public struct WeaponUpgrade
+        {
+            public int ExtraShots;
+            public float DamageMult;
+            public float CooldownDiv;
+            public float RangeMult;
+
+            public static WeaponUpgrade Default => new WeaponUpgrade
+            {
+                DamageMult = 1f,
+                CooldownDiv = 1f,
+                RangeMult = 1f
+            };
+        }
+
+        public static readonly Dictionary<int, WeaponUpgrade> WeaponUpgrades =
+            new Dictionary<int, WeaponUpgrade>();
+
         /// <summary>Идентификаторы оружия из оружейной, которые несёт игрок.</summary>
         public static readonly List<int> Loadout = new List<int>();
 
@@ -53,6 +72,7 @@ namespace InvaderOfWorlds
             ExplosionRadius = 0f;
             RegenPerSecond = 0f;
             ExtraShots = 0;
+            WeaponUpgrades.Clear();
             Loadout.Clear();
             ActiveBiome = null;
             Seed = Random.Range(1, int.MaxValue);

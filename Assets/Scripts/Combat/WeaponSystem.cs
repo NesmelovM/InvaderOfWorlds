@@ -118,6 +118,10 @@ namespace InvaderOfWorlds
 
             var name = WeaponName(slot);
 
+            // Запоминаем в состоянии забега: при переходе на планету слот
+            // собирается заново из набора, и усиления нужно вернуть.
+            RecordUpgrade(slot, upgrade, amount);
+
             switch (upgrade)
             {
                 case SlotUpgrade.Shots:
@@ -136,6 +140,59 @@ namespace InvaderOfWorlds
                     slot.Range *= amount;
                     return $"{name}: +{Mathf.RoundToInt((amount - 1f) * 100f)}% дальности";
             }
+        }
+
+        private static void RecordUpgrade(WeaponSlot slot, SlotUpgrade upgrade, float amount)
+        {
+            if (slot.Icon < 0)
+                return;
+
+            RunState.WeaponUpgrades.TryGetValue(slot.Icon, out var record);
+
+            if (record.DamageMult <= 0f)
+                record = RunState.WeaponUpgrade.Default;
+
+            switch (upgrade)
+            {
+                case SlotUpgrade.Shots:
+                    record.ExtraShots += Mathf.Max(1, Mathf.RoundToInt(amount));
+                    break;
+
+                case SlotUpgrade.AttackSpeed:
+                    record.CooldownDiv *= Mathf.Max(0.1f, amount);
+                    break;
+
+                case SlotUpgrade.Damage:
+                    record.DamageMult *= amount;
+                    break;
+
+                default:
+                    record.RangeMult *= amount;
+                    break;
+            }
+
+            RunState.WeaponUpgrades[slot.Icon] = record;
+        }
+
+        /// <summary>Возвращает слоту накопленные усиления этого оружия.</summary>
+        private static void ApplySavedUpgrades(WeaponSlot slot)
+        {
+            if (slot == null || slot.Icon < 0)
+                return;
+
+            if (!RunState.WeaponUpgrades.TryGetValue(slot.Icon, out var record))
+                return;
+
+            slot.Shots += record.ExtraShots;
+
+            if (record.DamageMult > 0f)
+                slot.Damage *= record.DamageMult;
+
+            if (record.CooldownDiv > 0f)
+                slot.Cooldown = Mathf.Max(0.05f, slot.Cooldown / record.CooldownDiv);
+
+            if (record.RangeMult > 0f)
+                slot.Range *= record.RangeMult;
         }
 
         /// <summary>Название оружия в слоте: из каталога, если известен индекс.</summary>
@@ -188,6 +245,10 @@ namespace InvaderOfWorlds
                 return false;
 
             slot.NextFireTime = 0f;
+
+            // Возвращаем усиления, накопленные в этом забеге.
+            ApplySavedUpgrades(slot);
+
             _slots.Add(slot);
             return true;
         }

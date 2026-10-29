@@ -28,6 +28,7 @@ namespace InvaderOfWorlds
             public int ExtraShots;
             public int PlanetsInBiome;
             public List<int> Loadout;
+            public Dictionary<int, RunState.WeaponUpgrade> WeaponUpgrades;
         }
 
         /// <summary>Снимок, сделанный в момент смерти.</summary>
@@ -50,7 +51,8 @@ namespace InvaderOfWorlds
                 RegenPerSecond = RunState.RegenPerSecond,
                 ExtraShots = RunState.ExtraShots,
                 PlanetsInBiome = RunState.PlanetsInBiome,
-                Loadout = new List<int>(RunState.Loadout)
+                Loadout = new List<int>(RunState.Loadout),
+                WeaponUpgrades = new Dictionary<int, RunState.WeaponUpgrade>(RunState.WeaponUpgrades)
             };
         }
 
@@ -96,6 +98,11 @@ namespace InvaderOfWorlds
             {
                 RunState.Loadout.Clear();
                 RunState.Loadout.AddRange(snapshot.Loadout);
+
+                RunState.WeaponUpgrades.Clear();
+
+                foreach (var pair in snapshot.WeaponUpgrades)
+                    RunState.WeaponUpgrades[pair.Key] = pair.Value;
             }
 
             RunState.PlanetsInBiome = snapshot.PlanetsInBiome;
@@ -135,7 +142,10 @@ namespace InvaderOfWorlds
             }
 
             if (!rules.Loadout)
+            {
                 RunState.Loadout.Clear();
+                RunState.WeaponUpgrades.Clear();
+            }
         }
     }
 }
