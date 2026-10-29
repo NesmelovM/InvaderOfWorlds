@@ -37,6 +37,17 @@ namespace InvaderOfWorlds
             if (_model == null)
                 return;
 
+            if (!Characters.Colorize)
+            {
+                // Цвет берём из самой модели — компонент перекраски только мешает.
+                var existing = GetComponent<ModelTint>();
+
+                if (existing != null)
+                    Destroy(existing);
+
+                return;
+            }
+
             var tint = GetComponent<ModelTint>();
 
             if (tint == null)

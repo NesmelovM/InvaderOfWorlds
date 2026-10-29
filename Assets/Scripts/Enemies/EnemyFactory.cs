@@ -142,9 +142,13 @@ namespace InvaderOfWorlds
             body.center = new Vector3(0f, height * 0.5f, 0f);
 
             // Модель из биома важнее встроенной: биом задаёт облик врагов.
+            // Если перекраска выключена, у модели остаются её родные материалы:
+            // цвет задаётся самим префабом из поля биома.
+            Color? tint = Characters.Colorize ? color : (Color?)null;
+
             var model = modelOverride != null
-                ? CharacterModel.Attach(enemy, modelOverride, height, 0f, color)
-                : CharacterModel.Attach(enemy, modelPath, height, 0f, color);
+                ? CharacterModel.Attach(enemy, modelOverride, height, 0f, tint)
+                : CharacterModel.Attach(enemy, modelPath, height, 0f, tint);
 
             if (model == null)
                 CreateFallbackVisual(enemy, color, height, radius);

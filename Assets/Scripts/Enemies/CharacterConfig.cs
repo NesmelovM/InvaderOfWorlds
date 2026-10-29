@@ -22,6 +22,10 @@ namespace InvaderOfWorlds
     [CreateAssetMenu(fileName = "Config", menuName = "Invader of Worlds/Персонажи")]
     public class CharacterConfig : ScriptableObject
     {
+        [Header("Перекраска")]
+        [Tooltip("Выключено: у моделей остаются их собственные материалы")]
+        public bool Colorize;
+
         [Header("Игрок")]
         public EnemyLook Player = new EnemyLook { Height = 1.95f };
         public Color PlayerTint = new Color(0.16f, 0.07f, 0.23f);
@@ -168,6 +172,8 @@ namespace InvaderOfWorlds
                 _ => null
             };
         }
+
+        public static bool Colorize => Config != null && Config.Colorize;
 
         public static EnemyLook PlayerLook => Config != null ? Config.Player : null;
         public static Color PlayerTint => Config != null ? Config.PlayerTint : new Color(0.16f, 0.07f, 0.23f);

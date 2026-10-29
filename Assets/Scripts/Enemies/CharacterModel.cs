@@ -42,6 +42,7 @@ namespace InvaderOfWorlds
             var fitter = model.AddComponent<ModelFitter>();
             fitter.Configure(host.transform, height);
 
+            // Перекраска только по запросу: по умолчанию остаются родные материалы модели.
             if (tint.HasValue)
                 ApplyTint(model, tint.Value);
 

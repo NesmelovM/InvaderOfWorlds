@@ -507,6 +507,7 @@ MonoBehaviour:
   _health: {fileID: 0}
   _fill: {r: 0.25, g: 0.8, b: 0.35, a: 1}
   _lowFill: {r: 0.85, g: 0.25, b: 0.2, a: 1}
+  _experienceFill: {r: 0.42, g: 0.66, b: 1, a: 1}
 --- !u!114 &200154778
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -585,7 +586,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c573089036c48e79d6e2282583550be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InvaderOfWorlds.ModelTint
-  _color: {r: 0.16, g: 0.07, b: 0.23, a: 1}
+  _color: {r: 0.21568629, g: 0.21568629, b: 0.21568629, a: 0}
   _emission: 0
 --- !u!114 &200154782
 MonoBehaviour:
@@ -1067,9 +1068,9 @@ Transform:
   m_GameObject: {fileID: 708104466}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.1268835, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.9894094, y: 0.9894094, z: 0.9894094}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 770694077}
   - {fileID: 76251672}

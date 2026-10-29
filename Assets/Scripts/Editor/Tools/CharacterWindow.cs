@@ -44,6 +44,15 @@ namespace InvaderOfWorlds.EditorTools
 
             _scroll = EditorGUILayout.BeginScrollView(_scroll);
 
+            _config.Colorize = EditorGUILayout.Toggle("Красить модели", _config.Colorize);
+            EditorGUILayout.HelpBox(
+                _config.Colorize
+                    ? "Модели перекрашиваются в один цвет забега."
+                    : "Цвет берётся из самого префаба — можно ставить уже покрашенных врагов.",
+                MessageType.None);
+
+            EditorGUILayout.Space(6f);
+
             DrawPlayer();
 
             EditorGUILayout.Space(10f);
@@ -86,7 +95,8 @@ namespace InvaderOfWorlds.EditorTools
                 _config.Player.Height = EditorGUILayout.Slider("Рост", _config.Player.Height, 0.8f, 3f);
                 _config.Player.WeaponScale = EditorGUILayout.Slider("Размер оружия",
                     _config.Player.WeaponScale, 0.3f, 2f);
-                _config.PlayerTint = EditorGUILayout.ColorField("Цвет мантии", _config.PlayerTint);
+                using (new EditorGUI.DisabledScope(!_config.Colorize))
+                    _config.PlayerTint = EditorGUILayout.ColorField("Цвет мантии", _config.PlayerTint);
 
                 if (_config.Player.Model == null)
                 {
