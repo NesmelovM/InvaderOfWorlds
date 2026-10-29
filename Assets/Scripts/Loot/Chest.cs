@@ -25,7 +25,7 @@ namespace InvaderOfWorlds
         {
             var root = new GameObject("Chest");
             root.transform.SetParent(parent, false);
-            root.transform.position = planet.Center + direction.normalized * (planet.Radius + 0.05f);
+            root.transform.position = planet.Center + direction.normalized * (planet.Radius - 0.03f);
 
             var up = direction.normalized;
             var forward = Vector3.ProjectOnPlane(Vector3.forward, up).normalized;
@@ -42,42 +42,56 @@ namespace InvaderOfWorlds
 
         private void Build()
         {
-            _wood ??= EnemyFactory.GetMaterial(new Color(0.42f, 0.26f, 0.14f));
-            _metal ??= EnemyFactory.GetMaterial(new Color(0.85f, 0.72f, 0.30f));
+            _wood ??= EnemyFactory.GetMaterial(new Color(0.34f, 0.20f, 0.10f));
+            _metal ??= EnemyFactory.GetMaterial(new Color(0.90f, 0.75f, 0.30f));
 
-            // Основание.
+            // Плинтус: чуть шире корпуса, чтобы сундук читался стоящим на земле.
+            var plinth = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            plinth.name = "Plinth";
+            plinth.transform.SetParent(transform, false);
+            plinth.transform.localPosition = new Vector3(0f, 0.06f, 0f);
+            plinth.transform.localScale = new Vector3(1.2f, 0.12f, 0.82f);
+            Paint(plinth, _wood);
+
+            // Корпус.
             var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
             body.name = "Body";
             body.transform.SetParent(transform, false);
-            body.transform.localPosition = new Vector3(0f, 0.35f, 0f);
-            body.transform.localScale = new Vector3(1.0f, 0.7f, 0.7f);
+            body.transform.localPosition = new Vector3(0f, 0.42f, 0f);
+            body.transform.localScale = new Vector3(1.1f, 0.6f, 0.7f);
             Paint(body, _wood);
 
-            // Крышка на петле.
-            var lid = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            lid.name = "Lid";
-            lid.transform.SetParent(transform, false);
-            lid.transform.localPosition = new Vector3(0f, 0.7f, -0.35f);
-            lid.transform.localScale = new Vector3(1.04f, 0.24f, 0.74f);
-            Paint(lid, _wood);
-
+            // Крышка: петля по задней кромке, поэтому центр крышки смещён вперёд.
             var pivot = new GameObject("Lid Pivot").transform;
             pivot.SetParent(transform, false);
-            pivot.localPosition = new Vector3(0f, 0.74f, 0.35f);
+            pivot.localPosition = new Vector3(0f, 0.72f, -0.35f);
+
+            var lid = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            lid.name = "Lid";
             lid.transform.SetParent(pivot, false);
-            lid.transform.localPosition = new Vector3(0f, 0f, -0.7f);
+            lid.transform.localPosition = new Vector3(0f, 0.11f, 0.35f);
+            lid.transform.localScale = new Vector3(1.14f, 0.22f, 0.74f);
+            Paint(lid, _wood);
             _lid = pivot;
 
-            // Металлические полосы.
+            // Металлические полосы по бокам.
             for (var i = -1; i <= 1; i += 2)
             {
                 var band = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 band.name = "Band";
                 band.transform.SetParent(transform, false);
-                band.transform.localPosition = new Vector3(i * 0.34f, 0.35f, 0f);
-                band.transform.localScale = new Vector3(0.08f, 0.72f, 0.72f);
+                band.transform.localPosition = new Vector3(i * 0.40f, 0.42f, 0f);
+                band.transform.localScale = new Vector3(0.08f, 0.62f, 0.72f);
                 Paint(band, _metal);
             }
+
+            // Замок спереди.
+            var lockPlate = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            lockPlate.name = "Lock";
+            lockPlate.transform.SetParent(transform, false);
+            lockPlate.transform.localPosition = new Vector3(0f, 0.52f, 0.37f);
+            lockPlate.transform.localScale = new Vector3(0.2f, 0.2f, 0.06f);
+            Paint(lockPlate, _metal);
         }
 
         private static void Paint(GameObject part, Material material)
@@ -157,7 +171,10 @@ namespace InvaderOfWorlds
                 normal = { textColor = new Color(0.95f, 0.85f, 0.55f) }
             };
 
-            GUI.Label(new Rect(0f, UiCanvas.Height - 150f, UiCanvas.Width, 32f),
+            var plate = new Rect(UiCanvas.Width * 0.5f - 150f, UiCanvas.Height - 156f, 300f, 40f);
+            HealthBarDrawer.DrawRect(plate, new Color(0.05f, 0.06f, 0.09f, 0.85f));
+
+            GUI.Label(new Rect(plate.x, plate.y + 8f, plate.width, 26f),
                 "E — открыть сундук", _hintStyle);
 
             UiCanvas.End();
