@@ -14,10 +14,19 @@ namespace InvaderOfWorlds
     [DisallowMultipleComponent]
     public class RunLevel : MonoBehaviour
     {
+        /// <summary>Редкость карточки: влияет на силу улучшения и цвет рамки.</summary>
+        private enum CardRarity
+        {
+            Common,
+            Rare,
+            Epic
+        }
+
         private struct Card
         {
             public string Title;
             public string Description;
+            public CardRarity Rarity;
             public Action Apply;
         }
 
@@ -37,6 +46,7 @@ namespace InvaderOfWorlds
         private GUIStyle _textStyle;
         private GUIStyle _hintStyle;
         private GUIStyle _buttonStyle;
+        private GUIStyle _rarityStyle;
 
         /// <summary>Идёт выбор карточки: HUD забега в этот момент не рисуется.</summary>
         public bool IsChoosing => _choosing;
@@ -106,79 +116,123 @@ namespace InvaderOfWorlds
             Cursor.visible = true;
         }
 
-        /// <summary>Собирает три разные карточки: оружие, персонаж, окружение.</summary>
+        /// <summary>
+        /// Собирает три карточки разной редкости. Обычные попадаются часто,
+        /// редкие — примерно в трети случаев, эпические — редко и заметно сильнее.
+        /// </summary>
         private void BuildCards()
         {
             _cards.Clear();
+
+            var common = new List<Card>();
+            var rare = new List<Card>();
+            var epic = new List<Card>();
+
+            void Add(List<Card> list, CardRarity rarity, string title, string description, Action apply)
+            {
+                list.Add(new Card
+                {
+                    Title = title,
+                    Description = description,
+                    Rarity = rarity,
+                    Apply = apply
+                });
+            }
+
+            // --- обычные ---
+            Add(common, CardRarity.Common, "Заточка", "+15% урона всем оружиям",
+                () => BoostDamage(1.15f));
+            Add(common, CardRarity.Common, "Стойкость", "+20 к здоровью и полное лечение",
+                () => BoostHealth(20f));
+            Add(common, CardRarity.Common, "Лёгкость", "+8% скорости передвижения",
+                () => BoostSpeed(1.08f));
+            Add(common, CardRarity.Common, "Тяжёлый воздух", "враги двигаются на 10% медленнее",
+                () => RunModifiers.SlowEnemies(0.1f));
+            Add(common, CardRarity.Common, "Вампиризм", "+2 здоровья за каждое убийство",
+                () => RunModifiers.AddHealPerKill(2f));
+
+            // --- редкие ---
+            Add(rare, CardRarity.Rare, "Острая сталь", "+30% урона всем оружиям",
+                () => BoostDamage(1.30f));
+            Add(rare, CardRarity.Rare, "Крепкая шкура", "+40 к здоровью и полное лечение",
+                () => BoostHealth(40f));
+            Add(rare, CardRarity.Rare, "Проворство", "+15% скорости передвижения",
+                () => BoostSpeed(1.15f));
+            Add(rare, CardRarity.Rare, "Голод", "+5 здоровья за каждое убийство",
+                () => RunModifiers.AddHealPerKill(5f));
 
             var weaponId = FindWeaponOffer();
 
             if (weaponId >= 0)
             {
                 var weapon = Armory.Catalog[weaponId];
-                _cards.Add(new Card
-                {
-                    Title = $"Оружие: {weapon.Name}",
-                    Description = weapon.Description,
-                    Apply = () => EquipWeapon(weaponId)
-                });
+                Add(rare, CardRarity.Rare, $"Оружие: {weapon.Name}", weapon.Description,
+                    () => EquipWeapon(weaponId));
             }
 
-            _cards.Add(new Card
+            // --- эпические ---
+            Add(epic, CardRarity.Epic, "Кровавый клинок", "+55% урона всем оружиям",
+                () => BoostDamage(1.55f));
+            Add(epic, CardRarity.Epic, "Каменная плоть", "+70 к здоровью и полное лечение",
+                () => BoostHealth(70f));
+            Add(epic, CardRarity.Epic, "Порыв ветра", "+25% скорости передвижения",
+                () => BoostSpeed(1.25f));
+            Add(epic, CardRarity.Epic, "Пиршество", "+10 здоровья за каждое убийство",
+                () => RunModifiers.AddHealPerKill(10f));
+            Add(epic, CardRarity.Epic, "Мёртвый воздух", "враги двигаются на 25% медленнее",
+                () => RunModifiers.SlowEnemies(0.25f));
+
+            for (var i = 0; i < 3; i++)
             {
-                Title = "Заточка",
-                Description = "+15% урона всем оружиям",
-                Apply = () =>
-                {
-                    RunModifiers.MultiplyWeaponDamage(1.15f);
-                    _weapons?.MultiplyDamage(1.15f);
-                }
-            });
+                var card = PickCard(common, rare, epic);
 
-            _cards.Add(new Card
-            {
-                Title = "Стойкость",
-                Description = "+20 к здоровью и полное лечение",
-                Apply = () =>
-                {
-                    if (_playerHealth == null)
-                        return;
+                if (card.HasValue)
+                    _cards.Add(card.Value);
+            }
+        }
 
-                    _playerHealth.IncreaseMax(20f);
-                    RunState.HealthBonus += 20f;
-                    _playerHealth.Heal(_playerHealth.Max);
-                }
-            });
+        /// <summary>Бросает редкость и забирает случайную карточку из её набора.</summary>
+        private static Card? PickCard(List<Card> common, List<Card> rare, List<Card> epic)
+        {
+            var roll = UnityEngine.Random.value;
+            var list = roll < 0.60f ? common : roll < 0.90f ? rare : epic;
 
-            _cards.Add(new Card
-            {
-                Title = "Лёгкость",
-                Description = "+8% скорости передвижения",
-                Apply = () =>
-                {
-                    var motor = _player != null ? _player.GetComponent<PlayerMotor>() : null;
+            if (list.Count == 0)
+                list = common.Count > 0 ? common : rare.Count > 0 ? rare : epic;
 
-                    if (motor != null)
-                        motor.ApplySpeedMultiplier(1.08f);
-                    RunState.SpeedMultiplier *= 1.08f;
-                }
-            });
+            if (list.Count == 0)
+                return null;
 
-            _cards.Add(new Card
-            {
-                Title = "Тяжёлый воздух",
-                Description = "враги двигаются на 10% медленнее",
-                Apply = () => RunModifiers.SlowEnemies(0.1f)
-            });
+            var index = UnityEngine.Random.Range(0, list.Count);
+            var card = list[index];
+            list.RemoveAt(index);
+            return card;
+        }
 
-            _cards.Add(new Card
-            {
-                Title = "Вампиризм",
-                Description = "+2 здоровья за каждое убийство",
-                Apply = () => RunModifiers.AddHealPerKill(2f)
-            });
+        private void BoostDamage(float multiplier)
+        {
+            RunModifiers.MultiplyWeaponDamage(multiplier);
+            _weapons?.MultiplyDamage(multiplier);
+        }
 
-            Shuffle();
+        private void BoostHealth(float amount)
+        {
+            if (_playerHealth == null)
+                return;
+
+            _playerHealth.IncreaseMax(amount);
+            RunState.HealthBonus += amount;
+            _playerHealth.Heal(_playerHealth.Max);
+        }
+
+        private void BoostSpeed(float multiplier)
+        {
+            var motor = _player != null ? _player.GetComponent<PlayerMotor>() : null;
+
+            if (motor != null)
+                motor.ApplySpeedMultiplier(multiplier);
+
+            RunState.SpeedMultiplier *= multiplier;
         }
 
         /// <summary>Ищет купленное, но не взятое в набор оружие.</summary>
@@ -206,7 +260,7 @@ namespace InvaderOfWorlds
             SaveSystem.Save();
         }
 
-        private void Shuffle()
+        private void ShuffleUnused()
         {
             for (var i = _cards.Count - 1; i > 0; i--)
             {
@@ -280,15 +334,27 @@ namespace InvaderOfWorlds
 
             for (var i = 0; i < _cards.Count; i++)
             {
+                var card = _cards[i];
+                var accent = RarityColor(card.Rarity);
                 var rect = new Rect(startX + i * (cardWidth + gap), top, cardWidth, cardHeight);
-                HealthBarDrawer.DrawRect(rect, new Color(0.11f, 0.13f, 0.19f, 0.98f));
-                HealthBarDrawer.DrawRect(new Rect(rect.x, rect.y, rect.width, 4f),
-                    new Color(0.95f, 0.80f, 0.45f, 0.9f));
 
-                GUI.Label(new Rect(rect.x + 20f, rect.y + 20f, rect.width - 40f, 62f), _cards[i].Title,
-                    _titleStyle);
-                GUI.Label(new Rect(rect.x + 20f, rect.y + 92f, rect.width - 40f, 150f),
-                    _cards[i].Description, _textStyle);
+                HealthBarDrawer.DrawRect(rect, new Color(0.11f, 0.13f, 0.19f, 0.98f));
+                HealthBarDrawer.DrawRect(new Rect(rect.x, rect.y, rect.width, 5f), accent);
+
+                // Рамка цвета редкости — видно, что карточка особенная, ещё до чтения.
+                if (card.Rarity != CardRarity.Common)
+                {
+                    HealthBarDrawer.DrawRect(new Rect(rect.x, rect.y + cardHeight - 5f, rect.width, 5f), accent);
+                    HealthBarDrawer.DrawRect(new Rect(rect.x, rect.y, 4f, cardHeight), accent);
+                    HealthBarDrawer.DrawRect(new Rect(rect.x + rect.width - 4f, rect.y, 4f, cardHeight), accent);
+                }
+
+                _rarityStyle.normal.textColor = accent;
+                GUI.Label(new Rect(rect.x + 20f, rect.y + 14f, rect.width - 40f, 22f), RarityName(card.Rarity),
+                    _rarityStyle);
+                GUI.Label(new Rect(rect.x + 20f, rect.y + 38f, rect.width - 40f, 62f), card.Title, _titleStyle);
+                GUI.Label(new Rect(rect.x + 20f, rect.y + 106f, rect.width - 40f, 150f),
+                    card.Description, _textStyle);
 
                 if (GUI.Button(new Rect(rect.x + 20f, rect.y + cardHeight - 66f, rect.width - 40f, 46f),
                         "ВЗЯТЬ", _buttonStyle))
@@ -298,6 +364,27 @@ namespace InvaderOfWorlds
             }
 
             UiCanvas.End();
+        }
+
+        /// <summary>Цвет редкости: серый, синий, фиолетовый.</summary>
+        private static Color RarityColor(CardRarity rarity)
+        {
+            return rarity switch
+            {
+                CardRarity.Rare => new Color(0.35f, 0.65f, 0.95f, 0.95f),
+                CardRarity.Epic => new Color(0.72f, 0.45f, 0.95f, 0.95f),
+                _ => new Color(0.62f, 0.68f, 0.78f, 0.9f)
+            };
+        }
+
+        private static string RarityName(CardRarity rarity)
+        {
+            return rarity switch
+            {
+                CardRarity.Rare => "РЕДКОЕ",
+                CardRarity.Epic => "ЭПИЧЕСКОЕ",
+                _ => "ОБЫЧНОЕ"
+            };
         }
 
         private void EnsureStyles()
@@ -337,6 +424,17 @@ namespace InvaderOfWorlds
 
             if (_buttonStyle == null)
                 _buttonStyle = new GUIStyle(GUI.skin.button) { fontSize = 18 };
+
+            if (_rarityStyle == null)
+            {
+                _rarityStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 14,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleCenter,
+                    normal = { textColor = new Color(0.70f, 0.75f, 0.85f) }
+                };
+            }
         }
     }
 }

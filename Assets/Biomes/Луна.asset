@@ -113,8 +113,16 @@ MonoBehaviour:
   - {fileID: 4165767647961175646, guid: f8ff99b498388e64b914051608368fe2, type: 3}
   WallSegments: 6
   WallHeight: 3
-  MeleeModel: {fileID: 460340101142492609, guid: 16d26378532b9824fbc290be40b1fd59, type: 3}
-  RangedModel: {fileID: 3344582975809630224, guid: 13dec937b4f104e48987ea63aa0a7985, type: 3}
-  EliteModel: {fileID: 460340101142492609, guid: 16d26378532b9824fbc290be40b1fd59, type: 3}
-  EliteArcherModel: {fileID: 3344582975809630224, guid: 13dec937b4f104e48987ea63aa0a7985, type: 3}
-  BossModel: {fileID: 1417194156277938, guid: 0e6dd0455797e4231bd6f52961a75b33, type: 3}
+  EnemyModel1: {fileID: 4121327100216899360, guid: 31a9d4f9e24b06644b3a6a2f7d701471, type: 3}
+  EnemyModel2: {fileID: 297494572217138367, guid: 6828e5a72efdea64bb3dcf0a3bcd9761, type: 3}
+  EnemyModel3: {fileID: 4121327100216899360, guid: 31a9d4f9e24b06644b3a6a2f7d701471, type: 3}
+  EnemyModel4: {fileID: 297494572217138367, guid: 6828e5a72efdea64bb3dcf0a3bcd9761, type: 3}
+  EnemyModel5: {fileID: 2734712360499174245, guid: 8ab282a15ca8ee74192d8b36b1e4d8e4, type: 3}
+  EnemyModel6: {fileID: 6851799452316157813, guid: f0bda2f6b9f31a64ca065ab31916f96a, type: 3}
+  ProceduralModel: {fileID: 919132149155446097, guid: d2a92702c0b6db0479db7bd5542d2d92, type: 3}
+  MeleeWeapons:
+  - {fileID: 113808, guid: 854b79b41b7e5cc42b6b7c93dc7a83d1, type: 3}
+  - {fileID: 1000011153640270, guid: dffba8244aeb1844494d47159ea57cd8, type: 3}
+  RangedWeapons:
+  - {fileID: 1276611230816550, guid: 1bff4569365714a78b2a5d4cf009ad14, type: 3}
+  - {fileID: 1864941553872042199, guid: ff129cf4cb92bde4e958c43c9366a3cc, type: 3}
