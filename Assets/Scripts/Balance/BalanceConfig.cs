@@ -13,6 +13,8 @@ namespace InvaderOfWorlds
         [Min(0.1f)] public float Speed = 2.5f;
         [Min(0.05f)] public float AttackCooldown = 1.5f;
         [Min(0.5f)] public float AttackRange = 2.2f;
+        [Tooltip("Сколько опыта даёт убийство этого врага")]
+        [Min(0)] public int Experience = 10;
     }
 
     /// <summary>Параметры всех типов врагов одного биома.</summary>
@@ -21,11 +23,11 @@ namespace InvaderOfWorlds
     {
         public string Biome = "";
 
-        public EnemyStats Melee = new EnemyStats { Health = 60f, Damage = 10f, Speed = 2.5f, AttackCooldown = 1.5f, AttackRange = 2.2f };
-        public EnemyStats Ranged = new EnemyStats { Health = 48f, Damage = 10f, Speed = 2.2f, AttackCooldown = 1.6f, AttackRange = 16f };
-        public EnemyStats Elite = new EnemyStats { Health = 180f, Damage = 14f, Speed = 2.6f, AttackCooldown = 1.8f, AttackRange = 2.6f };
-        public EnemyStats EliteRanged = new EnemyStats { Health = 140f, Damage = 12f, Speed = 2.4f, AttackCooldown = 1.6f, AttackRange = 20f };
-        public EnemyStats Boss = new EnemyStats { Health = 520f, Damage = 18f, Speed = 2.4f, AttackCooldown = 6f, AttackRange = 5f };
+        public EnemyStats Melee = new EnemyStats { Health = 60f, Damage = 10f, Speed = 2.5f, AttackCooldown = 1.5f, AttackRange = 2.2f, Experience = 10 };
+        public EnemyStats Ranged = new EnemyStats { Health = 48f, Damage = 10f, Speed = 2.2f, AttackCooldown = 1.6f, AttackRange = 16f, Experience = 14 };
+        public EnemyStats Elite = new EnemyStats { Health = 180f, Damage = 14f, Speed = 2.6f, AttackCooldown = 1.8f, AttackRange = 2.6f, Experience = 50 };
+        public EnemyStats EliteRanged = new EnemyStats { Health = 140f, Damage = 12f, Speed = 2.4f, AttackCooldown = 1.6f, AttackRange = 20f, Experience = 70 };
+        public EnemyStats Boss = new EnemyStats { Health = 520f, Damage = 18f, Speed = 2.4f, AttackCooldown = 6f, AttackRange = 5f, Experience = 300 };
     }
 
     /// <summary>

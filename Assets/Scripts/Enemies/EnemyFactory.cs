@@ -23,7 +23,7 @@ namespace InvaderOfWorlds
         /// <summary>Параметры врага из баланса или переданные значения по умолчанию.</summary>
         private static void Stats(EnemyType type, float health, float damage, float speed,
             float cooldown, float range, out float outHealth, out float outDamage, out float outSpeed,
-            out float outCooldown, out float outRange)
+            out float outCooldown, out float outRange, out int outExperience, int experience)
         {
             var stats = Balance.EnemyStatsForCurrentBiome(type);
 
@@ -32,6 +32,7 @@ namespace InvaderOfWorlds
             outSpeed = stats != null ? stats.Speed : speed;
             outCooldown = stats != null ? stats.AttackCooldown : cooldown;
             outRange = stats != null ? stats.AttackRange : range;
+            outExperience = stats != null ? Mathf.Max(0, stats.Experience) : experience;
         }
 
         /// <summary>Ближний бой: подходит и бьёт рукой.</summary>
@@ -42,10 +43,11 @@ namespace InvaderOfWorlds
             var height = look != null ? look.Height : 1.8f;
 
             Stats(EnemyType.Melee, health, 10f, 2.5f, 1.5f, 2.2f,
-                out var maxHealth, out var damage, out var speed, out var cooldown, out var range);
+                out var maxHealth, out var damage, out var speed, out var cooldown, out var range,
+                out var experience, 10);
 
             var enemy = CreateBody(planet, surfacePosition, color, maxHealth, parent, height, 0.35f,
-                gold: 5, experience: 10, modelPath: "Characters/man-soldier_Rig", weaponPath: "Weapons/sword",
+                gold: 5, experience: experience, modelPath: "Characters/man-soldier_Rig", weaponPath: "Weapons/sword",
                 modelOverride: look?.Model,
                 weaponOverride: Characters.RandomWeapon(false) ?? look?.Weapon);
             enemy.name = "Guard";
@@ -66,10 +68,11 @@ namespace InvaderOfWorlds
             var height = look != null ? look.Height : 1.9f;
 
             Stats(EnemyType.Ranged, health, 10f, 2.2f, 1.6f, 16f,
-                out var maxHealth, out var damage, out var speed, out var cooldown, out var range);
+                out var maxHealth, out var damage, out var speed, out var cooldown, out var range,
+                out var experience, 14);
 
             var enemy = CreateBody(planet, surfacePosition, RangedColor, maxHealth, parent, height, 0.33f,
-                gold: 7, experience: 14, modelPath: "Characters/man-cult_Rig", weaponPath: "Weapons/bow",
+                gold: 7, experience: experience, modelPath: "Characters/man-cult_Rig", weaponPath: "Weapons/bow",
                 modelOverride: look?.Model,
                 weaponOverride: Characters.RandomWeapon(true) ?? look?.Weapon);
             enemy.name = "Archer";
@@ -90,10 +93,11 @@ namespace InvaderOfWorlds
             var height = look != null ? look.Height : 2.5f;
 
             Stats(EnemyType.Elite, 180f, 14f, 2.6f, 1.8f, 2.6f,
-                out var maxHealth, out var damage, out var speed, out var cooldown, out var range);
+                out var maxHealth, out var damage, out var speed, out var cooldown, out var range,
+                out var experience, 50);
 
             var enemy = CreateBody(planet, surfacePosition, EliteColor, maxHealth, parent, height, 0.5f,
-                gold: 25, experience: 50, modelPath: "Characters/man-knight_Rig", weaponPath: "Weapons/hammer",
+                gold: 25, experience: experience, modelPath: "Characters/man-knight_Rig", weaponPath: "Weapons/hammer",
                 modelOverride: look?.Model,
                 weaponOverride: Characters.RandomWeapon(false) ?? look?.Weapon);
             enemy.name = "Elite";
@@ -116,10 +120,11 @@ namespace InvaderOfWorlds
             var height = look != null ? look.Height : 2.4f;
 
             Stats(EnemyType.EliteRanged, 140f, 12f, 2.4f, 1.6f, 20f,
-                out var maxHealth, out var damage, out var speed, out var cooldown, out var range);
+                out var maxHealth, out var damage, out var speed, out var cooldown, out var range,
+                out var experience, 70);
 
             var enemy = CreateBody(planet, surfacePosition, EliteRangedColor, maxHealth, parent, height, 0.5f,
-                gold: 35, experience: 70, modelPath: "Characters/man-cult_Rig", weaponPath: "Weapons/bow",
+                gold: 35, experience: experience, modelPath: "Characters/man-cult_Rig", weaponPath: "Weapons/bow",
                 modelOverride: look?.Model,
                 weaponOverride: Characters.RandomWeapon(true) ?? look?.Weapon);
             enemy.name = "Elite Archer";
@@ -141,10 +146,11 @@ namespace InvaderOfWorlds
             var height = look != null ? look.Height : 4.2f;
 
             Stats(EnemyType.Boss, 520f, 18f, 2.4f, 6f, 5f,
-                out var maxHealth, out var damage, out var speed, out var cooldown, out var range);
+                out var maxHealth, out var damage, out var speed, out var cooldown, out var range,
+                out var experience, 300);
 
             var enemy = CreateBody(planet, surfacePosition, BossColor, maxHealth, parent, height, 0.9f,
-                gold: 150, experience: 300, modelPath: "Characters/giant_Rig", weaponPath: "Weapons/club-zulu",
+                gold: 150, experience: experience, modelPath: "Characters/giant_Rig", weaponPath: "Weapons/club-zulu",
                 modelOverride: look?.Model,
                 weaponOverride: Characters.RandomWeapon(false) ?? look?.Weapon);
             enemy.name = "Boss";

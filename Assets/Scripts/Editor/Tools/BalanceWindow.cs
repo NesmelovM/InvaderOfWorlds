@@ -324,6 +324,7 @@ namespace InvaderOfWorlds.EditorTools
                 stats.Speed = EditorGUILayout.FloatField("Скорость", stats.Speed);
                 stats.AttackCooldown = EditorGUILayout.FloatField("Темп атаки, с", stats.AttackCooldown);
                 stats.AttackRange = EditorGUILayout.FloatField("Радиус атаки", stats.AttackRange);
+                stats.Experience = EditorGUILayout.IntField("Опыт за убийство", stats.Experience);
             }
         }
 

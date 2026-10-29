@@ -165,30 +165,35 @@ MonoBehaviour:
       Speed: 2.5
       AttackCooldown: 1.5
       AttackRange: 2.2
+      Experience: 10
     Ranged:
       Health: 48
       Damage: 10
       Speed: 2.2
       AttackCooldown: 1.6
       AttackRange: 16
+      Experience: 14
     Elite:
       Health: 180
       Damage: 14
       Speed: 2.6
       AttackCooldown: 1.8
       AttackRange: 2.6
+      Experience: 50
     EliteRanged:
       Health: 140
       Damage: 12
       Speed: 2.4
       AttackCooldown: 1.6
       AttackRange: 20
+      Experience: 70
     Boss:
       Health: 520
       Damage: 18
       Speed: 2.4
       AttackCooldown: 6
       AttackRange: 5
+      Experience: 300
   - Biome: "\u0418\u043D\u0434\u0438\u044F"
     Melee:
       Health: 60
@@ -196,30 +201,35 @@ MonoBehaviour:
       Speed: 2.5
       AttackCooldown: 1.5
       AttackRange: 2.2
+      Experience: 10
     Ranged:
       Health: 48
       Damage: 10
       Speed: 2.2
       AttackCooldown: 1.6
       AttackRange: 16
+      Experience: 14
     Elite:
       Health: 180
       Damage: 14
       Speed: 2.6
       AttackCooldown: 1.8
       AttackRange: 2.6
+      Experience: 50
     EliteRanged:
       Health: 140
       Damage: 12
       Speed: 2.4
       AttackCooldown: 1.6
       AttackRange: 20
+      Experience: 70
     Boss:
       Health: 520
       Damage: 18
       Speed: 2.4
       AttackCooldown: 6
       AttackRange: 5
+      Experience: 300
   - Biome: "\u042F\u043F\u043E\u043D\u0438\u044F"
     Melee:
       Health: 60
@@ -227,30 +237,35 @@ MonoBehaviour:
       Speed: 2.5
       AttackCooldown: 1.5
       AttackRange: 2.2
+      Experience: 10
     Ranged:
       Health: 48
       Damage: 10
       Speed: 2.2
       AttackCooldown: 1.6
       AttackRange: 16
+      Experience: 14
     Elite:
       Health: 180
       Damage: 14
       Speed: 2.6
       AttackCooldown: 1.8
       AttackRange: 2.6
+      Experience: 50
     EliteRanged:
       Health: 140
       Damage: 12
       Speed: 2.4
       AttackCooldown: 1.6
       AttackRange: 20
+      Experience: 70
     Boss:
       Health: 520
       Damage: 18
       Speed: 2.4
       AttackCooldown: 6
       AttackRange: 5
+      Experience: 300
   - Biome: "\u041B\u0443\u043D\u0430"
     Melee:
       Health: 60
@@ -258,29 +273,34 @@ MonoBehaviour:
       Speed: 2.5
       AttackCooldown: 1.5
       AttackRange: 2.2
+      Experience: 10
     Ranged:
       Health: 48
       Damage: 10
       Speed: 2.2
       AttackCooldown: 1.6
       AttackRange: 16
+      Experience: 14
     Elite:
       Health: 180
       Damage: 14
       Speed: 2.6
       AttackCooldown: 1.8
       AttackRange: 2.6
+      Experience: 50
     EliteRanged:
       Health: 140
       Damage: 12
       Speed: 2.4
       AttackCooldown: 1.6
       AttackRange: 20
+      Experience: 70
     Boss:
       Health: 520
       Damage: 18
       Speed: 2.4
       AttackCooldown: 6
       AttackRange: 5
+      Experience: 300
   PlanetsPerBiome: 3
   DifficultyStep: 1.32
