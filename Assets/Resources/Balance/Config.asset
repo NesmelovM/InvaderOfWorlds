@@ -85,11 +85,11 @@ MonoBehaviour:
     Shots: 1
     ProjectileSpeed: 18
     Cost: 122
-  - Damage: 26
+  - Damage: 40
     Range: 16
     Cooldown: 2.2
     Shots: 1
-    ProjectileSpeed: 14
+    ProjectileSpeed: 17.1
     Cost: 133
   ExperienceMultiplier: 1
   LevelBaseExperience: 45
@@ -165,142 +165,142 @@ MonoBehaviour:
       Speed: 2.5
       AttackCooldown: 1.5
       AttackRange: 2.2
-      Experience: 10
+      Experience: 5
     Ranged:
       Health: 48
       Damage: 10
       Speed: 2.2
       AttackCooldown: 1.6
       AttackRange: 16
-      Experience: 14
+      Experience: 7
     Elite:
       Health: 180
-      Damage: 14
-      Speed: 2.6
-      AttackCooldown: 1.8
+      Damage: 20
+      Speed: 4.45
+      AttackCooldown: 2.49
       AttackRange: 2.6
-      Experience: 50
+      Experience: 25
     EliteRanged:
       Health: 140
-      Damage: 12
-      Speed: 2.4
+      Damage: 15
+      Speed: 4.45
       AttackCooldown: 1.6
       AttackRange: 20
-      Experience: 70
+      Experience: 28
     Boss:
       Health: 520
       Damage: 18
-      Speed: 2.4
+      Speed: 5
       AttackCooldown: 6
       AttackRange: 5
-      Experience: 300
+      Experience: 140
   - Biome: "\u0418\u043D\u0434\u0438\u044F"
     Melee:
-      Health: 60
-      Damage: 10
+      Health: 72
+      Damage: 11.67
       Speed: 2.5
       AttackCooldown: 1.5
       AttackRange: 2.2
-      Experience: 10
+      Experience: 8
     Ranged:
-      Health: 48
-      Damage: 10
+      Health: 58
+      Damage: 13.6
       Speed: 2.2
       AttackCooldown: 1.6
       AttackRange: 16
-      Experience: 14
+      Experience: 13
     Elite:
-      Health: 180
-      Damage: 14
-      Speed: 2.6
+      Health: 190.5
+      Damage: 19.2
+      Speed: 5.51
       AttackCooldown: 1.8
       AttackRange: 2.6
-      Experience: 50
+      Experience: 43
     EliteRanged:
-      Health: 140
-      Damage: 12
-      Speed: 2.4
+      Health: 158.6
+      Damage: 16.9
+      Speed: 5.5
       AttackCooldown: 1.6
       AttackRange: 20
-      Experience: 70
+      Experience: 68
     Boss:
-      Health: 520
-      Damage: 18
-      Speed: 2.4
+      Health: 549.7
+      Damage: 22.1
+      Speed: 5.49
       AttackCooldown: 6
       AttackRange: 5
-      Experience: 300
+      Experience: 214
   - Biome: "\u042F\u043F\u043E\u043D\u0438\u044F"
     Melee:
-      Health: 60
+      Health: 79.7
       Damage: 10
       Speed: 2.5
       AttackCooldown: 1.5
       AttackRange: 2.2
-      Experience: 10
+      Experience: 119
     Ranged:
-      Health: 48
+      Health: 91
       Damage: 10
       Speed: 2.2
       AttackCooldown: 1.6
       AttackRange: 16
-      Experience: 14
+      Experience: 100
     Elite:
-      Health: 180
+      Health: 267.4
       Damage: 14
-      Speed: 2.6
+      Speed: 6.42
       AttackCooldown: 1.8
       AttackRange: 2.6
-      Experience: 50
+      Experience: 269
     EliteRanged:
-      Health: 140
-      Damage: 12
-      Speed: 2.4
+      Health: 285.2
+      Damage: 23
+      Speed: 5.88
       AttackCooldown: 1.6
       AttackRange: 20
-      Experience: 70
+      Experience: 155
     Boss:
-      Health: 520
-      Damage: 18
-      Speed: 2.4
+      Health: 698.2
+      Damage: 31.6
+      Speed: 5.63
       AttackCooldown: 6
       AttackRange: 5
-      Experience: 300
+      Experience: 428
   - Biome: "\u041B\u0443\u043D\u0430"
     Melee:
-      Health: 60
+      Health: 140.4
       Damage: 10
       Speed: 2.5
       AttackCooldown: 1.5
       AttackRange: 2.2
-      Experience: 10
+      Experience: 277
     Ranged:
-      Health: 48
+      Health: 129
       Damage: 10
       Speed: 2.2
       AttackCooldown: 1.6
       AttackRange: 16
-      Experience: 14
+      Experience: 484
     Elite:
-      Health: 180
+      Health: 314
       Damage: 14
       Speed: 2.6
       AttackCooldown: 1.8
       AttackRange: 2.6
-      Experience: 50
+      Experience: 277
     EliteRanged:
-      Health: 140
+      Health: 291.5
       Damage: 12
       Speed: 2.4
       AttackCooldown: 1.6
       AttackRange: 20
-      Experience: 70
+      Experience: 269
     Boss:
-      Health: 520
+      Health: 822.8
       Damage: 18
       Speed: 2.4
       AttackCooldown: 6
       AttackRange: 5
-      Experience: 300
+      Experience: 698
   PlanetsPerBiome: 3
   DifficultyStep: 1.32

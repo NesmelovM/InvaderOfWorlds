@@ -17,10 +17,9 @@ MonoBehaviour:
   GroundColor: {r: 0.42, g: 0.52, b: 0.36, a: 1}
   HillColor: {r: 0.34, g: 0.42, b: 0.3, a: 1}
   SkyColor: {r: 0.2, g: 0.3, b: 0.28, a: 1}
-  BigProps: 100
+  BigProps: 50
   SmallProps: 700
   Big:
-  - {fileID: 444229797996521405, guid: cb356e2220cef0a438f2b88b62790b63, type: 3}
   - {fileID: 2344288799412060050, guid: c504aa35681966b4583f9df72878529b, type: 3}
   - {fileID: 7706599732814762307, guid: 9b40f93a8cb08c74f95ac3d6915c8250, type: 3}
   - {fileID: 3279149373483205250, guid: d017911252f0ddc4c91e52abbe7bd9e5, type: 3}
@@ -38,8 +37,6 @@ MonoBehaviour:
   - {fileID: 3006806604066508501, guid: 848279e3be6b2694f86c39cab1d9973d, type: 3}
   - {fileID: 4468798434412265705, guid: efb9cb053c8666e42a55bc41c4318713, type: 3}
   - {fileID: 198759958263690526, guid: b63933f397afe4746b8122149905b95d, type: 3}
-  - {fileID: 7802305870556239256, guid: 01f1bba7910732948936a8780067e5de, type: 3}
-  - {fileID: 2876743178510568125, guid: 6f333dcb4d664514a8f7ce4601d9c3a5, type: 3}
   Small:
   - {fileID: 146238, guid: adb9415be6f03b44188876c36045d693, type: 3}
   - {fileID: 1000012428686606, guid: 847480715863e18499e62c63dc24d320, type: 3}
@@ -151,18 +148,15 @@ MonoBehaviour:
   - {fileID: 1000014109055006, guid: 5c9de7283eb7304419a30532403d04e6, type: 3}
   - {fileID: 1102042703788146, guid: 8dfca704eb0cf4e9c81773e2df7ef913, type: 3}
   Walls:
-  - {fileID: 8502125837752092916, guid: 0a3794a5e33ff0c49be0ede2a556fbc0, type: 3}
-  - {fileID: 5464518480705063859, guid: 6c376d30781246c4589ac3a01d058a5a, type: 3}
-  - {fileID: 9181530589722518808, guid: 8e69effcf74532f42a1b3d469ce574fd, type: 3}
-  - {fileID: 3877821564361777714, guid: d6aa88ff31d280d48b4ae649d655164d, type: 3}
-  - {fileID: 1944258280618694242, guid: 9e122b7f9273c1241b503e60a3643800, type: 3}
-  - {fileID: 7104898219868701789, guid: d02e5ed675bac1b4f8f98eb3b23d816a, type: 3}
-  - {fileID: 2387216541404063292, guid: 085731d21dd753b4cbc743208a510945, type: 3}
-  - {fileID: 6316004072912495867, guid: 39f5203fa84f65149ae6258857479554, type: 3}
-  - {fileID: 3006806604066508501, guid: 848279e3be6b2694f86c39cab1d9973d, type: 3}
-  - {fileID: 4468798434412265705, guid: efb9cb053c8666e42a55bc41c4318713, type: 3}
   - {fileID: 7802305870556239256, guid: 01f1bba7910732948936a8780067e5de, type: 3}
   - {fileID: 2876743178510568125, guid: 6f333dcb4d664514a8f7ce4601d9c3a5, type: 3}
+  - {fileID: 145726, guid: 1be5e82b1cbc5d243947fbcf678997fa, type: 3}
+  - {fileID: 1000012777144428, guid: fb1b76b22e1884f46aaac4cd83d0f5a5, type: 3}
+  - {fileID: 1000011588507356, guid: 7c66eb0c404a14d4f9614c5c501a17af, type: 3}
+  - {fileID: 1053836556080074, guid: e96ccf468607246dea6230263a2b10ef, type: 3}
+  - {fileID: 1400936089926566, guid: ae3d7ce39118d49e6a6b08196c4c28cf, type: 3}
+  - {fileID: 1694978722104928, guid: 4938eefdf61ec4b9097a1398980b421c, type: 3}
+  - {fileID: 1000011094018628, guid: 1b8371250eba14a4e9a3601d7a95ab61, type: 3}
   WallSegments: 6
   WallHeight: 3
   EnemyModel1: {fileID: 8863106677756784568, guid: ea4303dee3d9b0f4fb44b7f633b73c94, type: 3}

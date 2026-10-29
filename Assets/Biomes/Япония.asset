@@ -17,10 +17,9 @@ MonoBehaviour:
   GroundColor: {r: 0.43942365, g: 0.7283019, b: 0.09756497, a: 1}
   HillColor: {r: 0.78867924, g: 0.26512453, b: 0.18898536, a: 1}
   SkyColor: {r: 0.4066999, g: 0.6826424, b: 0.90188676, a: 1}
-  BigProps: 90
-  SmallProps: 600
+  BigProps: 40
+  SmallProps: 900
   Big:
-  - {fileID: 0}
   - {fileID: 1259308759151230, guid: 39d889c36e2a84b509941a3e8d8120a9, type: 3}
   - {fileID: 1000011329397856, guid: 402e0500f120f4608814b6ef51e2aca0, type: 3}
   - {fileID: 1000011591939036, guid: b742e89c06dd149e98adc584241dc7c2, type: 3}
