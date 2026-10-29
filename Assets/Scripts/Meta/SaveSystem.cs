@@ -51,7 +51,8 @@ namespace InvaderOfWorlds
                 {
                     System.IO.Path.Combine(root, "DefaultCompany", "InvaderOfWorlds6", FileName),
                     System.IO.Path.Combine(root, "DefaultCompany", "InvaderOfWorlds", FileName),
-                    System.IO.Path.Combine(root, "Dazed Games", "InvaderOfWorlds6", FileName)
+                    System.IO.Path.Combine(root, "Dazed Games", "InvaderOfWorlds6", FileName),
+                    System.IO.Path.Combine(root, "Dazed Games", "Invaders Of World", FileName)
                 };
 
                 foreach (var candidate in candidates)

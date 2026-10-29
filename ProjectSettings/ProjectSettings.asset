@@ -12,7 +12,7 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: Dazed Games
+  companyName: DefaultCompany
   productName: Invaders Of World
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
