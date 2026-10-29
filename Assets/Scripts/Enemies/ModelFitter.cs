@@ -16,11 +16,16 @@ namespace InvaderOfWorlds
         private Transform _host;
         private float _targetHeight;
         private bool _running;
+        private Renderer[] _renderers;
 
         public void Configure(Transform host, float targetHeight)
         {
             _host = host;
             _targetHeight = Mathf.Max(0.1f, targetHeight);
+
+            // Запоминаем рендереры сразу: оружие вешается в руку уже после,
+            // и если мерить вместе с ним, персонаж ужмётся и повиснет.
+            _renderers = GetComponentsInChildren<Renderer>();
 
             if (!_running && isActiveAndEnabled)
             {
@@ -59,6 +64,18 @@ namespace InvaderOfWorlds
             Destroy(this);
         }
 
+        /// <summary>Оружие и прочие навески в руке не входят в рост персонажа.</summary>
+        private bool IsPartOfAttachment(Transform target)
+        {
+            for (var current = target; current != null && current != transform; current = current.parent)
+            {
+                if (current.name.StartsWith("Weapon"))
+                    return true;
+            }
+
+            return false;
+        }
+
         /// <summary>Нижняя и верхняя точки модели вдоль «вверх» объекта-хозяина.</summary>
         private bool TryMeasure(out float bottom, out float top)
         {
@@ -68,9 +85,12 @@ namespace InvaderOfWorlds
             var up = _host.up;
             var origin = _host.position;
 
-            foreach (var renderer in GetComponentsInChildren<Renderer>())
+            foreach (var renderer in _renderers)
             {
-                if (renderer is ParticleSystemRenderer || !renderer.enabled)
+                if (renderer == null || renderer is ParticleSystemRenderer || !renderer.enabled)
+                    continue;
+
+                if (IsPartOfAttachment(renderer.transform))
                     continue;
 
                 var bounds = renderer.bounds;
