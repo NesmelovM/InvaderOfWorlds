@@ -16,7 +16,7 @@ namespace InvaderOfWorlds
         private const float VisibleAngle = 80f;
         private const float BarWidth = 760f;
         private const float BarHeight = 34f;
-        private const float BarTop = 104f;
+        private const float BarTop = 18f;
 
         private static readonly Color PortalColor = new Color(0.35f, 0.85f, 1f);
         private static readonly Color ChestColor = new Color(1f, 0.82f, 0.30f);
