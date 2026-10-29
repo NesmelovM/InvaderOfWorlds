@@ -58,6 +58,47 @@ namespace InvaderOfWorlds
             return Vector3.ProjectOnPlane(delta, normal);
         }
 
+        /// <summary>
+        /// Выталкивает персонажа из геометрии, если он оказался внутри: в углу
+        /// скольжение по одной нормали может завести внутрь второй стены.
+        /// Возвращает суммарное смещение наружу.
+        /// </summary>
+        public static Vector3 ResolvePenetration(Collider body, Vector3 up, float maxPush,
+            LayerMask mask)
+        {
+            if (body == null || maxPush <= 0f)
+                return Vector3.zero;
+
+            var offset = Vector3.zero;
+            var center = body.bounds.center;
+            var radius = Mathf.Max(0.2f, body.bounds.extents.x);
+            var hits = Physics.OverlapSphere(center, radius + 0.05f, mask, QueryTriggerInteraction.Ignore);
+
+            foreach (var other in hits)
+            {
+                if (other == null || other == body || other.transform.IsChildOf(body.transform))
+                    continue;
+
+                if (other.GetComponentInParent<EnemyMarker>() != null)
+                    continue;
+
+                if (!Physics.ComputePenetration(body, body.transform.position, body.transform.rotation,
+                        other, other.transform.position, other.transform.rotation, out var direction,
+                        out var distance))
+                    continue;
+
+                // Только горизонтальная составляющая: вверх-вниз персонажа держит грунт.
+                var flat = Vector3.ProjectOnPlane(direction, up);
+
+                if (flat.sqrMagnitude < 0.0001f)
+                    continue;
+
+                offset += flat.normalized * Mathf.Min(distance, maxPush);
+            }
+
+            return offset.sqrMagnitude > maxPush * maxPush ? offset.normalized * maxPush : offset;
+        }
+
         private static Vector3 GetBlockingNormal(Vector3 origin, Vector3 direction, float distance, LayerMask mask)
         {
             var count = Physics.SphereCastNonAlloc(origin, 0.35f, direction, Buffer, distance + 0.05f, mask,

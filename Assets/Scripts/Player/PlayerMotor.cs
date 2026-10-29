@@ -58,6 +58,9 @@ namespace InvaderOfWorlds
         private float _height;           // высота над грунтом, м
         private float _verticalSpeed;    // вдоль нормали, м/с
         private Vector3 _up = Vector3.up;
+        private Collider _bodyCollider;
+        private Vector3 _lastPosition;
+        private float _stuckTimer;
         private float _stepDistance;
         private CharacterRig _rig;
         [SerializeField, Min(0.5f)] private float _stepLength = 2.4f;
@@ -107,6 +110,7 @@ namespace InvaderOfWorlds
             // Скорости берём из конфига баланса и множителя забега:
             // карточки «Лёгкость» должны переживать переход на новую планету.
             _rig = GetComponent<CharacterRig>();
+            _bodyCollider = GetComponent<Collider>();
             _walkSpeed = Balance.WalkSpeed * RunState.SpeedMultiplier;
             _sprintSpeed = Balance.SprintSpeed * RunState.SpeedMultiplier;
         }
@@ -162,6 +166,133 @@ namespace InvaderOfWorlds
 
             _stepDistance = 0f;
             SoundBank.Step(transform.position);
+        }
+
+        /// <summary>
+        /// Выталкивает из стен и построек, если персонаж оказался внутри:
+        /// скольжение по одной нормали в углу может завести внутрь второй стены.
+        /// </summary>
+        private void Unstick()
+        {
+            if (_bodyCollider == null)
+                return;
+
+            // Сначала пробуем аккуратно вытолкнуть: работает для простых коллайдеров.
+            var push = CharacterObstacles.ResolvePenetration(_bodyCollider, _up, 0.45f, _obstacleMask);
+
+            if (push.sqrMagnitude > 0.000001f)
+            {
+                transform.position += push;
+                SnapToSurface();
+            }
+
+            if (!IsOverlapping())
+                return;
+
+            // Мешевые коллайдеры не умеют ComputePenetration, поэтому ищем
+            // свободное место вокруг и выбираем ближайшее.
+            if (TryFindFreeStep(out var free))
+            {
+                transform.position = free;
+                _velocity = Vector3.zero;
+                SnapToSurface();
+            }
+        }
+
+        /// <summary>Стоит ли игрок внутри стены или постройки.</summary>
+        private bool IsOverlapping()
+        {
+            var center = transform.position + _up * _bodyCenter;
+
+            foreach (var other in Physics.OverlapSphere(center, _bodyRadius, _obstacleMask,
+                         QueryTriggerInteraction.Ignore))
+            {
+                if (other == null || other == _bodyCollider || other.transform.IsChildOf(transform))
+                    continue;
+
+                if (other.GetComponentInParent<EnemyMarker>() != null)
+                    continue;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Ищет рядом точку, где персонаж не пересекается с геометрией.</summary>
+        private bool TryFindFreeStep(out Vector3 free)
+        {
+            free = transform.position;
+            var center = transform.position + _up * _bodyCenter;
+            var forward = Vector3.ProjectOnPlane(transform.forward, _up).normalized;
+
+            if (forward.sqrMagnitude < 0.001f)
+                forward = Vector3.ProjectOnPlane(Vector3.right, _up).normalized;
+
+            for (var ring = 0; ring < 3; ring++)
+            {
+                var distance = 0.6f + ring * 0.7f;
+
+                for (var i = 0; i < 8; i++)
+                {
+                    var direction = Quaternion.AngleAxis(i * 45f, _up) * forward;
+                    var candidate = center + direction * distance;
+                    var blocked = false;
+
+                    foreach (var other in Physics.OverlapSphere(candidate, _bodyRadius, _obstacleMask,
+                                 QueryTriggerInteraction.Ignore))
+                    {
+                        if (other == null || other == _bodyCollider || other.transform.IsChildOf(transform))
+                            continue;
+
+                        if (other.GetComponentInParent<EnemyMarker>() != null)
+                            continue;
+
+                        blocked = true;
+                        break;
+                    }
+
+                    if (blocked)
+                        continue;
+
+                    free = candidate - _up * _bodyCenter;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Если игрок жмёт вперёд, а сдвига нет полторы секунды — вытаскиваем его
+        /// на ближайшее свободное место. Лучше небольшая телепортация, чем тупик.
+        /// </summary>
+        private void GuardAgainstStuck(Vector2 input)
+        {
+            var moved = Vector3.Distance(transform.position, _lastPosition);
+            _lastPosition = transform.position;
+
+            if (input.sqrMagnitude < 0.01f || moved > 0.02f)
+            {
+                _stuckTimer = 0f;
+                return;
+            }
+
+            _stuckTimer += Time.deltaTime;
+
+            if (_stuckTimer < 1.5f)
+                return;
+
+            _stuckTimer = 0f;
+
+            if (SpawnPlacement.TryFindFreeGroundPosition(_planet, transform.position, 6f, 40,
+                    out var free, out _, 1.2f))
+            {
+                transform.position = free;
+                _velocity = Vector3.zero;
+                SnapToSurface();
+                SoundBank.Step(transform.position);
+            }
         }
 
         /// <summary>Возвращает персонажа на текущий грунт после расталкивания.</summary>
