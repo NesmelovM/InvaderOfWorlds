@@ -40,6 +40,10 @@ namespace InvaderOfWorlds
         private void OnDied(Health health)
         {
             SoundBank.Coin(transform.position);
+
+            // Монеты летят к игроку: золото уже начислено выше, это чистый эффект.
+            var player = RunModifiers.PlayerHealth != null ? RunModifiers.PlayerHealth.transform : null;
+            Coin.Burst(transform.position, player, UnityEngine.Random.Range(2, 5));
             RunSession.RegisterKill(
                 Mathf.RoundToInt(_gold * Balance.GoldMultiplier),
                 Mathf.RoundToInt(_experience * Balance.ExperienceMultiplier));

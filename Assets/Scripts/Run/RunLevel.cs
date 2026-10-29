@@ -128,6 +128,37 @@ namespace InvaderOfWorlds
             var rare = new List<Card>();
             var epic = new List<Card>();
 
+            BuildPools(common, rare, epic);
+
+            for (var i = 0; i < 3; i++)
+            {
+                var card = PickCard(common, rare, epic);
+
+                if (card.HasValue)
+                    _cards.Add(card.Value);
+            }
+        }
+
+        /// <summary>
+        /// Даёт случайное улучшение без экрана выбора — так работает награда из сундука.
+        /// </summary>
+        public void GrantRandomUpgrade()
+        {
+            var common = new List<Card>();
+            var rare = new List<Card>();
+            var epic = new List<Card>();
+
+            BuildPools(common, rare, epic);
+
+            var card = PickCard(common, rare, epic);
+
+            if (card.HasValue)
+                card.Value.Apply?.Invoke();
+        }
+
+        /// <summary>Наполняет наборы карточек для текущего уровня.</summary>
+        private void BuildPools(List<Card> common, List<Card> rare, List<Card> epic)
+        {
             void Add(List<Card> list, CardRarity rarity, string title, string description, Action apply)
             {
                 list.Add(new Card
@@ -182,13 +213,6 @@ namespace InvaderOfWorlds
             Add(epic, CardRarity.Epic, "Мёртвый воздух", "враги двигаются на 25% медленнее",
                 () => RunModifiers.SlowEnemies(0.25f));
 
-            for (var i = 0; i < 3; i++)
-            {
-                var card = PickCard(common, rare, epic);
-
-                if (card.HasValue)
-                    _cards.Add(card.Value);
-            }
         }
 
         /// <summary>Бросает редкость и забирает случайную карточку из её набора.</summary>

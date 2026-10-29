@@ -81,6 +81,7 @@ namespace InvaderOfWorlds
             SpawnBigProps(random);
             SpawnSmallProps(random);
             SpawnSettlementWalls(random);
+            SpawnChests(random);
             SpawnBossArena();
         }
 
@@ -398,6 +399,35 @@ namespace InvaderOfWorlds
         }
 
         /// <summary>Босс и портал в самой дальней точке от входа.</summary>
+        /// <summary>
+        /// Сундуки в забеге: несколько штук в случайных точках планеты, подальше от старта.
+        /// </summary>
+        private void SpawnChests(System.Random random)
+        {
+            if (_player == null || _planet == null)
+                return;
+
+            var root = new GameObject("Chests").transform;
+            var startUp = _planet.UpAt(_player.position);
+            var placed = 0;
+            var attempts = 0;
+            var count = 3 + random.Next(0, 2);
+
+            while (placed < count && attempts < 60)
+            {
+                attempts++;
+                var point = _planet.RandomSurfacePoint(random);
+                var direction = _planet.UpAt(point);
+
+                // Не ставим рядом со стартом и не ближе 20 градусов друг к другу.
+                if (Vector3.Angle(startUp, direction) < 25f)
+                    continue;
+
+                Chest.Spawn(_planet, direction, _player, root);
+                placed++;
+            }
+        }
+
         private void SpawnBossArena()
         {
             var direction = _planet.UpAt(_generator.BossPortalPoint);
