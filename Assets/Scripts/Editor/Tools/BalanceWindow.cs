@@ -49,6 +49,8 @@ namespace InvaderOfWorlds.EditorTools
             EditorGUILayout.Space(8f);
             DrawProgress();
             EditorGUILayout.Space(8f);
+            DrawCards();
+            EditorGUILayout.Space(8f);
             DrawEnemies();
             EditorGUILayout.Space(8f);
             DrawPlayer();
@@ -127,9 +129,53 @@ namespace InvaderOfWorlds.EditorTools
             _config.LevelGrowth = EditorGUILayout.FloatField("Рост порога за уровень", _config.LevelGrowth);
             _config.DeathPenaltyShare = EditorGUILayout.Slider("Доля добычи после смерти",
                 _config.DeathPenaltyShare, 0f, 1f);
+            _config.ExperiencePerPlanet = EditorGUILayout.FloatField(
+                new GUIContent("Опыт за планету", "Во сколько раз больше опыта за врага на каждой следующей планете"),
+                _config.ExperiencePerPlanet);
+
             _config.DifficultyStep = EditorGUILayout.FloatField(
                 new GUIContent("Рост сложности за планету", "Во сколько раз злее враги на следующей планете"),
                 _config.DifficultyStep);
+        }
+
+        private void DrawCards()
+        {
+            EditorGUILayout.LabelField("КАРТОЧКИ УРОВНЯ", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "Значения карточек по редкости. Пустое или нулевое поле убирает карточку из набора.",
+                MessageType.None);
+
+            DrawTier("Обычные", _config.CommonCards);
+            DrawTier("Редкие", _config.RareCards);
+            DrawTier("Эпические", _config.EpicCards);
+        }
+
+        private static void DrawTier(string title, CardTierBalance tier)
+        {
+            if (tier == null)
+                return;
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
+
+                tier.DamageMult = EditorGUILayout.FloatField("Урон, множитель", tier.DamageMult);
+                tier.HealthAdd = EditorGUILayout.FloatField("Здоровье, прибавка", tier.HealthAdd);
+                tier.SpeedMult = EditorGUILayout.FloatField("Скорость, множитель", tier.SpeedMult);
+                tier.AttackSpeedMult = EditorGUILayout.FloatField("Скорость атаки, множитель",
+                    tier.AttackSpeedMult);
+                tier.ExperienceMult = EditorGUILayout.FloatField("Опыт, множитель", tier.ExperienceMult);
+                tier.HealPerKill = EditorGUILayout.FloatField("Здоровье за убийство", tier.HealPerKill);
+                tier.SlowPercent = EditorGUILayout.Slider("Замедление врагов", tier.SlowPercent, 0f, 0.6f);
+
+                EditorGUILayout.Space(4f);
+                tier.ExplosionDamage = EditorGUILayout.FloatField("Урон взрыва при смерти",
+                    tier.ExplosionDamage);
+                tier.ExplosionRadius = EditorGUILayout.FloatField("Радиус взрыва, м", tier.ExplosionRadius);
+                tier.RegenPerSecond = EditorGUILayout.FloatField("Регенерация в секунду",
+                    tier.RegenPerSecond);
+                tier.ExtraShots = EditorGUILayout.IntSlider("Доп. снарядов", tier.ExtraShots, 0, 3);
+            }
         }
 
         private void DrawEnemies()

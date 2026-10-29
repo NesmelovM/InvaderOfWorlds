@@ -72,6 +72,9 @@ namespace InvaderOfWorlds
             if (GetComponent<Ambience>() == null)
                 gameObject.AddComponent<Ambience>();
 
+            if (player.GetComponent<RunRegen>() == null)
+                player.AddComponent<RunRegen>();
+
             // Перед первым заходом даём выбрать оружие из купленного.
             if (firstPlanet)
                 RunStartWeaponChoice.Show(player);

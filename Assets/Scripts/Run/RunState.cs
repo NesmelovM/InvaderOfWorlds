@@ -23,6 +23,10 @@ namespace InvaderOfWorlds
         public static float SpeedMultiplier = 1f;
         public static float AttackSpeedMultiplier = 1f;
         public static float ExperienceMultiplier = 1f;
+        public static float ExplosionDamage;
+        public static float ExplosionRadius;
+        public static float RegenPerSecond;
+        public static int ExtraShots;
 
         /// <summary>Идентификаторы оружия из оружейной, которые несёт игрок.</summary>
         public static readonly List<int> Loadout = new List<int>();
@@ -42,6 +46,10 @@ namespace InvaderOfWorlds
             SpeedMultiplier = 1f;
             AttackSpeedMultiplier = 1f;
             ExperienceMultiplier = 1f;
+            ExplosionDamage = 0f;
+            ExplosionRadius = 0f;
+            RegenPerSecond = 0f;
+            ExtraShots = 0;
             Loadout.Clear();
             ActiveBiome = null;
             Seed = Random.Range(1, int.MaxValue);

@@ -4,6 +4,23 @@ using UnityEngine;
 
 namespace InvaderOfWorlds
 {
+    /// <summary>Значения карточек одной редкости: их правит инструмент баланса.</summary>
+    [Serializable]
+    public class CardTierBalance
+    {
+        [Tooltip("Множитель урона")] public float DamageMult = 1.10f;
+        [Tooltip("Прибавка здоровья")] public float HealthAdd = 15f;
+        [Tooltip("Множитель скорости")] public float SpeedMult = 1.05f;
+        [Tooltip("Здоровье за убийство")] public float HealPerKill = 1f;
+        [Tooltip("Множитель скорости атаки")] public float AttackSpeedMult = 1.10f;
+        [Tooltip("Множитель получаемого опыта")] public float ExperienceMult = 1.10f;
+        [Tooltip("Замедление врагов, доля")] public float SlowPercent = 0.08f;
+        [Tooltip("Урон взрыва при убийстве")] public float ExplosionDamage;
+        [Tooltip("Радиус взрыва, м")] public float ExplosionRadius = 4f;
+        [Tooltip("Регенерация здоровья в секунду")] public float RegenPerSecond;
+        [Tooltip("Сколько снарядов добавляет карточка")] public int ExtraShots;
+    }
+
     /// <summary>Параметры одного оружия, которые правятся в инструменте баланса.</summary>
     [Serializable]
     public class WeaponBalance
@@ -48,6 +65,32 @@ namespace InvaderOfWorlds
         [Min(1f)] public float WalkSpeed = 10f;
         [Min(1f)] public float SprintSpeed = 20f;
 
+        [Header("Карточки уровня")]
+        public CardTierBalance CommonCards = new CardTierBalance
+        {
+            DamageMult = 1.10f, HealthAdd = 15f, SpeedMult = 1.05f, HealPerKill = 1f,
+            AttackSpeedMult = 1.10f, ExperienceMult = 1.10f, SlowPercent = 0.08f,
+            ExplosionDamage = 10f, ExplosionRadius = 3.5f, RegenPerSecond = 0.5f, ExtraShots = 0
+        };
+
+        public CardTierBalance RareCards = new CardTierBalance
+        {
+            DamageMult = 1.20f, HealthAdd = 30f, SpeedMult = 1.10f, HealPerKill = 3f,
+            AttackSpeedMult = 1.20f, ExperienceMult = 1.20f, SlowPercent = 0.12f,
+            ExplosionDamage = 20f, ExplosionRadius = 4f, RegenPerSecond = 1f, ExtraShots = 1
+        };
+
+        public CardTierBalance EpicCards = new CardTierBalance
+        {
+            DamageMult = 1.35f, HealthAdd = 50f, SpeedMult = 1.18f, HealPerKill = 6f,
+            AttackSpeedMult = 1.35f, ExperienceMult = 1.35f, SlowPercent = 0.20f,
+            ExplosionDamage = 35f, ExplosionRadius = 5f, RegenPerSecond = 2f, ExtraShots = 1
+        };
+
+        [Header("Опыт по планетам")]
+        [Tooltip("Во сколько раз больше опыта за врага на каждой следующей планете забега")]
+        [Min(1f)] public float ExperiencePerPlanet = 1.25f;
+
         [Header("Сложность")]
         [Min(1f)] public float DifficultyStep = 1.32f;
     }
@@ -86,6 +129,21 @@ namespace InvaderOfWorlds
         public static float WalkSpeed => Config != null ? Config.WalkSpeed : 10f;
         public static float SprintSpeed => Config != null ? Config.SprintSpeed : 20f;
         public static float DifficultyStep => Config != null ? Config.DifficultyStep : 1.5f;
+        public static float ExperiencePerPlanet => Config != null ? Config.ExperiencePerPlanet : 1.25f;
+
+        /// <summary>Значения карточек для редкости: 0 — обычная, 1 — редкая, 2 — эпическая.</summary>
+        public static CardTierBalance Cards(int rarity)
+        {
+            if (Config == null)
+                return null;
+
+            return rarity switch
+            {
+                1 => Config.RareCards,
+                2 => Config.EpicCards,
+                _ => Config.CommonCards
+            };
+        }
 
         /// <summary>Сбрасывает кеш: нужно после правок конфига в редакторе.</summary>
         public static void ResetCache()

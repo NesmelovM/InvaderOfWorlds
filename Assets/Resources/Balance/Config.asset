@@ -102,4 +102,41 @@ MonoBehaviour:
   PlayerHealth: 100
   WalkSpeed: 10
   SprintSpeed: 20
+  CommonCards:
+    DamageMult: 1.1
+    HealthAdd: 15
+    SpeedMult: 1.05
+    HealPerKill: 1
+    AttackSpeedMult: 1.1
+    ExperienceMult: 1.1
+    SlowPercent: 0.08
+    ExplosionDamage: 10
+    ExplosionRadius: 3.5
+    RegenPerSecond: 0.5
+    ExtraShots: 0
+  RareCards:
+    DamageMult: 1.2
+    HealthAdd: 30
+    SpeedMult: 1.1
+    HealPerKill: 3
+    AttackSpeedMult: 1.2
+    ExperienceMult: 1.2
+    SlowPercent: 0.12
+    ExplosionDamage: 20
+    ExplosionRadius: 4
+    RegenPerSecond: 1
+    ExtraShots: 1
+  EpicCards:
+    DamageMult: 1.35
+    HealthAdd: 50
+    SpeedMult: 1.18
+    HealPerKill: 6
+    AttackSpeedMult: 1.35
+    ExperienceMult: 1.35
+    SlowPercent: 0.2
+    ExplosionDamage: 35
+    ExplosionRadius: 5
+    RegenPerSecond: 2
+    ExtraShots: 1
+  ExperiencePerPlanet: 1.25
   DifficultyStep: 1.32

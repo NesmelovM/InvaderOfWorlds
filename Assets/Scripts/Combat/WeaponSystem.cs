@@ -455,7 +455,8 @@ namespace InvaderOfWorlds
         private void FireVolley(WeaponSlot slot, Vector3 origin, Vector3 direction, float r, float g, float b,
             int pierce = 0)
         {
-            var shots = Mathf.Max(1, slot.Shots);
+            // Карточка «Залп» добавляет снаряды всем оружиям.
+            var shots = Mathf.Max(1, slot.Shots + Mathf.Max(0, RunState.ExtraShots));
             var spread = shots > 1 ? 6f : 0f;
 
             for (var i = 0; i < shots; i++)

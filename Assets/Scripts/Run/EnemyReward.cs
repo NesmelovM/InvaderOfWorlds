@@ -37,6 +37,30 @@ namespace InvaderOfWorlds
                 _health.Died -= OnDied;
         }
 
+        /// <summary>Карточка «Осколки»: смерть врага бьёт соседей по площади.</summary>
+        private void ExplodeAround()
+        {
+            if (RunState.ExplosionDamage <= 0f || RunState.ExplosionRadius <= 0f)
+                return;
+
+            var center = transform.position;
+            var radius = RunState.ExplosionRadius;
+
+            foreach (var other in FindObjectsByType<EnemyMarker>(FindObjectsSortMode.None))
+            {
+                if (other == null || other.gameObject == gameObject)
+                    continue;
+
+                if (Vector3.Distance(other.transform.position, center) > radius)
+                    continue;
+
+                var health = other.GetComponent<Health>();
+
+                if (health != null && health.IsAlive)
+                    health.TakeDamage(RunState.ExplosionDamage);
+            }
+        }
+
         private void OnDied(Health health)
         {
             SoundBank.Coin(transform.position);
@@ -46,7 +70,11 @@ namespace InvaderOfWorlds
             Coin.Burst(transform.position, player, UnityEngine.Random.Range(2, 5));
             RunSession.RegisterKill(
                 Mathf.RoundToInt(_gold * Balance.GoldMultiplier),
-                Mathf.RoundToInt(_experience * Balance.ExperienceMultiplier * RunState.ExperienceMultiplier));
+                Mathf.RoundToInt(_experience * Balance.ExperienceMultiplier *
+                                 RunState.ExperienceMultiplier *
+                                 Mathf.Pow(Balance.ExperiencePerPlanet, RunState.PlanetIndex)));
+
+            ExplodeAround();
 
             // «Вампиризм»: за убийство возвращается немного здоровья.
             if (RunModifiers.HealPerKill <= 0f || RunModifiers.PlayerHealth == null)

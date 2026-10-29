@@ -172,10 +172,40 @@ namespace InvaderOfWorlds
             return card.Value.Title;
         }
 
-        /// <summary>Наполняет наборы карточек для текущего уровня.</summary>
+        /// <summary>
+        /// Наполняет наборы карточек значениями из конфига баланса:
+        /// всё, что раньше было зашито в код, теперь правится в инструменте.
+        /// </summary>
         private void BuildPools(List<Card> common, List<Card> rare, List<Card> epic)
         {
-            void Add(List<Card> list, CardRarity rarity, string title, string description, Action apply)
+            BuildTier(common, CardRarity.Common, Balance.Cards(0));
+            BuildTier(rare, CardRarity.Rare, Balance.Cards(1));
+
+            // Оружие из оружейной всегда идёт редкой карточкой.
+            var weaponId = FindWeaponOffer();
+
+            if (weaponId >= 0)
+            {
+                var weapon = Armory.Catalog[weaponId];
+                rare.Add(new Card
+                {
+                    Title = $"Оружие: {weapon.Name}",
+                    Description = weapon.Description,
+                    Rarity = CardRarity.Rare,
+                    Apply = () => EquipWeapon(weaponId)
+                });
+            }
+
+            BuildTier(epic, CardRarity.Epic, Balance.Cards(2));
+        }
+
+        /// <summary>Собирает карточки одной редкости по её числам из баланса.</summary>
+        private void BuildTier(List<Card> list, CardRarity rarity, CardTierBalance tier)
+        {
+            if (tier == null)
+                return;
+
+            void Add(string title, string description, Action apply)
             {
                 list.Add(new Card
                 {
@@ -186,62 +216,58 @@ namespace InvaderOfWorlds
                 });
             }
 
-            // --- обычные ---
-            Add(common, CardRarity.Common, "Заточка", "+10% урона всем оружиям",
-                () => BoostDamage(1.10f));
-            Add(common, CardRarity.Common, "Стойкость", "+15 к здоровью и полное лечение",
-                () => BoostHealth(15f));
-            Add(common, CardRarity.Common, "Лёгкость", "+5% скорости передвижения",
-                () => BoostSpeed(1.05f));
-            Add(common, CardRarity.Common, "Тяжёлый воздух", "враги двигаются на 8% медленнее",
-                () => RunModifiers.SlowEnemies(0.08f));
-            Add(common, CardRarity.Common, "Вампиризм", "+1 здоровье за каждое убийство",
-                () => RunModifiers.AddHealPerKill(1f));
-            Add(common, CardRarity.Common, "Быстрый взмах", "+10% скорости атаки",
-                () => BoostAttackSpeed(1.10f));
-            Add(common, CardRarity.Common, "Ученик", "+10% получаемого опыта",
-                () => BoostExperience(1.10f));
+            if (tier.DamageMult > 1f)
+                Add("Заточка", $"+{Percent(tier.DamageMult)}% урона всем оружиям",
+                    () => BoostDamage(tier.DamageMult));
 
-            // --- редкие ---
-            Add(rare, CardRarity.Rare, "Острая сталь", "+20% урона всем оружиям",
-                () => BoostDamage(1.20f));
-            Add(rare, CardRarity.Rare, "Крепкая шкура", "+30 к здоровью и полное лечение",
-                () => BoostHealth(30f));
-            Add(rare, CardRarity.Rare, "Проворство", "+10% скорости передвижения",
-                () => BoostSpeed(1.10f));
-            Add(rare, CardRarity.Rare, "Голод", "+3 здоровья за каждое убийство",
-                () => RunModifiers.AddHealPerKill(3f));
-            Add(rare, CardRarity.Rare, "Тренировка", "+20% скорости атаки",
-                () => BoostAttackSpeed(1.20f));
-            Add(rare, CardRarity.Rare, "Наставник", "+20% получаемого опыта",
-                () => BoostExperience(1.20f));
+            if (tier.HealthAdd > 0f)
+                Add("Стойкость", $"+{tier.HealthAdd:F0} к здоровью и полное лечение",
+                    () => BoostHealth(tier.HealthAdd));
 
-            var weaponId = FindWeaponOffer();
+            if (tier.SpeedMult > 1f)
+                Add("Лёгкость", $"+{Percent(tier.SpeedMult)}% скорости передвижения",
+                    () => BoostSpeed(tier.SpeedMult));
 
-            if (weaponId >= 0)
-            {
-                var weapon = Armory.Catalog[weaponId];
-                Add(rare, CardRarity.Rare, $"Оружие: {weapon.Name}", weapon.Description,
-                    () => EquipWeapon(weaponId));
-            }
+            if (tier.AttackSpeedMult > 1f)
+                Add("Быстрый взмах", $"+{Percent(tier.AttackSpeedMult)}% скорости атаки",
+                    () => BoostAttackSpeed(tier.AttackSpeedMult));
 
-            // --- эпические ---
-            Add(epic, CardRarity.Epic, "Кровавый клинок", "+35% урона всем оружиям",
-                () => BoostDamage(1.35f));
-            Add(epic, CardRarity.Epic, "Каменная плоть", "+50 к здоровью и полное лечение",
-                () => BoostHealth(50f));
-            Add(epic, CardRarity.Epic, "Порыв ветра", "+18% скорости передвижения",
-                () => BoostSpeed(1.18f));
-            Add(epic, CardRarity.Epic, "Пиршество", "+6 здоровья за каждое убийство",
-                () => RunModifiers.AddHealPerKill(6f));
-            Add(epic, CardRarity.Epic, "Стальная хватка", "+35% скорости атаки",
-                () => BoostAttackSpeed(1.35f));
-            Add(epic, CardRarity.Epic, "Мудрец", "+35% получаемого опыта",
-                () => BoostExperience(1.35f));
-            Add(epic, CardRarity.Epic, "Мёртвый воздух", "враги двигаются на 20% медленнее",
-                () => RunModifiers.SlowEnemies(0.20f));
+            if (tier.ExperienceMult > 1f)
+                Add("Ученик", $"+{Percent(tier.ExperienceMult)}% получаемого опыта",
+                    () => BoostExperience(tier.ExperienceMult));
+
+            if (tier.HealPerKill > 0f)
+                Add("Вампиризм", $"+{tier.HealPerKill:F0} здоровья за убийство",
+                    () => RunModifiers.AddHealPerKill(tier.HealPerKill));
+
+            if (tier.SlowPercent > 0f)
+                Add("Тяжёлый воздух", $"враги двигаются на {Percent(tier.SlowPercent)}% медленнее",
+                    () => RunModifiers.SlowEnemies(tier.SlowPercent));
+
+            if (tier.ExplosionDamage > 0f && tier.ExplosionRadius > 0f)
+                Add("Осколки", $"враг взрывается при смерти: {tier.ExplosionDamage:F0} урона в радиусе " +
+                               $"{tier.ExplosionRadius:F0} м", () => BoostExplosion(tier));
+
+            if (tier.RegenPerSecond > 0f)
+                Add("Живучесть", $"+{tier.RegenPerSecond:F1} здоровья в секунду",
+                    () => RunState.RegenPerSecond += tier.RegenPerSecond);
+
+            if (tier.ExtraShots > 0)
+                Add("Залп", $"+{tier.ExtraShots} снаряд ко всем оружиям",
+                    () => RunState.ExtraShots += tier.ExtraShots);
         }
 
+        /// <summary>Процент из множителя: 1.2 → «20».</summary>
+        private static string Percent(float multiplier)
+        {
+            return Mathf.RoundToInt((multiplier - 1f) * 100f).ToString();
+        }
+
+        private static void BoostExplosion(CardTierBalance tier)
+        {
+            RunState.ExplosionDamage += tier.ExplosionDamage;
+            RunState.ExplosionRadius = Mathf.Max(RunState.ExplosionRadius, tier.ExplosionRadius);
+        }
         /// <summary>Бросает редкость и забирает случайную карточку из её набора.</summary>
         private static Card? PickCard(List<Card> common, List<Card> rare, List<Card> epic)
         {
