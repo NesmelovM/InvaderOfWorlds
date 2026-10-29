@@ -50,7 +50,9 @@ namespace InvaderOfWorlds
 
             if (_host != null && TryMeasure(out var newBottom, out _))
             {
-                var shift = -newBottom;
+                // Чуть вдавливаем в грунт: на песке и траве щель под ногами
+                // читается как парение, даже если она в пару сантиметров.
+                var shift = -newBottom - 0.04f;
                 transform.position += _host.up * shift;
             }
 

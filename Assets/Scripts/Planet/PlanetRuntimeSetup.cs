@@ -140,12 +140,15 @@ namespace InvaderOfWorlds
                 hill.AddComponent<MeshRenderer>().sharedMaterial =
                     EnemyFactory.GetMaterial(_biome != null ? _biome.HillColor : new Color(0.42f, 0.38f, 0.34f));
 
-                var collider = hill.AddComponent<MeshCollider>();
-                collider.sharedMesh = filter.sharedMesh;
-                collider.convex = true;
-
                 hill.transform.position = _planet.Center;
                 hill.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
+
+                // Коллайдер невыпуклый: выпуклая оболочка получалась меньше
+                // самой горки, и персонажи «висели» над видимым склоном.
+                var collider = hill.AddComponent<MeshCollider>();
+                collider.sharedMesh = null;
+                collider.convex = false;
+                collider.sharedMesh = filter.sharedMesh;
             }
         }
 
